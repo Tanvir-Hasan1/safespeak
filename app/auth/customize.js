@@ -29,7 +29,7 @@ export default function Customize() {
               <Tick width={30} height={30} />
             </StyledView>
           </StyledView>
-          <StyledView className="bg-white px-3 py-3 rounded-full flex-row items-center shadow-sm">
+          <StyledView className="bg-white px-3 py-3r rounded-full flex-row items-center shadow-sm">
             <Ionicons name="flag-outline" size={16} color="black" />
             <StyledText className="text-black ml-2 font-medium">
               English (US)
@@ -87,7 +87,10 @@ export default function Customize() {
 
         <HelpCard />
 
-        <StyledTouchableOpacity className="w-full bg-[#FB923C] py-4 rounded-full items-center mb-10 shadow-lg">
+        <StyledTouchableOpacity
+          className="w-full bg-[#FB923C] py-4 rounded-full items-center mb-10 shadow-lg"
+          onPress={() => router.replace("/(tabs)/home")}
+        >
           <StyledText className="text-white text-lg font-bold">
             Get Started
           </StyledText>
