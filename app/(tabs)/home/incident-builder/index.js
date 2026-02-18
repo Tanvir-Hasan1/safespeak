@@ -7,13 +7,14 @@ import {
   Switch,
   ScrollView,
   Dimensions,
+  Image,
 } from "react-native";
 
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
-import Sphere from "../../../../assets/images/home/Sphere.svg";
+const Sphere = require("../../../../assets/images/home/Sphere.png");
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -47,7 +48,11 @@ export default function IncidentBuilder() {
         <StyledView
           className={`${isRecording ? "mt-4" : "mt-8"} items-center justify-center`}
         >
-          <Sphere width={SPHERE_SIZE} height={SPHERE_SIZE} />
+          <Image
+            source={Sphere}
+            style={{ width: SPHERE_SIZE, height: SPHERE_SIZE }}
+            resizeMode="contain"
+          />
         </StyledView>
 
         {isRecording ? (

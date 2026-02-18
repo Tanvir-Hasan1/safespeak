@@ -5,12 +5,14 @@ import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import TopLeftCard from "../../../assets/images/home/top-left-card.svg";
 import TopRightCard from "../../../assets/images/home/top-right-card.svg";
 import BottomLeftCard from "../../../assets/images/home/bottom-left-card.svg";
 import BottomRightCard from "../../../assets/images/home/bottom-right-card.svg";
-import Sphere from "../../../assets/images/home/Sphere.svg";
+
+const Sphere = require("../../../assets/images/home/Sphere.png");
 
 import { useRouter } from "expo-router";
 
@@ -68,7 +70,11 @@ const ReportingHub = React.memo(() => {
             style={styles.sphereContent}
             onPress={() => router.push("/home/incident-builder")}
           >
-            <Sphere width={SPHERE_SIZE} height={SPHERE_SIZE} />
+            <Image
+              source={Sphere}
+              style={{ width: SPHERE_SIZE, height: SPHERE_SIZE }}
+              resizeMode="contain"
+            />
             <View style={styles.textOverlay}>
               <Text style={styles.sphereText}>Report{"\n"}an incident</Text>
             </View>
