@@ -2,11 +2,11 @@ import React from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
-import EmergencyBar from "../../components/tabs/home/EmergencyBar";
-import ProfileHeader from "../../components/tabs/home/ProfileHeader";
-import ReportingHub from "../../components/tabs/home/ReportingHub";
-import ServiceTiles from "../../components/tabs/home/ServiceTiles";
-import IntelligenceMap from "../../components/tabs/home/IntelligenceMap";
+import EmergencyBar from "../../../components/tabs/home/EmergencyBar";
+import ProfileHeader from "../../../components/tabs/home/ProfileHeader";
+import ReportingHub from "../../../components/tabs/home/ReportingHub";
+import ServiceTiles from "../../../components/tabs/home/ServiceTiles";
+import IntelligenceMap from "../../../components/tabs/home/IntelligenceMap";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);

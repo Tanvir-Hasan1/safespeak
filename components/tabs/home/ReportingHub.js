@@ -1,10 +1,18 @@
 import React from "react";
-import { View, Text, Dimensions, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import TopLeftCard from "../../../assets/images/home/top-left-card.svg";
 import TopRightCard from "../../../assets/images/home/top-right-card.svg";
 import BottomLeftCard from "../../../assets/images/home/bottom-left-card.svg";
 import BottomRightCard from "../../../assets/images/home/bottom-right-card.svg";
 import Sphere from "../../../assets/images/home/Sphere.svg";
+
+import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -14,38 +22,62 @@ const GAP = HUB_SIZE * 0.04; // Responsive gap (4% of hub size)
 const CARD_SIZE = (HUB_SIZE - GAP) / 2;
 const SPHERE_SIZE = HUB_SIZE * 0.42; // Precisely sized sphere
 
-const ReportingHub = () => {
+const ReportingHub = React.memo(() => {
+  const router = useRouter();
+
   return (
     <View style={styles.outerContainer}>
       <View style={styles.hubContainer}>
         {/* The 2x2 Grid using absolute positioning */}
-        <View style={[styles.cardContainer, styles.topLeft]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.cardContainer, styles.topLeft]}
+          onPress={() => router.push("/home/incident-builder")}
+        >
           <TopLeftCard width={CARD_SIZE} height={CARD_SIZE} />
-        </View>
+        </TouchableOpacity>
 
-        <View style={[styles.cardContainer, styles.topRight]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.cardContainer, styles.topRight]}
+          onPress={() => router.push("/home/incident-builder")}
+        >
           <TopRightCard width={CARD_SIZE} height={CARD_SIZE} />
-        </View>
+        </TouchableOpacity>
 
-        <View style={[styles.cardContainer, styles.bottomLeft]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.cardContainer, styles.bottomLeft]}
+          onPress={() => router.push("/home/incident-builder")}
+        >
           <BottomLeftCard width={CARD_SIZE} height={CARD_SIZE} />
-        </View>
+        </TouchableOpacity>
 
-        <View style={[styles.cardContainer, styles.bottomRight]}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.cardContainer, styles.bottomRight]}
+          onPress={() => router.push("/home/incident-builder")}
+        >
           <BottomRightCard width={CARD_SIZE} height={CARD_SIZE} />
-        </View>
+        </TouchableOpacity>
 
         {/* Central Sphere with centered text */}
         <View style={styles.sphereWrapper}>
-          <Sphere width={SPHERE_SIZE} height={SPHERE_SIZE} />
-          <View style={styles.textOverlay}>
-            <Text style={styles.sphereText}>Report{"\n"}an incident</Text>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.sphereContent}
+            onPress={() => router.push("/home/incident-builder")}
+          >
+            <Sphere width={SPHERE_SIZE} height={SPHERE_SIZE} />
+            <View style={styles.textOverlay}>
+              <Text style={styles.sphereText}>Report{"\n"}an incident</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   outerContainer: {

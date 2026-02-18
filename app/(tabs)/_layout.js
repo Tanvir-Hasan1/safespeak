@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useSegments } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Platform } from "react-native";
 import { styled } from "nativewind";
@@ -6,15 +6,21 @@ import { styled } from "nativewind";
 const StyledView = styled(View);
 
 export default function TabLayout() {
+  const segments = useSegments();
+
+  // Hide tab bar on sub-pages (e.g., /home/scam-shield)
+  const hideTabBar = segments.length > 2;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true, // Useful for performance when typing
         tabBarStyle: {
-          backgroundColor: "white",
+          backgroundColor: "#F0F4FA", // Match background to prevent flickering
           borderTopWidth: 0,
-          elevation: 10,
+          elevation: hideTabBar ? 0 : 10,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.1,
@@ -26,10 +32,12 @@ export default function TabLayout() {
           right: 25,
           borderRadius: 40,
           paddingHorizontal: 10,
-          paddingBottom: 0, // Ensure no safe-area padding shifts icons up
+          paddingBottom: 0,
           paddingTop: 0,
           alignItems: "center",
           justifyContent: "center",
+          transform: [{ translateY: hideTabBar ? 200 : 0 }], // Move off-screen instead of just display:none
+          opacity: hideTabBar ? 0 : 1,
         },
       }}
     >

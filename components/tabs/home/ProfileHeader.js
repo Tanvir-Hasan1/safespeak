@@ -7,7 +7,7 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const ProfileHeader = ({ name = "Alex Rivera" }) => {
+const ProfileHeader = React.memo(({ name = "Alex Rivera" }) => {
   return (
     <StyledView className="flex-row items-center justify-between px-6 py-4 bg-white mx-4 rounded-3xl shadow-sm border border-gray-100">
       <StyledView>
@@ -27,6 +27,6 @@ const ProfileHeader = ({ name = "Alex Rivera" }) => {
       </StyledTouchableOpacity>
     </StyledView>
   );
-};
+});
 
 export default ProfileHeader;

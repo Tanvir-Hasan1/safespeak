@@ -7,9 +7,9 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const IntelligenceMap = () => {
+const IntelligenceMap = React.memo(() => {
   return (
-    <StyledView className="px-6 mb-10">
+    <StyledView className="px-6 mb-20">
       <StyledText className="text-[#1F2937] text-2xl font-bold mb-4">
         Local Intelligence
       </StyledText>
@@ -55,6 +55,6 @@ const IntelligenceMap = () => {
       </StyledView>
     </StyledView>
   );
-};
+});
 
 export default IntelligenceMap;

@@ -8,7 +8,7 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const EmergencyBar = () => {
+const EmergencyBar = React.memo(() => {
   return (
     <StyledTouchableOpacity className="w-full px-4 pt-2 pb-2">
       <LinearGradient
@@ -35,6 +35,6 @@ const EmergencyBar = () => {
       </LinearGradient>
     </StyledTouchableOpacity>
   );
-};
+});
 
 export default EmergencyBar;
