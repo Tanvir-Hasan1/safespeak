@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import CustomHeader from "../../../components/CustomHeader";
+import CustomHeader from "../../../../components/CustomHeader";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);

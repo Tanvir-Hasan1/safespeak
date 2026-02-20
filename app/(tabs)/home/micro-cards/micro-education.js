@@ -8,9 +8,9 @@ import {
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import CustomHeader from "../../../components/CustomHeader";
+import CustomHeader from "../../../../components/CustomHeader";
 
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -63,12 +63,14 @@ const EDUCATION_ITEMS = [
   },
 ];
 
-export default function ScamShield() {
+export default function MicroEducation() {
   const router = useRouter();
+  const { name } = useLocalSearchParams();
+  const screenTitle = name || "MicroEducation";
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Cyber Bullying" />
+      <CustomHeader title={screenTitle} />
       <StyledScrollView
         className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
@@ -79,7 +81,7 @@ export default function ScamShield() {
             MicroEducation
           </StyledText>
           <StyledText className="text-[#FB923C] text-xs font-bold uppercase mt-1">
-            Cyber Bullying
+            {screenTitle}
           </StyledText>
         </StyledView>
 
@@ -87,7 +89,7 @@ export default function ScamShield() {
         <StyledView className="flex-row items-center bg-white rounded-3xl px-4 py-3 mb-8 border border-white shadow-sm">
           <Ionicons name="search" size={20} color="#94A3B8" />
           <StyledTextInput
-            placeholder="Search cyber bullying lessons..."
+            placeholder={`Search ${screenTitle.toLowerCase()} lessons...`}
             className="flex-1 ml-3 text-base text-[#1F2937]"
             placeholderTextColor="#94A3B8"
           />
@@ -99,7 +101,7 @@ export default function ScamShield() {
             <StyledTouchableOpacity
               key={item.id}
               activeOpacity={0.7}
-              onPress={() => router.push("/home/lesson-detail")}
+              onPress={() => router.push("/home/micro-cards/lesson-detail")}
               className={`flex-row items-center justify-between p-4 rounded-[24px] bg-[${item.color}] shadow-sm mb-4`}
               style={{ backgroundColor: item.color }}
             >

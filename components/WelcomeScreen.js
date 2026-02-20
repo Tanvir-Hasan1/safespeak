@@ -1,23 +1,51 @@
-import React from "react";
-import { View, Text, ImageBackground, TouchableOpacity } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { styled } from "nativewind";
 import Constants from "expo-constants";
 import Logo from "../assets/logos/safespeak-logo.svg";
 import SocialSignIns from "./SocialSignIns";
 import { LinearGradient } from "expo-linear-gradient";
+import { useVideoPlayer, VideoView } from "expo-video";
+import { useNavigation } from "expo-router";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledImageBackground = styled(ImageBackground);
+
+const videoSource = require("../assets/videos/Australia_Map_Cinematic_Loop_Animation.mp4");
 
 const WelcomeScreen = () => {
+  const navigation = useNavigation();
+  const player = useVideoPlayer(videoSource, (player) => {
+    player.loop = true;
+    player.muted = false; // User changed this to false
+    player.play();
+  });
+
+  useEffect(() => {
+    const focusListener = navigation.addListener("focus", () => {
+      player.play();
+    });
+
+    const blurListener = navigation.addListener("blur", () => {
+      player.pause();
+    });
+
+    return () => {
+      focusListener();
+      blurListener();
+    };
+  }, [navigation, player]);
+
   return (
-    <StyledImageBackground
-      source={require("../assets/images/welcome.png")}
-      className="flex-1"
-      resizeMode="cover"
-    >
+    <View style={styles.container}>
+      <VideoView
+        style={StyleSheet.absoluteFill}
+        player={player}
+        resizeMode="cover"
+        nativeControls={false}
+      />
+
       {/* Overlay for readability */}
       <StyledView className="absolute inset-0 bg-black/40" />
 
@@ -71,8 +99,14 @@ const WelcomeScreen = () => {
           </StyledText>
         </StyledView>
       </StyledView>
-    </StyledImageBackground>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default WelcomeScreen;

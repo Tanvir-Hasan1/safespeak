@@ -9,7 +9,7 @@ import {
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import CustomHeader from "../../../components/CustomHeader";
+import CustomHeader from "../../../../components/CustomHeader";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -60,6 +60,14 @@ const HUB_ITEMS = [
 export default function MicroCards() {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("All Lessons");
+
+  // Helper to push to education with params
+  const navigateToEducation = (name) => {
+    router.push({
+      pathname: "/home/micro-cards/micro-education",
+      params: { name },
+    });
+  };
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
@@ -122,7 +130,7 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#005B96] rounded-[30px] p-5 h-40 justify-between"
               activeOpacity={0.7}
-              onPress={() => router.push("/home/lesson-detail")}
+              onPress={() => navigateToEducation("Cyber Bullying")}
             >
               <StyledView>
                 <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
@@ -139,7 +147,7 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#F97316] rounded-[30px] p-5 h-[320px] justify-between"
               activeOpacity={0.7}
-              onPress={() => router.push("/home/lesson-detail")}
+              onPress={() => navigateToEducation("Discrimination")}
             >
               <StyledView>
                 <StyledText className="text-white text-2xl font-black leading-tight">
@@ -160,7 +168,7 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#FBBF24] rounded-[30px] p-5 h-44 justify-between"
               activeOpacity={0.7}
-              onPress={() => router.push("/home/lesson-detail")}
+              onPress={() => navigateToEducation("Legal Rights")}
             >
               <StyledView>
                 <StyledText className="text-black/60 text-[10px] font-bold uppercase tracking-wider">
@@ -181,7 +189,7 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#10B981] rounded-[40px] p-6 h-40 justify-between overflow-hidden"
               activeOpacity={0.7}
-              onPress={() => router.push("/home/lesson-detail")}
+              onPress={() => navigateToEducation("Online Safety")}
             >
               <StyledView className="flex-row justify-between items-start">
                 <StyledView className="flex-1 pr-4">
@@ -213,7 +221,7 @@ export default function MicroCards() {
               <StyledTouchableOpacity
                 className="bg-[#8B5CF6] rounded-[40px] p-5 h-44 justify-between overflow-hidden"
                 activeOpacity={0.7}
-                onPress={() => router.push("/home/lesson-detail")}
+                onPress={() => navigateToEducation("Mental Health")}
               >
                 <StyledText className="text-white text-2xl font-black leading-tight uppercase">
                   Mental{"\n"}Health
@@ -245,7 +253,7 @@ export default function MicroCards() {
               <StyledTouchableOpacity
                 className="bg-[#0D9488] rounded-[40px] p-5 h-44 justify-between"
                 activeOpacity={0.7}
-                onPress={() => router.push("/home/lesson-detail")}
+                onPress={() => navigateToEducation("Legal Aid Basics")}
               >
                 <StyledView>
                   <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
