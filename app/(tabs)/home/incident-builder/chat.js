@@ -159,6 +159,17 @@ export default function AIBotChat() {
                 </StyledText>
               </StyledView>
             </StyledView>
+
+            {/* Report Button */}
+            <StyledTouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/home/report-submission")}
+              className="self-end px-2"
+            >
+              <StyledText className="text-[#FF8A00] text-sm font-bold uppercase tracking-widest">
+                Report >>
+              </StyledText>
+            </StyledTouchableOpacity>
           </StyledView>
         </StyledScrollView>
 

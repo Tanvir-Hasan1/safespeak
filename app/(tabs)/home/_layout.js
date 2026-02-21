@@ -7,6 +7,7 @@ export default function HomeLayout() {
       <Stack.Screen name="scam-shield" />
       <Stack.Screen name="micro-cards" />
       <Stack.Screen name="resources" />
+      <Stack.Screen name="report-submission" />
     </Stack>
   );
 }
