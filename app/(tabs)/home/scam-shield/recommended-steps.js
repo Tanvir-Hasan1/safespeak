@@ -17,42 +17,39 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const RECOMMENDATIONS = [
-  {
-    id: 1,
-    title: "Contact Your Bank",
-    description:
-      "Contact Your Bank - If you have lost money, shared your card details, or think someone can access your account, contact your bank immediately.",
-    icon: "business-outline",
-    iconColor: "#FB923C",
-    bgColor: "#FFF7ED",
-    buttonText: "Call Fraud Department",
-  },
-  {
-    id: 2,
-    title: "Report to ACCC Scamwatch",
-    description:
-      "Report to Scamwatch. Choose this if you have not lost money, but want the government to be aware of a scam. \n\nCrucial for community prevention.",
-    icon: "trending-down-outline",
-    iconColor: "#FB923C",
-    bgColor: "#FFF7ED",
-    buttonText: "Launch Report Tool",
-  },
-  {
-    id: 3,
-    title: "Report to ReportCyber",
-    description:
-      "Report to ReportCyber - Choose this if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk.",
-    icon: "hammer-outline",
-    iconColor: "#FB923C",
-    bgColor: "#FFF7ED",
-    buttonText: "Launch Report Tool",
-  },
-];
-
 export default function RecommendedSteps() {
   const router = useRouter();
   const { t } = useLanguage();
+
+  const RECOMMENDATIONS = [
+    {
+      id: 1,
+      title: t("contactBank"),
+      description: t("contactBankDesc"),
+      icon: "business-outline",
+      iconColor: "#FB923C",
+      bgColor: "#FFF7ED",
+      buttonText: t("callFraudDept"),
+    },
+    {
+      id: 2,
+      title: t("reportScamwatch"),
+      description: t("reportScamwatchDesc"),
+      icon: "trending-down-outline",
+      iconColor: "#FB923C",
+      bgColor: "#FFF7ED",
+      buttonText: t("launchReportTool"),
+    },
+    {
+      id: 3,
+      title: t("reportCyber"),
+      description: t("reportCyberDesc"),
+      icon: "hammer-outline",
+      iconColor: "#FB923C",
+      bgColor: "#FFF7ED",
+      buttonText: t("launchReportTool"),
+    },
+  ];
 
   return (
     <StyledView className="flex-1 bg-[#FDFDFD]">
@@ -68,9 +65,7 @@ export default function RecommendedSteps() {
           <StyledView className="flex-row items-start">
             <Ionicons name="warning-outline" size={16} color="#A16207" />
             <StyledText className="ml-2 flex-1 text-[#A16207] text-[10px] font-bold leading-5">
-              **SafeSpeak does not submit reports on your behalf. We explain
-              your options and guide you to the right place based on what
-              happened.**
+              {t("safespeakDisclaimer")}
             </StyledText>
           </StyledView>
         </StyledView>
@@ -127,12 +122,7 @@ export default function RecommendedSteps() {
           <StyledView className="flex-row items-center mb-4">
             <Ionicons name="time-outline" size={20} color="#94A3B8" />
             <StyledText className="ml-3 flex-1 text-[#64748B] text-sm font-medium leading-5">
-              All generated documentation and chat logs are automatically saved
-              to your{" "}
-              <StyledText className="text-[#005B96] font-bold">
-                History
-              </StyledText>
-              .
+              {t("historySaved")}
             </StyledText>
           </StyledView>
 
@@ -142,7 +132,7 @@ export default function RecommendedSteps() {
           >
             <Ionicons name="download-outline" size={18} color="#002B49" />
             <StyledText className="text-[#002B49] text-sm font-bold ml-3">
-              {t("prefilledReport")}
+              {t("downloadPrefilled")}
             </StyledText>
           </StyledTouchableOpacity>
 
@@ -153,7 +143,7 @@ export default function RecommendedSteps() {
             <Ionicons name="document-text-outline" size={18} color="#002B49" />
             <StyledView className="ml-3 items-center">
               <StyledText className="text-[#002B49] text-sm font-bold">
-                {t("incidentSummary")}
+                {t("downloadSummary")}
               </StyledText>
             </StyledView>
           </StyledTouchableOpacity>

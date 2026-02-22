@@ -12,57 +12,60 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../../components/CustomHeader";
 
+import { useLanguage } from "../../../../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 const StyledScrollView = styled(ScrollView);
 
-const FILTER_OPTIONS = ["All Reports", "Drafts", "In Review"];
-
-const INCIDENTS = [
-  {
-    id: "1",
-    type: "Harassment Incident - Wing A",
-    department: "Legal Compliance Dept.",
-    date: "OCT 12, 2023",
-    status: "ACTION REQUIRED",
-    statusColor: "#E2D3C4",
-    statusTextColor: "#8B6B4E",
-    icon: "shield-outline",
-    iconBg: "#C7D2FE",
-    iconColor: "#6366F1",
-  },
-  {
-    id: "2",
-    type: "Wellbeing Support Request",
-    department: "Mental Health Team",
-    date: "OCT 15, 2023",
-    status: "SUBMITTED",
-    statusColor: "#D1D5DB",
-    statusTextColor: "#002B49",
-    icon: "heart-outline",
-    iconBg: "#FCD4D4",
-    iconColor: "#F43F5E",
-  },
-  {
-    id: "3",
-    type: "Safety Concern - Main Entry",
-    department: "Campus Security",
-    date: "OCT 20, 2023",
-    status: "DRAFT",
-    statusColor: "#D1D5DB",
-    statusTextColor: "#002B49",
-    icon: "lock-closed-outline",
-    iconBg: "#D1FAE5",
-    iconColor: "#10B981",
-  },
-];
-
 export default function IncidentHistory() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("All Reports");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const FILTER_OPTIONS = [t("allReports"), t("drafts"), t("inReview")];
+
+  const INCIDENTS = [
+    {
+      id: "1",
+      type: "Harassment Incident - Wing A",
+      department: "Legal Compliance Dept.",
+      date: "OCT 12, 2023",
+      status: t("actionRequired"),
+      statusColor: "#E2D3C4",
+      statusTextColor: "#8B6B4E",
+      icon: "shield-outline",
+      iconBg: "#C7D2FE",
+      iconColor: "#6366F1",
+    },
+    {
+      id: "2",
+      type: "Wellbeing Support Request",
+      department: "Mental Health Team",
+      date: "OCT 15, 2023",
+      status: t("submitted"),
+      statusColor: "#D1D5DB",
+      statusTextColor: "#002B49",
+      icon: "heart-outline",
+      iconBg: "#FCD4D4",
+      iconColor: "#F43F5E",
+    },
+    {
+      id: "3",
+      type: "Safety Concern - Main Entry",
+      department: "Campus Security",
+      date: "OCT 20, 2023",
+      status: t("draft"),
+      statusColor: "#D1D5DB",
+      statusTextColor: "#002B49",
+      icon: "lock-closed-outline",
+      iconBg: "#D1FAE5",
+      iconColor: "#10B981",
+    },
+  ];
 
   const renderIncidentCard = ({ item }) => (
     <StyledView className="flex-row items-center mb-4">
@@ -116,7 +119,7 @@ export default function IncidentHistory() {
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Your Reports" />
+      <CustomHeader title={t("yourReports")} />
 
       <StyledScrollView
         className="flex-1"
@@ -131,10 +134,10 @@ export default function IncidentHistory() {
           </StyledView>
 
           <StyledText className="text-[#002B49] text-2xl font-bold text-center">
-            Your Incident History
+            {t("yourIncidentHistory")}
           </StyledText>
           <StyledText className="text-[#94A3B8] text-sm font-medium mt-1">
-            SafeSpeak Secure Records
+            {t("secureRecords")}
           </StyledText>
         </StyledView>
 
@@ -143,7 +146,7 @@ export default function IncidentHistory() {
           <StyledView className="bg-white/60 rounded-full flex-row items-center px-4 py-3 border border-white">
             <Ionicons name="search" size={20} color="#94A3B8" />
             <StyledTextInput
-              placeholder="Search reports..."
+              placeholder={t("searchReports")}
               value={searchQuery}
               onChangeText={setSearchQuery}
               className="flex-1 ml-2 text-[#002B49] text-base"
@@ -200,7 +203,7 @@ export default function IncidentHistory() {
               12
             </StyledText>
             <StyledText className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wider">
-              TOTAL ACTIVE
+              {t("totalActive")}
             </StyledText>
           </StyledView>
 
@@ -212,7 +215,7 @@ export default function IncidentHistory() {
               48
             </StyledText>
             <StyledText className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wider">
-              ARCHIVED
+              {t("archived")}
             </StyledText>
           </StyledView>
         </StyledView>

@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../../components/CustomHeader";
 
+import { useLanguage } from "../../../../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
@@ -21,11 +23,12 @@ const { width } = Dimensions.get("window");
 
 export default function ReportOverview() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [language, setLanguage] = useState("Original");
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Report Overview" />
+      <CustomHeader title={t("reportOverview")} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -35,17 +38,17 @@ export default function ReportOverview() {
         {/* Header Info */}
         <StyledView className="flex-row justify-between items-center mt-6">
           <StyledText className="text-[#3B82F6] text-[10px] font-bold tracking-widest uppercase">
-            REF: #SR-2024-8821
+            {t("ref")} #SR-2024-8821
           </StyledText>
           <StyledView className="bg-[#FEE2E2] px-3 py-1 rounded-lg">
             <StyledText className="text-[#EF4444] text-[10px] font-bold uppercase">
-              HIGH PRIORITY
+              {t("highPriority")}
             </StyledText>
           </StyledView>
         </StyledView>
 
         <StyledText className="text-[#002B49] text-2xl font-bold mt-2">
-          Incident Narrative
+          {t("incidentNarrative")}
         </StyledText>
 
         {/* Language Tabs */}
@@ -61,7 +64,7 @@ export default function ReportOverview() {
                 language === "Original" ? "text-[#3B82F6]" : "text-[#94A3B8]"
               }`}
             >
-              Original Language
+              {t("originalLanguage")}
             </StyledText>
           </StyledTouchableOpacity>
           <StyledTouchableOpacity
@@ -75,7 +78,7 @@ export default function ReportOverview() {
                 language === "English" ? "text-[#3B82F6]" : "text-[#94A3B8]"
               }`}
             >
-              English Translation
+              {t("englishTranslation")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>
@@ -100,14 +103,14 @@ export default function ReportOverview() {
               color="#3B82F6"
             />
             <StyledText className="text-[#002B49] text-xl font-bold ml-2">
-              Report Metadata
+              {t("reportMetadata")}
             </StyledText>
           </StyledView>
 
           <StyledView className="flex-row flex-wrap gap-y-6">
             <StyledView className="w-1/2">
               <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-1">
-                DATE & TIME
+                {t("dateTime")}
               </StyledText>
               <StyledText className="text-[#002B49] text-sm font-bold">
                 Oct 24, 2023 • 20:30
@@ -116,7 +119,7 @@ export default function ReportOverview() {
 
             <StyledView className="w-1/2">
               <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-1">
-                LOCATION
+                {t("location")}
               </StyledText>
               <StyledText className="text-[#002B49] text-sm font-bold">
                 Terminal 2, Gate B12
@@ -125,7 +128,7 @@ export default function ReportOverview() {
 
             <StyledView className="w-1/2">
               <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-1">
-                CATEGORY
+                {t("category")}
               </StyledText>
               <StyledText className="text-[#002B49] text-sm font-bold">
                 Harassment
@@ -134,7 +137,7 @@ export default function ReportOverview() {
 
             <StyledView className="w-1/2">
               <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-1">
-                EVIDENCE
+                {t("evidence")}
               </StyledText>
               <StyledText className="text-[#002B49] text-sm font-bold">
                 2 Photos, 1 Audio
@@ -160,7 +163,7 @@ export default function ReportOverview() {
             className="mr-2"
           />
           <StyledText className="text-white text-lg font-bold">
-            Edit Report
+            {t("editReport")}
           </StyledText>
         </StyledTouchableOpacity>
 
@@ -175,7 +178,7 @@ export default function ReportOverview() {
             className="mr-2"
           />
           <StyledText className="text-white text-lg font-bold">
-            Proceed to Submission
+            {t("proceedSubmission")}
           </StyledText>
         </StyledTouchableOpacity>
       </StyledScrollView>

@@ -11,6 +11,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../components/CustomHeader";
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -18,11 +19,11 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 
-const RESOURCE_ITEMS = [
+const getResourceItems = (t) => [
   {
     id: 1,
-    title: "Legal Aid",
-    subtitle: "Legal advice and rights information",
+    title: t("legalAid"),
+    subtitle: t("legalAidSubtitle"),
     image:
       "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=400&auto=format&fit=crop",
     icon: "hammer",
@@ -30,8 +31,8 @@ const RESOURCE_ITEMS = [
   },
   {
     id: 2,
-    title: "Community Support",
-    subtitle: "",
+    title: t("communitySupport"),
+    subtitle: t("communitySupportSubtitle"),
     image:
       "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=400&auto=format&fit=crop",
     icon: "people",
@@ -39,8 +40,8 @@ const RESOURCE_ITEMS = [
   },
   {
     id: 3,
-    title: "Counselling",
-    subtitle: "Mental health support",
+    title: t("counselling"),
+    subtitle: t("counsellingSubtitle"),
     image:
       "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=400&auto=format&fit=crop",
     icon: "bulb",
@@ -48,7 +49,7 @@ const RESOURCE_ITEMS = [
   },
   {
     id: 4,
-    title: "Health Services",
+    title: t("healthServices"),
     subtitle: "",
     image:
       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=400&auto=format&fit=crop",
@@ -57,7 +58,7 @@ const RESOURCE_ITEMS = [
   },
   {
     id: 5,
-    title: "Elder Support",
+    title: t("elderSupport"),
     subtitle: "",
     image:
       "https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?q=80&w=400&auto=format&fit=crop",
@@ -66,8 +67,8 @@ const RESOURCE_ITEMS = [
   },
   {
     id: 6,
-    title: "Crisis Support",
-    subtitle: "Immediate help",
+    title: t("crisisSupport"),
+    subtitle: t("crisisSupportSubtitle"),
     image:
       "https://images.unsplash.com/photo-1542884706-258e2501a4e1?q=80&w=400&auto=format&fit=crop",
     icon: "medical-outline",
@@ -77,10 +78,12 @@ const RESOURCE_ITEMS = [
 
 export default function Resources() {
   const router = useRouter();
+  const { t } = useLanguage();
+  const resourceItems = getResourceItems(t);
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Safe Connections" />
+      <CustomHeader title={t("safeConnections")} />
       <StyledScrollView
         className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
@@ -88,11 +91,10 @@ export default function Resources() {
       >
         <StyledView className="mt-6 mb-8">
           <StyledText className="text-[#002B49] text-4xl font-extrabold">
-            Find the support you need
+            {t("findSupportHero")}
           </StyledText>
           <StyledText className="text-[#1F2937]/70 text-base font-medium mt-2 leading-6">
-            Find organisations and services that can help. You decide who to
-            contact and how.
+            {t("findSupportDesc")}
           </StyledText>
         </StyledView>
 
@@ -100,7 +102,7 @@ export default function Resources() {
         <StyledView className="flex-row items-center bg-white rounded-3xl px-4 py-3 mb-8 border border-white shadow-sm">
           <Ionicons name="search" size={20} color="#94A3B8" />
           <StyledTextInput
-            placeholder="Search by name, topic, or type..."
+            placeholder={t("searchResourcesPlaceholder")}
             className="flex-1 ml-3 text-base text-[#1F2937]"
             placeholderTextColor="#94A3B8"
           />
@@ -115,7 +117,7 @@ export default function Resources() {
         >
           <StyledTouchableOpacity className="flex-row items-center bg-[#D1E9FF]/50 px-5 py-2.5 rounded-full mr-3 border border-[#3B82F6]/10">
             <StyledText className="text-[#3B82F6] font-bold text-sm">
-              Language
+              {t("language")}
             </StyledText>
             <Ionicons
               name="chevron-down"
@@ -126,7 +128,7 @@ export default function Resources() {
           </StyledTouchableOpacity>
           <StyledTouchableOpacity className="flex-row items-center bg-[#D1E9FF]/50 px-5 py-2.5 rounded-full mr-3 border border-[#3B82F6]/10">
             <StyledText className="text-[#3B82F6] font-bold text-sm">
-              Region
+              {t("region")}
             </StyledText>
             <Ionicons
               name="location"
@@ -137,7 +139,7 @@ export default function Resources() {
           </StyledTouchableOpacity>
           <StyledTouchableOpacity className="bg-[#D1E9FF]/50 px-5 py-2.5 rounded-full border border-[#3B82F6]/10">
             <StyledText className="text-[#3B82F6] font-bold text-sm">
-              Service Type
+              {t("serviceType")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledScrollView>
@@ -150,7 +152,7 @@ export default function Resources() {
             onPress={() => router.push("/home/service-details")}
           >
             <ImageBackground
-              source={{ uri: RESOURCE_ITEMS[0].image }}
+              source={{ uri: resourceItems[0].image }}
               className="h-44 rounded-[40px] overflow-hidden"
               resizeMode="cover"
             >
@@ -159,10 +161,10 @@ export default function Resources() {
                   <Ionicons name="hammer" size={20} color="white" />
                 </StyledView>
                 <StyledText className="text-white text-2xl font-bold">
-                  Legal Aid
+                  {resourceItems[0].title}
                 </StyledText>
                 <StyledText className="text-white/80 text-[12px] font-medium">
-                  Legal advice and rights information
+                  {resourceItems[0].subtitle}
                 </StyledText>
               </StyledView>
             </ImageBackground>
@@ -176,7 +178,7 @@ export default function Resources() {
               onPress={() => router.push("/home/service-details")}
             >
               <ImageBackground
-                source={{ uri: RESOURCE_ITEMS[2].image }}
+                source={{ uri: resourceItems[2].image }}
                 className="h-96 rounded-[40px] overflow-hidden"
                 resizeMode="cover"
               >
@@ -185,10 +187,10 @@ export default function Resources() {
                     <Ionicons name="bulb" size={20} color="white" />
                   </StyledView>
                   <StyledText className="text-white text-2xl font-bold">
-                    Counselling
+                    {resourceItems[2].title}
                   </StyledText>
                   <StyledText className="text-white/80 text-[12px] font-medium">
-                    Mental health support
+                    {resourceItems[2].subtitle}
                   </StyledText>
                 </StyledView>
               </ImageBackground>
@@ -200,7 +202,7 @@ export default function Resources() {
               onPress={() => router.push("/home/service-details")}
             >
               <ImageBackground
-                source={{ uri: RESOURCE_ITEMS[4].image }}
+                source={{ uri: resourceItems[4].image }}
                 className="h-48 rounded-[40px] overflow-hidden"
                 resizeMode="cover"
               >
@@ -209,7 +211,7 @@ export default function Resources() {
                     <Ionicons name="walk" size={20} color="white" />
                   </StyledView>
                   <StyledText className="text-white text-2xl font-bold leading-tight">
-                    Elder{"\n"}Support
+                    {resourceItems[4].title}
                   </StyledText>
                 </StyledView>
               </ImageBackground>
@@ -224,7 +226,7 @@ export default function Resources() {
               onPress={() => router.push("/home/service-details")}
             >
               <ImageBackground
-                source={{ uri: RESOURCE_ITEMS[1].image }}
+                source={{ uri: resourceItems[1].image }}
                 className="h-48 rounded-[40px] overflow-hidden"
                 resizeMode="cover"
               >
@@ -233,7 +235,7 @@ export default function Resources() {
                     <Ionicons name="people" size={20} color="white" />
                   </StyledView>
                   <StyledText className="text-white text-[18px] font-extrabold leading-tight">
-                    Community{"\n"}Support
+                    {resourceItems[1].title}
                   </StyledText>
                 </StyledView>
               </ImageBackground>
@@ -245,7 +247,7 @@ export default function Resources() {
               onPress={() => router.push("/home/service-details")}
             >
               <ImageBackground
-                source={{ uri: RESOURCE_ITEMS[3].image }}
+                source={{ uri: resourceItems[3].image }}
                 className="h-60 rounded-[40px] overflow-hidden"
                 resizeMode="cover"
               >
@@ -254,7 +256,7 @@ export default function Resources() {
                     <Ionicons name="medical" size={20} color="white" />
                   </StyledView>
                   <StyledText className="text-white text-2xl font-bold">
-                    Health Services
+                    {resourceItems[3].title}
                   </StyledText>
                 </StyledView>
               </ImageBackground>
@@ -266,7 +268,7 @@ export default function Resources() {
               onPress={() => router.push("/home/service-details")}
             >
               <ImageBackground
-                source={{ uri: RESOURCE_ITEMS[5].image }}
+                source={{ uri: resourceItems[5].image }}
                 className="h-48 rounded-[40px] overflow-hidden"
                 resizeMode="cover"
               >
@@ -275,10 +277,10 @@ export default function Resources() {
                     <Ionicons name="medical-outline" size={20} color="white" />
                   </StyledView>
                   <StyledText className="text-white text-2xl font-bold leading-tight">
-                    Crisis{"\n"}Support
+                    {resourceItems[5].title}
                   </StyledText>
                   <StyledText className="text-white/80 text-[10px] font-medium">
-                    Immediate help
+                    {resourceItems[5].subtitle}
                   </StyledText>
                 </StyledView>
               </ImageBackground>
@@ -298,10 +300,10 @@ export default function Resources() {
                 </StyledView>
                 <StyledView className="flex-1">
                   <StyledText className="text-white text-2xl font-bold">
-                    Online Safety
+                    {t("onlineSafety")}
                   </StyledText>
                   <StyledText className="text-white/80 text-[12px] font-medium mt-1">
-                    Protection against cyber threats and harassment
+                    {t("onlineSafetySubtitle")}
                   </StyledText>
                 </StyledView>
               </StyledView>

@@ -14,6 +14,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -23,6 +24,7 @@ const StyledScrollView = styled(ScrollView);
 
 export default function AIBotChat() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [message, setMessage] = useState("");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -46,17 +48,17 @@ export default function AIBotChat() {
     {
       id: 1,
       type: "ai",
-      text: "I'm helping you structure your report. Who was involved in this incident?",
+      text: t("aiChatIntro"),
     },
     {
       id: 2,
       type: "user",
-      text: "It was a manager from the logistics department and two witnesses.",
+      text: t("userChatInvolvement"),
     },
     {
       id: 3,
       type: "ai",
-      text: "Thank you. Can you describe where exactly in the office this occurred?",
+      text: t("aiChatLocation"),
     },
   ];
 
@@ -65,7 +67,7 @@ export default function AIBotChat() {
       className="flex-1 bg-[#F0F4FA]"
       style={{ paddingBottom: keyboardHeight }}
     >
-      <CustomHeader title="AI Chatbot Assistant" />
+      <CustomHeader title={t("aiChatbotAssistant")} />
 
       <StyledView className="flex-1">
         <StyledScrollView
@@ -109,12 +111,12 @@ export default function AIBotChat() {
                   color="#3B82F6"
                 />
                 <StyledText className="ml-3 text-[#64748B] text-xs font-bold uppercase tracking-widest">
-                  Live Timeline Builder
+                  {t("liveTimelineBuilder")}
                 </StyledText>
               </StyledView>
               <StyledView className="bg-[#DBEAFE] px-3 py-1 rounded-full">
                 <StyledText className="text-[#3B82F6] text-[10px] font-bold uppercase">
-                  Updating
+                  {t("updating")}
                 </StyledText>
               </StyledView>
             </StyledView>
@@ -125,10 +127,10 @@ export default function AIBotChat() {
               <StyledView className="bg-white/80 p-4 rounded-[24px] flex-row items-center justify-between border border-white shadow-sm">
                 <StyledView>
                   <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase mb-1">
-                    Who
+                    {t("who")}
                   </StyledText>
                   <StyledText className="text-[#002B49] text-base font-bold">
-                    Manager & 2 Witnesses
+                    {t("managerWitnesses")}
                   </StyledText>
                 </StyledView>
                 <StyledView className="bg-[#EFF6FF] rounded-full p-1">
@@ -140,10 +142,10 @@ export default function AIBotChat() {
               <StyledView className="bg-white border border-[#3B82F6]/30 p-4 rounded-[24px] flex-row items-center justify-between shadow-sm mt-3">
                 <StyledView>
                   <StyledText className="text-[#3B82F6] text-[10px] font-bold uppercase mb-1">
-                    What
+                    {t("what")}
                   </StyledText>
                   <StyledText className="text-[#94A3B8] text-base font-medium">
-                    Waiting for details...
+                    {t("waitingForDetails")}
                   </StyledText>
                 </StyledView>
                 <StyledView className="w-2 h-2 bg-[#3B82F6] rounded-full mr-2" />
@@ -152,10 +154,10 @@ export default function AIBotChat() {
               {/* WHERE */}
               <StyledView className="bg-white/40 p-4 rounded-[24px] mt-3">
                 <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase mb-1">
-                  Where
+                  {t("where")}
                 </StyledText>
                 <StyledText className="text-[#94A3B8] text-base font-medium italic">
-                  Processing from transcript...
+                  {t("processingTranscript")}
                 </StyledText>
               </StyledView>
             </StyledView>
@@ -167,7 +169,7 @@ export default function AIBotChat() {
               className="self-end px-2"
             >
               <StyledText className="text-[#FF8A00] text-sm font-bold uppercase tracking-widest">
-                Report >>
+                {t("reportArrow")}
               </StyledText>
             </StyledTouchableOpacity>
           </StyledView>
@@ -177,7 +179,7 @@ export default function AIBotChat() {
         <StyledView className="p-4 bg-transparent">
           <StyledView className="bg-white rounded-full flex-row items-center px-4 py-3 shadow-md border border-[#E2E8F0]">
             <StyledTextInput
-              placeholder="Type your response..."
+              placeholder={t("typeResponse")}
               value={message}
               onChangeText={setMessage}
               className="flex-1 text-[#1F2937] text-base px-2"

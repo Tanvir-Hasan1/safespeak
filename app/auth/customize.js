@@ -8,6 +8,8 @@ import OptionCard from "../../components/auth/customize/OptionCard";
 import HelpCard from "../../components/auth/customize/HelpCard";
 import Tick from "../../assets/icons/tick.svg";
 
+import { useLanguage } from "../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
@@ -15,7 +17,10 @@ const StyledScrollView = styled(ScrollView);
 
 export default function Customize() {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const [privacyMode, setPrivacyMode] = useState(false);
+
+  const selectedLangLabel = language === "es" ? "Español" : "English (US)";
 
   return (
     <SafeAreaView className="flex-1 bg-[#F0F4FA]">
@@ -29,10 +34,10 @@ export default function Customize() {
               <Tick width={30} height={30} />
             </StyledView>
           </StyledView>
-          <StyledView className="bg-white px-3 py-3r rounded-full flex-row items-center shadow-sm">
+          <StyledView className="bg-white px-3 py-3 rounded-full flex-row items-center shadow-sm">
             <Ionicons name="flag-outline" size={16} color="black" />
             <StyledText className="text-black ml-2 font-medium">
-              English (US)
+              {selectedLangLabel}
             </StyledText>
             <Ionicons
               name="chevron-down"
@@ -47,16 +52,16 @@ export default function Customize() {
         </StyledText>
 
         <StyledText className="text-[#002B49] text-3xl font-bold mb-2">
-          Customize your experience
+          {t("customizeTitle")}
         </StyledText>
         <StyledText className="text-gray-500 mb-8">
-          Tailor SafeSpeak to your specific needs and safety preferences.
+          {t("customizeSubtitle")}
         </StyledText>
 
         <OptionCard
           icon="people"
-          title="Cultural Profile"
-          description="Community specific resources & support networks."
+          title={t("culturalProfile")}
+          description={t("culturalProfileDesc")}
           hasArrow
         />
 
@@ -65,8 +70,8 @@ export default function Customize() {
             <OptionCard
               variant="grid"
               icon="eye-off-outline"
-              title="Privacy Mode"
-              description="Quick-exit & covert icon"
+              title={t("privacyMode")}
+              description={t("privacyModeDesc")}
               hasSwitch
               value={privacyMode}
               onValueChange={setPrivacyMode}
@@ -78,8 +83,8 @@ export default function Customize() {
             <OptionCard
               variant="grid"
               icon="location"
-              title="Location Services"
-              description="Find nearby centers"
+              title={t("locationServices")}
+              description={t("locationServicesDesc")}
               hasArrow
             />
           </StyledView>
@@ -92,12 +97,12 @@ export default function Customize() {
           onPress={() => router.replace("/(tabs)/home")}
         >
           <StyledText className="text-white text-lg font-bold">
-            Get Started
+            {t("getStarted")}
           </StyledText>
         </StyledTouchableOpacity>
         <StyledView>
           <StyledText className="text-center text-gray-500 mb-10">
-            Not a substitute for legal advice, counselling, or crisis services.
+            {t("notSubstitute")}
           </StyledText>
         </StyledView>
       </StyledScrollView>

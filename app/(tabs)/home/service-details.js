@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, Switch } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useLanguage } from "../../../context/LanguageContext";
 import CustomHeader from "../../../components/CustomHeader";
 import ScaleIcon from "../../../assets/icons/scale.svg";
 import HandWithHeartIcon from "../../../assets/icons/hand-with-heart.svg";
@@ -12,11 +14,12 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function ServiceDetails() {
+  const { t } = useLanguage();
   const [includeSummary, setIncludeSummary] = useState(false);
 
   return (
     <StyledView className="flex-1 bg-[#F9FAFB]">
-      <CustomHeader title="Service Details" />
+      <CustomHeader title={t("serviceDetails")} />
 
       <StyledScrollView
         className="flex-1"
@@ -31,16 +34,16 @@ export default function ServiceDetails() {
           </StyledView>
 
           <StyledText className="text-[#111827] text-2xl font-black mb-1">
-            Community Legal Centre
+            {t("communityLegalCentre")}
           </StyledText>
           <StyledText className="text-[#3B82F6] text-base font-semibold mb-4">
-            Legal Support Services
+            {t("legalSupportServices")}
           </StyledText>
 
           <StyledView className="flex-row items-center bg-[#F0FDF4] px-4 py-1.5 rounded-full border border-[#DCFCE7]">
             <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
             <StyledText className="text-[#15803D] text-[13px] font-bold ml-1.5">
-              Available Now
+              {t("availableNow")}
             </StyledText>
           </StyledView>
         </StyledView>
@@ -48,7 +51,7 @@ export default function ServiceDetails() {
         {/* Contact Information */}
         <StyledView className="px-6 mb-10">
           <StyledText className="text-[#111827] text-lg font-bold mb-4 ml-1">
-            Contact Information
+            {t("contactInformation")}
           </StyledText>
 
           <StyledTouchableOpacity
@@ -60,7 +63,7 @@ export default function ServiceDetails() {
             </StyledView>
             <StyledView className="flex-1">
               <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                PHONE
+                {t("phone")}
               </StyledText>
               <StyledText className="text-[#002B49] text-[20px] font-black">
                 (02) 5550 0123
@@ -78,7 +81,7 @@ export default function ServiceDetails() {
             </StyledView>
             <StyledView className="flex-1">
               <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                EMAIL
+                {t("email")}
               </StyledText>
               <StyledText className="text-[#002B49] text-[18px] font-black">
                 contact@clc.org.au
@@ -96,7 +99,7 @@ export default function ServiceDetails() {
             </StyledView>
             <StyledView className="flex-1">
               <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                LANGUAGES
+                {t("languages")}
               </StyledText>
               <StyledText className="text-[#002B49] text-[18px] font-black">
                 English, Arabic, Mandarin
@@ -112,22 +115,21 @@ export default function ServiceDetails() {
               <HandWithHeartIcon width={28} height={28} />
             </StyledView>
             <StyledText className="text-[#002B49] text-[24px] font-black">
-              Warm Referral
+              {t("warmReferral")}
             </StyledText>
           </StyledView>
 
           <StyledText className="text-[#6B7280] text-[15px] font-medium leading-5 mb-8">
-            A warm referral ensures the provider has the context they need to
-            help you immediately without repeating your story.
+            {t("warmReferralDesc")}
           </StyledText>
 
           <StyledView className="bg-white rounded-[40px] p-4 mb-8 shadow-sm flex-row items-center justify-between">
             <StyledView className="flex-1 pr-4">
               <StyledText className="text-[#111827] text-sm font-bold mb-1">
-                Include Incident Summary
+                {t("includeIncidentSummary")}
               </StyledText>
               <StyledText className="text-[#9CA3AF] text-sm">
-                Shares your recent report securely.
+                {t("sharesRecentReport")}
               </StyledText>
             </StyledView>
             <Switch
@@ -144,7 +146,7 @@ export default function ServiceDetails() {
             activeOpacity={0.5}
           >
             <StyledText className="text-white text-[18px] font-black mr-2">
-              Send Referral
+              {t("sendReferral")}
             </StyledText>
             <Ionicons name="paper-plane-outline" size={24} color="white" />
           </StyledTouchableOpacity>
@@ -154,7 +156,7 @@ export default function ServiceDetails() {
         <StyledView className="px-8 mt-10 mb-10">
           <StyledTouchableOpacity className="flex-row items-center justify-between">
             <StyledText className="text-[#002B49] text-xl font-black">
-              Relevant Resources
+              {t("relevantResources")}
             </StyledText>
             <Ionicons name="chevron-down" size={24} color="#9CA3AF" />
           </StyledTouchableOpacity>

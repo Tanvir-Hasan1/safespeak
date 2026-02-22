@@ -10,6 +10,7 @@ import {
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -17,41 +18,35 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const LESSON_STEPS = [
+const getLessonSteps = (t) => [
   {
-    title: "Understanding Harassment",
-    mainText:
-      "Digital harassment is any behavior intended to threaten or harm. Recognizing these patterns is the first step toward regaining your peace.",
-    subText:
-      "Your safety is the highest priority. Whether blocking accounts or documenting incidents, small steps lead to significant protection.",
+    title: t("lessonHarassmentTitle"),
+    mainText: t("lessonHarassmentMain"),
+    subText: t("lessonHarassmentSub"),
   },
   {
-    title: "Securing Your Accounts",
-    mainText:
-      "Secure your accounts by using strong, unique passwords and enabling two-factor authentication (2FA). This dramatically reduces the risk of unauthorized access.",
-    subText:
-      "Be mindful of what you share publicly; setting your profiles to private can provide an extra layer of control over who sees your activity.",
+    title: t("lessonSecurityTitle"),
+    mainText: t("lessonSecurityMain"),
+    subText: t("lessonSecuritySub"),
   },
   {
-    title: "Documenting Evidence",
-    mainText:
-      "If you experience harassment, document everything. Take screenshots of messages or posts, and keep a log of dates and times.",
-    subText:
-      "Most platforms have reporting tools—don't hesitate to use them. Your documentation will be vital if you need to take further action.",
+    title: t("lessonEvidenceTitle"),
+    mainText: t("lessonEvidenceMain"),
+    subText: t("lessonEvidenceSub"),
   },
   {
-    title: "Prioritizing Wellbeing",
-    mainText:
-      "Your mental wellbeing is just as important as your digital safety. If online interactions are causing distress, it's okay to take a break or disconnect.",
-    subText:
-      "Reach out to trusted friends or professional support services. Remember, you don't have to face digital threats alone.",
+    title: t("lessonWellbeingTitle"),
+    mainText: t("lessonWellbeingMain"),
+    subText: t("lessonWellbeingSub"),
   },
 ];
 
 export default function LessonDetail() {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const totalSteps = LESSON_STEPS.length;
+  const lessonSteps = getLessonSteps(t);
+  const totalSteps = lessonSteps.length;
 
   const animateTransition = (nextStep) => {
     Animated.timing(fadeAnim, {
@@ -82,7 +77,7 @@ export default function LessonDetail() {
 
   return (
     <StyledView className="flex-1 bg-white">
-      <CustomHeader title="SafeSpeak Education" />
+      <CustomHeader title={t("safeSpeakEducation")} />
 
       <StyledScrollView
         className="flex-1"
@@ -105,10 +100,10 @@ export default function LessonDetail() {
                   <Ionicons name="alert-circle" size={40} color="#EF4444" />
                   <StyledView className="ml-3">
                     <StyledText className="text-[#002B49] text-2xl font-black">
-                      INTERNET
+                      {t("internet")}
                     </StyledText>
                     <StyledText className="text-[#3B82F6] text-3xl font-black mt-[-5]">
-                      HOAX
+                      {t("hoax")}
                     </StyledText>
                   </StyledView>
                 </StyledView>
@@ -120,10 +115,10 @@ export default function LessonDetail() {
         {/* Content Section */}
         <StyledView className="px-8 mt-10 items-center">
           <StyledText className="text-[#3B82F6] text-[10px] font-bold uppercase tracking-[3px] mb-2">
-            Security Essentials
+            {t("securityEssentials")}
           </StyledText>
           <StyledText className="text-[#002B49] text-[36px] font-black leading-[44px] text-center">
-            STAYING SAFE{"\n"}ONLINE
+            {t("stayingSafeOnline")}
           </StyledText>
 
           <AnimatedView
@@ -144,11 +139,11 @@ export default function LessonDetail() {
 
             <StyledView className="flex-1 px-4">
               <StyledText className="text-[#4B5563] text-lg font-medium text-center leading-7">
-                {LESSON_STEPS[currentStep].mainText}
+                {lessonSteps[currentStep].mainText}
               </StyledText>
 
               <StyledText className="text-[#4B5563] text-base font-medium text-center leading-6 mt-6">
-                {LESSON_STEPS[currentStep].subText}
+                {lessonSteps[currentStep].subText}
               </StyledText>
             </StyledView>
 
@@ -176,8 +171,7 @@ export default function LessonDetail() {
           </StyledView>
 
           <StyledText className="text-[#9CA3AF] text-[10px] font-medium italic text-center mt-12 px-4 leading-4">
-            This is educational information only. In an emergency, always follow
-            the instructions of the 000 operator.
+            {t("lessonDisclaimer")}
           </StyledText>
 
           {/* Action Button */}
@@ -189,8 +183,8 @@ export default function LessonDetail() {
           >
             <StyledText className="text-white text-lg font-bold text-center">
               {currentStep === totalSteps - 1
-                ? "Lesson Completed"
-                : "See next Card"}
+                ? t("lessonCompleted")
+                : t("seeNextCard")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>

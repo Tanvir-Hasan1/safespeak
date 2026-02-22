@@ -28,29 +28,37 @@ export default function SubmitReport() {
 
   // State for editable fields
   const [acccData, setAcccData] = useState([
-    { label: "Sender Name", value: "Unknown/PayPal Spoof", verified: true },
     {
-      label: "Scam Category",
-      value: "Phishing / Identity Theft",
+      label: t("senderNameLabel"),
+      value: "Unknown/PayPal Spoof",
+      verified: true,
+    },
+    {
+      label: t("scamCategoryLabel"),
+      value: t("phishingCategory"),
       icon: "swap-vertical",
     },
-    { label: "Platform", value: "Email / Gmail" },
+    { label: t("platformLabel"), value: "Email / Gmail" },
   ]);
 
   const [reportCyberData, setReportCyberData] = useState([
-    { label: "Report Type", value: "Cybercrime Investigation Request" },
-    { label: "Incident Date", value: "2026-02-20" },
-    { label: "Urgency Level", value: "High / Critical", icon: "alert-circle" },
+    { label: t("reportTypeLabel"), value: t("cybercrimeRequest") },
+    { label: t("incidentDateLabel"), value: "2026-02-20" },
+    {
+      label: t("urgencyLevelLabel"),
+      value: t("highUrgency"),
+      icon: "alert-circle",
+    },
   ]);
 
   const [bankData, setBankData] = useState([
-    { label: "Bank Name", value: "Commonwealth Bank (CBA)" },
+    { label: t("bankNameLabel"), value: "Commonwealth Bank (CBA)" },
     {
-      label: "Account Status",
-      value: "Compromised / Suspended",
+      label: t("accountStatusLabel"),
+      value: t("compromisedStatus"),
       icon: "lock-closed",
     },
-    { label: "Reference ID", value: "TXN-882190-SS" },
+    { label: t("referenceIdLabel"), value: "TXN-882190-SS" },
   ]);
 
   const toggleAgency = (name) => {
@@ -102,7 +110,7 @@ export default function SubmitReport() {
           <StyledView className="h-[1px] bg-[#F1F5F9] mb-5" />
 
           <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-4">
-            PREFILLED DETAILS
+            {t("prefilledDetails")}
           </StyledText>
 
           {fields.map((field, index) => (
@@ -199,10 +207,7 @@ export default function SubmitReport() {
         <StyledTouchableOpacity
           activeOpacity={0.8}
           onPress={() =>
-            Alert.alert(
-              "Reports Submitted",
-              "Your prefilled reports have been securely transmitted to the selected agencies.",
-            )
+            Alert.alert(t("reportsSubmittedTitle"), t("reportsSubmittedDesc"))
           }
           className={`rounded-full py-4 items-center justify-center flex-row mt-8 shadow-lg ${
             isPrivacyAccepted

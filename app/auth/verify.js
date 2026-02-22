@@ -12,6 +12,8 @@ import { styled } from "nativewind";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useLanguage } from "../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
@@ -19,6 +21,7 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function Verify() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
 
@@ -53,10 +56,10 @@ export default function Verify() {
           </StyledTouchableOpacity>
 
           <StyledText className="text-2xl font-bold mb-2">
-            Verify to protect your access
+            {t("verifyTitle")}
           </StyledText>
           <StyledText className="text-gray-600 mb-8">
-            This helps keep your information safe.
+            {t("verifySubtitle")}
           </StyledText>
 
           <StyledView className="flex-row justify-between w-full mb-6">
@@ -80,7 +83,8 @@ export default function Verify() {
 
           <StyledTouchableOpacity>
             <StyledText className="text-[#005b96]">
-              Didn't receive the code? <Text className="underline">Resend</Text>
+              {t("didntReceive")}{" "}
+              <Text className="underline">{t("resend")}</Text>
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>
@@ -90,7 +94,7 @@ export default function Verify() {
           onPress={() => router.push("/auth/customize")}
         >
           <StyledText className="text-white text-lg font-bold">
-            Verify
+            {t("verifyBtn")}
           </StyledText>
         </StyledTouchableOpacity>
       </KeyboardAvoidingView>

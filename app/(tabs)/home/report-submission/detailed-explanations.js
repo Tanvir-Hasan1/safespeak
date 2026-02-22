@@ -10,6 +10,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -18,11 +19,12 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function DetailedExplanations() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [legalRightsExpanded, setLegalRightsExpanded] = useState(true);
 
   return (
     <StyledView className="flex-1 bg-white">
-      <CustomHeader title="Detailed Explanations" showCancel={true} />
+      <CustomHeader title={t("detailedExplanations")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -31,8 +33,7 @@ export default function DetailedExplanations() {
       >
         <StyledView className="mt-6 mb-8">
           <StyledText className="text-[#64748B] text-sm leading-6">
-            Please review the following information carefully. These guidelines are
-            tailored to your current situation and location.
+            {t("detailedHero")}
           </StyledText>
         </StyledView>
 
@@ -48,7 +49,7 @@ export default function DetailedExplanations() {
                 <Ionicons name="hammer-outline" size={20} color="#FB923C" />
               </StyledView>
               <StyledText className="text-[#FB923C] text-lg font-bold">
-                Legal Rights
+                {t("legalRights")}
               </StyledText>
             </StyledView>
             <Ionicons
@@ -62,23 +63,19 @@ export default function DetailedExplanations() {
             <StyledView>
               <StyledView className="mb-4">
                 <StyledText className="text-[#1F2937] text-base font-bold mb-2">
-                  Right to Silence
+                  {t("rightToSilence")}
                 </StyledText>
                 <StyledText className="text-[#64748B] text-xs leading-5">
-                  You have the right to remain silent. Anything you say can be used
-                  against you in legal proceedings. It is crucial to understand that
-                  silence cannot be used as an admission of guilt.
+                  {t("rightToSilenceDesc")}
                 </StyledText>
               </StyledView>
 
               <StyledView className="mb-6">
                 <StyledText className="text-[#1F2937] text-base font-bold mb-2">
-                  Legal Counsel
+                  {t("legalCounsel")}
                 </StyledText>
                 <StyledText className="text-[#64748B] text-xs leading-5">
-                  You have the right to legal counsel immediately. If you cannot afford
-                  a private attorney, a public defender must be appointed to you prior
-                  to any interrogation.
+                  {t("legalCounselDesc")}
                 </StyledText>
               </StyledView>
 
@@ -87,11 +84,10 @@ export default function DetailedExplanations() {
                 <StyledView className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#FB923C]" />
                 <StyledView className="p-6">
                   <StyledText className="text-[#FB923C] text-xs font-bold uppercase tracking-widest mb-2">
-                    Interpreter Access
+                    {t("interpreterAccess")}
                   </StyledText>
                   <StyledText className="text-[#94A3B8] text-xs leading-5">
-                    You are entitled to a state-provided interpreter for all official
-                    questioning if you are not fluent in the primary language.
+                    {t("interpreterAccessDesc")}
                   </StyledText>
                 </StyledView>
               </StyledView>
@@ -110,10 +106,10 @@ export default function DetailedExplanations() {
             </StyledView>
             <StyledView>
               <StyledText className="text-white text-base font-bold mb-1">
-                Cultural Rights
+                {t("culturalRights")}
               </StyledText>
               <StyledText className="text-white/60 text-[10px] leading-4">
-                Universal protections for identity & heritage
+                {t("culturalRightsDesc")}
               </StyledText>
             </StyledView>
           </StyledTouchableOpacity>
@@ -127,10 +123,10 @@ export default function DetailedExplanations() {
             </StyledView>
             <StyledView>
               <StyledText className="text-white text-base font-bold mb-1">
-                What to Expect
+                {t("whatToExpect")}
               </StyledText>
               <StyledText className="text-white/60 text-[10px] leading-4">
-                Step-by-step walkthrough of the legal process
+                {t("whatToExpectDesc")}
               </StyledText>
             </StyledView>
           </StyledTouchableOpacity>
@@ -141,7 +137,7 @@ export default function DetailedExplanations() {
           <StyledTouchableOpacity className="flex-1 flex-row items-center justify-center">
             <Ionicons name="bookmark-outline" size={22} color="#FB923C" />
             <StyledText className="text-[#FB923C] text-xs font-bold ml-3 text-center">
-              Save to{"\n"}History
+              {t("saveToHistoryFull")}
             </StyledText>
           </StyledTouchableOpacity>
 
@@ -150,7 +146,7 @@ export default function DetailedExplanations() {
           <StyledTouchableOpacity className="flex-1 flex-row items-center justify-center">
             <Ionicons name="share-social-outline" size={22} color="#FB923C" />
             <StyledText className="text-[#FB923C] text-xs font-bold ml-3 text-center">
-              Share{"\n"}Report
+              {t("shareReportFull")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>
@@ -159,7 +155,7 @@ export default function DetailedExplanations() {
         <StyledView className="flex-row items-center justify-center opacity-40">
           <Ionicons name="lock-closed-outline" size={16} color="#64748B" />
           <StyledText className="text-[#64748B] text-xs ml-2">
-            Info saved to local storage.
+            {t("localStoreInfo")}
           </StyledText>
         </StyledView>
       </StyledScrollView>

@@ -16,6 +16,8 @@ import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
 const Sphere = require("../../../../assets/images/home/Sphere.png");
 
+import { useLanguage } from "../../../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
@@ -27,6 +29,7 @@ const SPHERE_SIZE = Math.min(width * 0.5, 320);
 
 export default function IncidentBuilder() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [response, setResponse] = useState("");
   const [metadataEnabled, setMetadataEnabled] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
@@ -34,7 +37,7 @@ export default function IncidentBuilder() {
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
-        title={isRecording ? "" : "Timeline Builder"}
+        title={isRecording ? "" : t("timelineBuilder")}
         onRightPress={() => router.push("/home/incident-builder/reports")}
         rightIcon={
           isRecording ? "document-text-outline" : "document-text-outline"
@@ -48,7 +51,9 @@ export default function IncidentBuilder() {
       >
         {/* Hero Section - Sphere */}
         <StyledView
-          className={`${isRecording ? "mt-4" : "mt-8"} items-center justify-center`}
+          className={`${
+            isRecording ? "mt-4" : "mt-8"
+          } items-center justify-center`}
         >
           <Image
             source={Sphere}
@@ -62,16 +67,16 @@ export default function IncidentBuilder() {
             {/* Listening Section */}
             <StyledView className="mt-10 items-center">
               <StyledText className="text-[#002B49] text-2xl font-light text-center leading-9">
-                I'm listening,{" "}
-                <StyledText className="font-bold">Raihan</StyledText>... take
-                your time.
+                {t("imListening")},{" "}
+                <StyledText className="font-bold">Raihan</StyledText>...{" "}
+                {t("takeYourTime")}
               </StyledText>
             </StyledView>
 
             {/* Transcript Box */}
             <StyledView className="w-full mt-10 bg-white/60 border border-white rounded-[32px] p-6 shadow-sm">
               <StyledText className="text-[#002B49] text-xs font-bold uppercase tracking-widest mb-4">
-                Real-time Transcript
+                {t("realtimeTranscript")}
               </StyledText>
               <StyledText className="text-[#64748B] text-base italic leading-6">
                 "It happened yesterday evening near the..."
@@ -88,14 +93,14 @@ export default function IncidentBuilder() {
                 <Ionicons name="stop" size={14} color="#EF4444" />
               </StyledView>
               <StyledText className="text-white text-lg font-bold">
-                Stop Recording
+                {t("stopRecording")}
               </StyledText>
             </StyledTouchableOpacity>
 
             {/* Bottom Input Area (Matching screenshot) */}
             <StyledView className="w-full mt-10 bg-white rounded-full flex-row items-center px-4 py-3 shadow-md border border-[#E2E8F0]">
               <StyledTextInput
-                placeholder="Type your response..."
+                placeholder={t("typeResponse")}
                 value={response}
                 onChangeText={setResponse}
                 className="flex-1 text-[#1F2937] text-base px-2"
@@ -119,8 +124,7 @@ export default function IncidentBuilder() {
             {/* Greeting Section */}
             <StyledView className="mt-10 items-center">
               <StyledText className="text-[#002B49] text-2xl font-light text-center leading-9">
-                Hi <StyledText className="font-bold">Raihan</StyledText>, can
-                you remind{"\n"}me, how can I help you{"\n"}today?
+                {t("incidentGreeting")}
               </StyledText>
             </StyledView>
 
@@ -131,7 +135,7 @@ export default function IncidentBuilder() {
               className="w-full mt-12 bg-white rounded-full flex-row items-center px-4 py-3 shadow-md border border-[#E2E8F0]"
             >
               <StyledTextInput
-                placeholder="Type your response..."
+                placeholder={t("typeResponse")}
                 value={response}
                 editable={false}
                 className="flex-1 text-[#1F2937] text-base px-2"
@@ -157,10 +161,10 @@ export default function IncidentBuilder() {
               </StyledView>
               <StyledView className="flex-1 ml-4">
                 <StyledText className="text-[#002B49] text-base font-bold">
-                  Metadata Capture
+                  {t("metadataCapture")}
                 </StyledText>
                 <StyledText className="text-[#94A3B8] text-xs font-medium">
-                  GPS & Device Intelligence
+                  {t("gpsIntelligence")}
                 </StyledText>
               </StyledView>
               <Switch
@@ -179,7 +183,7 @@ export default function IncidentBuilder() {
               className="w-full mt-12 bg-[#FB923C] rounded-[32px] py-6 items-center shadow-lg"
             >
               <StyledText className="text-white text-lg font-bold">
-                Tap to start recording
+                {t("tapRecord")}
               </StyledText>
             </StyledTouchableOpacity>
           </StyledView>

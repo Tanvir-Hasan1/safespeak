@@ -11,55 +11,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
 
+import { useLanguage } from "../../../../context/LanguageContext";
+
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 
-const CATEGORIES = ["All Lessons", "Harassment", "Rights"];
-
-const HUB_ITEMS = [
-  {
-    id: 1,
-    title: "CYBER",
-    subtitle: "BULLYING",
-    color: "#005B96",
-    icon: "shield-checkmark",
-    size: "small",
-  },
-  {
-    id: 2,
-    title: "DIS-",
-    subtitle: "CRIMINAT\nION",
-    content:
-      "Discrimination occurs when employees are treated unfairly for personal traits.",
-    color: "#F97316",
-    icon: "people",
-    size: "large",
-  },
-  {
-    id: 3,
-    title: "LEGAL",
-    subtitle: "Migrant &\nStudent\nRights",
-    color: "#FBBF24",
-    icon: "hammer",
-    size: "small",
-  },
-  {
-    id: 4,
-    title: "PROTECTION",
-    subtitle: "ONLINE SAFETY",
-    content: "Protect your digital footprint & data.",
-    color: "#10B981",
-    icon: "shield-half",
-    size: "wide",
-  },
-];
-
 export default function MicroCards() {
   const router = useRouter();
-  const [activeCategory, setActiveCategory] = useState("All Lessons");
+  const { t } = useLanguage();
+  const [activeCategory, setActiveCategory] = useState(t("catAllLessons"));
+
+  const CATEGORIES = [t("catAllLessons"), t("catHarassment"), t("catRights")];
 
   // Helper to push to education with params
   const navigateToEducation = (name) => {
@@ -71,7 +36,7 @@ export default function MicroCards() {
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="MicroEducation" />
+      <CustomHeader title={t("microEducation")} />
       <StyledScrollView
         className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
@@ -79,11 +44,10 @@ export default function MicroCards() {
       >
         <StyledView className="mt-6 mb-8">
           <StyledText className="text-[#002B49] text-5xl font-extrabold">
-            Learn. Protect. Thrive.
+            {t("microLearnHero")}
           </StyledText>
           <StyledText className="text-[#1F2937]/70 text-base font-medium mt-2 leading-6">
-            Quick lessons on rights, online safety, mental health, and everyday
-            hazards.
+            {t("microLearnSubtitle")}
           </StyledText>
         </StyledView>
 
@@ -91,7 +55,7 @@ export default function MicroCards() {
         <StyledView className="flex-row items-center bg-white rounded-3xl px-4 py-3 mb-8 border border-white shadow-sm">
           <Ionicons name="search" size={20} color="#94A3B8" />
           <StyledTextInput
-            placeholder="Search topics, laws, tips..."
+            placeholder={t("searchPlaceholder")}
             className="flex-1 ml-3 text-base text-[#1F2937]"
             placeholderTextColor="#94A3B8"
           />
@@ -130,14 +94,14 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#005B96] rounded-[30px] p-5 h-40 justify-between"
               activeOpacity={0.7}
-              onPress={() => navigateToEducation("Cyber Bullying")}
+              onPress={() => navigateToEducation(t("cyber"))}
             >
               <StyledView>
                 <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
-                  CYBER
+                  {t("cyber")}
                 </StyledText>
                 <StyledText className="text-white text-xl font-black mt-1">
-                  BULLYING
+                  {t("bullying")}
                 </StyledText>
               </StyledView>
             </StyledTouchableOpacity>
@@ -147,17 +111,20 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#F97316] rounded-[30px] p-5 h-[320px] justify-between"
               activeOpacity={0.7}
-              onPress={() => navigateToEducation("Discrimination")}
+              onPress={() => navigateToEducation(t("discrimination"))}
             >
               <StyledView>
                 <StyledText className="text-white text-2xl font-black leading-tight">
-                  DIS-{"\n"}CRIMINAT{"\n"}ION
+                  {t("dis")}
+                  {"\n"}
+                  {t("crimina")}
+                  {"\n"}
+                  {t("tion")}
                 </StyledText>
               </StyledView>
               <StyledView className="bg-white/20 p-4 rounded-[20px] mt-auto">
                 <StyledText className="text-white text-[11px] font-medium leading-4">
-                  Discrimination occurs when employees are treated unfairly for
-                  personal traits.
+                  {t("microDiscrimDesc")}
                 </StyledText>
               </StyledView>
             </StyledTouchableOpacity>
@@ -168,14 +135,17 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#FBBF24] rounded-[30px] p-5 h-44 justify-between"
               activeOpacity={0.7}
-              onPress={() => navigateToEducation("Legal Rights")}
+              onPress={() => navigateToEducation(t("legalRights"))}
             >
               <StyledView>
                 <StyledText className="text-black/60 text-[10px] font-bold uppercase tracking-wider">
-                  LEGAL
+                  {t("legal")}
                 </StyledText>
                 <StyledText className="text-black text-[18px] font-black mt-1 leading-6">
-                  Migrant &{"\n"}Student{"\n"}Rights
+                  {t("migrant")} &{"\n"}
+                  {t("student")}
+                  {"\n"}
+                  {t("rights")}
                 </StyledText>
               </StyledView>
               <StyledView className="items-end">
@@ -189,18 +159,18 @@ export default function MicroCards() {
             <StyledTouchableOpacity
               className="bg-[#10B981] rounded-[40px] p-6 h-40 justify-between overflow-hidden"
               activeOpacity={0.7}
-              onPress={() => navigateToEducation("Online Safety")}
+              onPress={() => navigateToEducation(t("onlineSafety"))}
             >
               <StyledView className="flex-row justify-between items-start">
                 <StyledView className="flex-1 pr-4">
                   <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
-                    PROTECTION
+                    {t("protection")}
                   </StyledText>
                   <StyledText className="text-white text-3xl font-black mt-1">
-                    ONLINE SAFETY
+                    {t("stayingSafeOnline")}
                   </StyledText>
                   <StyledText className="text-white/80 text-[12px] font-medium mt-2">
-                    Protect your digital footprint & data.
+                    {t("microOnlineSafetyDesc")}
                   </StyledText>
                 </StyledView>
                 <StyledView className="bg-white/20 p-4 rounded-[20px]">
@@ -221,10 +191,12 @@ export default function MicroCards() {
               <StyledTouchableOpacity
                 className="bg-[#8B5CF6] rounded-[40px] p-5 h-44 justify-between overflow-hidden"
                 activeOpacity={0.7}
-                onPress={() => navigateToEducation("Mental Health")}
+                onPress={() => navigateToEducation(t("mentalHealth"))}
               >
                 <StyledText className="text-white text-2xl font-black leading-tight uppercase">
-                  Mental{"\n"}Health
+                  {t("mental")}
+                  {"\n"}
+                  {t("health")}
                 </StyledText>
 
                 <StyledView className="flex-row items-center justify-between">
@@ -253,20 +225,22 @@ export default function MicroCards() {
               <StyledTouchableOpacity
                 className="bg-[#0D9488] rounded-[40px] p-5 h-44 justify-between"
                 activeOpacity={0.7}
-                onPress={() => navigateToEducation("Legal Aid Basics")}
+                onPress={() => navigateToEducation(t("legalAidBasics"))}
               >
                 <StyledView>
                   <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-wider">
-                    FUNDAMENTALS
+                    {t("fundamentals")}
                   </StyledText>
                   <StyledText className="text-white text-[19px] font-black mt-1 leading-tight uppercase">
-                    Legal Aid{"\n"}Basics
+                    {t("legalAid")}
+                    {"\n"}
+                    {t("basics")}
                   </StyledText>
                 </StyledView>
 
                 <StyledTouchableOpacity className="bg-black/20 self-start px-4 py-2 rounded-2xl">
                   <StyledText className="text-white text-[10px] font-bold uppercase tracking-widest">
-                    Start Now
+                    {t("microStartNow")}
                   </StyledText>
                 </StyledTouchableOpacity>
               </StyledTouchableOpacity>

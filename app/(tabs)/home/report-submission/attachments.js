@@ -11,6 +11,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -21,6 +22,7 @@ const StyledImage = styled(Image);
 
 export default function Attachments() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const files = [
     { id: 1, type: "image", uri: "https://picsum.photos/200/200?random=1" },
@@ -31,7 +33,7 @@ export default function Attachments() {
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Attachments" showCancel={true} />
+      <CustomHeader title={t("attachments")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -40,12 +42,12 @@ export default function Attachments() {
       >
         <StyledView className="mt-6 mb-8">
           <StyledText className="text-[#64748B] text-sm font-bold uppercase tracking-widest mb-3">
-            Incident Description
+            {t("incidentDescription")}
           </StyledText>
           <StyledView className="bg-white rounded-[32px] p-5 shadow-sm border border-[#E2E8F0] relative">
             <StyledTextInput
               multiline
-              placeholder="Describe the incident details..."
+              placeholder={t("describeIncidentDetails")}
               placeholderTextColor="#94A3B8"
               className="text-[#1F2937] text-sm leading-6 min-h-[120px]"
               textAlignVertical="top"
@@ -53,7 +55,7 @@ export default function Attachments() {
             <StyledTouchableOpacity className="absolute bottom-4 right-4 bg-[#F1F5F9] px-4 py-2 rounded-full flex-row items-center">
               <Ionicons name="mic-outline" size={18} color="#94A3B8" />
               <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase ml-2">
-                Dictate
+                {t("dictate")}
               </StyledText>
             </StyledTouchableOpacity>
           </StyledView>
@@ -61,11 +63,11 @@ export default function Attachments() {
 
         <StyledView className="flex-row items-center justify-between mb-6">
           <StyledText className="text-[#1F2937] text-xl font-bold">
-            Attached Files
+            {t("attachedFiles")}
           </StyledText>
           <StyledView className="bg-[#FFEDD5] px-3 py-1 rounded-full">
             <StyledText className="text-[#FB923C] text-xs font-bold">
-              3 Ready
+              3 {t("ready")}
             </StyledText>
           </StyledView>
         </StyledView>
@@ -89,19 +91,29 @@ export default function Attachments() {
                       </StyledView>
                     )}
                     {file.type === "image" ? (
-                       <StyledView className="absolute bottom-3 left-3 bg-black/20 p-1.5 rounded-lg">
-                          <Ionicons name="image-outline" size={14} color="white" />
-                       </StyledView>
+                      <StyledView className="absolute bottom-3 left-3 bg-black/20 p-1.5 rounded-lg">
+                        <Ionicons
+                          name="image-outline"
+                          size={14}
+                          color="white"
+                        />
+                      </StyledView>
                     ) : (
-                        <StyledView className="absolute bottom-3 right-3 bg-black/40 px-2 py-1 rounded-lg">
-                          <StyledText className="text-white text-[10px] font-bold">0:45</StyledText>
-                        </StyledView>
+                      <StyledView className="absolute bottom-3 right-3 bg-black/40 px-2 py-1 rounded-lg">
+                        <StyledText className="text-white text-[10px] font-bold">
+                          0:45
+                        </StyledText>
+                      </StyledView>
                     )}
                   </>
                 ) : file.type === "doc" ? (
                   <StyledView className="flex-1 p-6 justify-center items-center">
                     <StyledView className="w-12 h-12 bg-[#FFF7ED] rounded-2xl items-center justify-center mb-4">
-                      <Ionicons name="document-text" size={24} color="#FB923C" />
+                      <Ionicons
+                        name="document-text"
+                        size={24}
+                        color="#FB923C"
+                      />
                     </StyledView>
                     <StyledText className="text-[#1F2937] text-sm font-bold text-center mb-1">
                       {file.name}
@@ -113,9 +125,13 @@ export default function Attachments() {
                 ) : (
                   <StyledView className="flex-1 p-6 justify-center">
                     <StyledView className="flex-row items-center mb-4">
-                       <StyledView className="w-10 h-10 bg-[#F1F5F9] rounded-xl items-center justify-center">
-                          <Ionicons name="cloud-upload-outline" size={20} color="#FB923C" />
-                       </StyledView>
+                      <StyledView className="w-10 h-10 bg-[#F1F5F9] rounded-xl items-center justify-center">
+                        <Ionicons
+                          name="cloud-upload-outline"
+                          size={20}
+                          color="#FB923C"
+                        />
+                      </StyledView>
                     </StyledView>
                     <StyledText className="text-[#1F2937] text-[11px] font-bold mb-3">
                       {file.name}
@@ -131,7 +147,7 @@ export default function Attachments() {
                     </StyledText>
                   </StyledView>
                 )}
-                
+
                 {/* Delete button */}
                 <StyledTouchableOpacity className="absolute top-3 right-3 bg-black/10 w-7 h-7 rounded-full items-center justify-center border border-white/40">
                   <Ionicons name="close" size={16} color="white" />
@@ -145,7 +161,7 @@ export default function Attachments() {
         <StyledView className="mt-10">
           <StyledView className="bg-white rounded-full flex-row items-center px-5 py-3 shadow-lg border border-[#E2E8F0] mb-4">
             <StyledTextInput
-              placeholder="Type your response..."
+              placeholder={t("typeResponse")}
               className="flex-1 text-[#1F2937] text-sm"
               placeholderTextColor="#94A3B8"
             />
@@ -157,13 +173,15 @@ export default function Attachments() {
             </StyledTouchableOpacity>
           </StyledView>
 
-          <StyledTouchableOpacity 
+          <StyledTouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.push("/home/report-submission/evidence-review")}
+            onPress={() =>
+              router.push("/home/report-submission/evidence-review")
+            }
             className="bg-[#FB923C] rounded-[32px] py-4 items-center justify-center shadow-lg"
           >
             <StyledText className="text-white text-base font-bold">
-              Continue
+              {t("continue")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>

@@ -10,6 +10,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -18,25 +19,38 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function EvidenceReview() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState("WHO");
 
   const timelineItems = [
     {
       id: "WHO",
-      label: "WHO",
+      label: t("who").toUpperCase(),
       content: "Officer John Doe",
-      subLabel: "PERSON OF INTEREST",
+      subLabel: t("personOfInterest"),
       aiSuggested: true,
-      confidence: "98% Confidence",
+      confidence: `98% ${t("confidence")}`,
     },
-    { id: "WHAT", label: "WHAT", content: "Verbal harassment incident..." },
-    { id: "WHERE", label: "WHERE", content: "1234 Elm Street, Breakroom 4B" },
-    { id: "WHEN", label: "WHEN", content: "Oct 14, 2023 - 2:30 PM EST" },
+    {
+      id: "WHAT",
+      label: t("what").toUpperCase(),
+      content: "Verbal harassment incident...",
+    },
+    {
+      id: "WHERE",
+      label: t("where").toUpperCase(),
+      content: "1234 Elm Street, Breakroom 4B",
+    },
+    {
+      id: "WHEN",
+      label: t("when").toUpperCase(),
+      content: "Oct 14, 2023 - 2:30 PM EST",
+    },
   ];
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Timeline Builder" showCancel={true} />
+      <CustomHeader title={t("timelineBuilder")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -45,11 +59,10 @@ export default function EvidenceReview() {
       >
         <StyledView className="mt-4 mb-8">
           <StyledText className="text-[#005B96] text-3xl font-bold mb-2">
-            Evidence Review
+            {t("evidenceReview")}
           </StyledText>
           <StyledText className="text-[#64748B] text-base leading-6">
-            Our AI has structured your narrative. Please verify the timeline
-            events below before final submission.
+            {t("evidenceReviewDesc")}
           </StyledText>
         </StyledView>
 
@@ -77,7 +90,9 @@ export default function EvidenceReview() {
               >
                 <StyledTouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => setExpanded(item.id === expanded ? null : item.id)}
+                  onPress={() =>
+                    setExpanded(item.id === expanded ? null : item.id)
+                  }
                   className="flex-row items-center justify-between"
                 >
                   <StyledView
@@ -87,7 +102,9 @@ export default function EvidenceReview() {
                   >
                     <StyledText
                       className={`text-[10px] font-bold tracking-widest ${
-                        expanded === item.id ? "text-[#005B96]" : "text-[#94A3B8]"
+                        expanded === item.id
+                          ? "text-[#005B96]"
+                          : "text-[#94A3B8]"
                       }`}
                     >
                       {item.label}
@@ -114,14 +131,14 @@ export default function EvidenceReview() {
                       <StyledView className="flex-row items-center mb-6">
                         <Ionicons name="sparkles" size={14} color="#10B981" />
                         <StyledText className="text-[#10B981] text-xs font-medium ml-2">
-                          AI Suggested • {item.confidence}
+                          {t("aiSuggested")} • {item.confidence}
                         </StyledText>
                       </StyledView>
                     )}
                     <StyledTouchableOpacity className="flex-row items-center justify-end">
                       <Ionicons name="pencil" size={16} color="#FB923C" />
                       <StyledText className="text-[#FB923C] text-sm font-bold ml-2">
-                        Edit Details
+                        {t("editDetails")}
                       </StyledText>
                     </StyledTouchableOpacity>
                   </StyledView>
@@ -145,7 +162,7 @@ export default function EvidenceReview() {
               <Ionicons name="add" size={20} color="#FB923C" />
             </StyledView>
             <StyledText className="text-[#1F2937] text-base font-bold">
-              Add Manual Entry
+              {t("addManualEntry")}
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>
@@ -158,7 +175,7 @@ export default function EvidenceReview() {
             className="bg-[#FB923C] rounded-[24px] py-6 flex-row items-center justify-center shadow-lg shadow-orange-300"
           >
             <StyledText className="text-white text-lg font-bold">
-              Submit Report
+              {t("submitReport")}
             </StyledText>
             <Ionicons name="send" size={20} color="white" className="ml-3" />
           </StyledTouchableOpacity>

@@ -17,21 +17,19 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const RED_FLAGS = [
+const RED_FLAGS = (t) => [
   {
     id: 1,
-    title: "Urgent Language",
-    description:
-      "The message uses high-pressure tactics to force immediate action.",
+    title: t("urgentLanguage"),
+    description: t("urgentLanguageDesc"),
     icon: "warning-outline",
     color: "#FEF3C7", // Amber-50
     iconColor: "#F59E0B", // Amber-500
   },
   {
     id: 2,
-    title: "Suspicious Sender",
-    description:
-      "The sender's domain (noreply-security.net) does not match the official source.",
+    title: t("suspiciousSender"),
+    description: t("suspiciousSenderDesc"),
     icon: "at-outline",
     color: "#FEF7E6", // Custom lighter amber
     iconColor: "#F59E0B",
@@ -41,6 +39,8 @@ const RED_FLAGS = [
 export default function ScamRiskResults() {
   const router = useRouter();
   const { t } = useLanguage();
+
+  const flags = RED_FLAGS(t);
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
@@ -54,7 +54,7 @@ export default function ScamRiskResults() {
         {/* Risk Score Card */}
         <StyledView className="bg-white rounded-[32px] p-6 mt-6 items-center shadow-sm">
           <StyledText className="text-[#EF4444] text-[64px] font-black leading-[74px]">
-            85%
+            {t("risk85")}
           </StyledText>
           <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-[2px] mt-[-6px]">
             {t("highRisk")}
@@ -75,13 +75,13 @@ export default function ScamRiskResults() {
           </StyledText>
           <StyledView className="bg-[#FEE2E2] px-3 py-1 rounded-full">
             <StyledText className="text-[#EF4444] text-[10px] font-bold uppercase tracking-wider">
-              2 FOUND
+              {t("found2")}
             </StyledText>
           </StyledView>
         </StyledView>
 
         {/* Red Flags List */}
-        {RED_FLAGS.map((flag) => (
+        {flags.map((flag) => (
           <StyledView
             key={flag.id}
             className="bg-white rounded-[24px] p-5 mb-4 shadow-sm"
@@ -147,8 +147,8 @@ export default function ScamRiskResults() {
 
           <StyledView className="mt-5 bg-[#FEFCE8] p-3 rounded-xl border border-[#FEF08A]">
             <StyledText className="text-[#A16207] text-[9px] font-bold text-center leading-4 items-center">
-              <Ionicons name="warning-outline" size={10} /> **This is
-              information, not legal advice.**
+              <Ionicons name="warning-outline" size={10} />{" "}
+              {t("legalInformationDisclaimer")}
             </StyledText>
           </StyledView>
         </StyledView>

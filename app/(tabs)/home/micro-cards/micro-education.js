@@ -9,6 +9,7 @@ import {
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 import { useRouter, useLocalSearchParams } from "expo-router";
 
@@ -18,55 +19,57 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 
-const EDUCATION_ITEMS = [
+const getEducationItems = (t) => [
   {
     id: 1,
-    title: "Identifying Bullying",
-    time: "3 min read",
+    title: t("identifyingBullying"),
+    time: `3 ${t("minRead")}`,
     color: "#005B96",
     icon: "help-buoy-outline",
   },
   {
     id: 2,
-    title: "Documenting Evidence",
-    time: "5 min read",
+    title: t("documentingEvidence"),
+    time: `5 ${t("minRead")}`,
     color: "#FBBF24",
     icon: "document-text-outline",
   },
   {
     id: 3,
-    title: "Digital Footprints",
-    time: "4 min read",
+    title: t("digitalFootprints"),
+    time: `4 ${t("minRead")}`,
     color: "#005B96",
     icon: "footsteps-outline",
   },
   {
     id: 4,
-    title: "Safe Reporting",
-    time: "4 min read",
+    title: t("safeReporting"),
+    time: `4 ${t("minRead")}`,
     color: "#FBBF24",
     icon: "flag-outline",
   },
   {
     id: 5,
-    title: "Blocking & Muting",
-    time: "2 min read",
+    title: t("blockingMuting"),
+    time: `2 ${t("minRead")}`,
     color: "#005B96",
     icon: "remove-circle-outline",
   },
   {
     id: 6,
-    title: "Mental Health Support",
-    time: "6 min read",
+    title: t("mentalHealthSupport"),
+    time: `6 ${t("minRead")}`,
     color: "#FBBF24",
     icon: "heart-outline",
   },
 ];
 
 export default function MicroEducation() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { name } = useLocalSearchParams();
-  const screenTitle = name || "MicroEducation";
+  const screenTitle = name || t("microEducation");
+  const educationItems = getEducationItems(t);
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
@@ -78,7 +81,7 @@ export default function MicroEducation() {
       >
         <StyledView className="mt-6 mb-8">
           <StyledText className="text-[#002B49] text-4xl font-extrabold">
-            MicroEducation
+            {t("microEducation")}
           </StyledText>
           <StyledText className="text-[#FB923C] text-xs font-bold uppercase mt-1">
             {screenTitle}
@@ -89,7 +92,7 @@ export default function MicroEducation() {
         <StyledView className="flex-row items-center bg-white rounded-3xl px-4 py-3 mb-8 border border-white shadow-sm">
           <Ionicons name="search" size={20} color="#94A3B8" />
           <StyledTextInput
-            placeholder={`Search ${screenTitle.toLowerCase()} lessons...`}
+            placeholder={t("searchLessonsIntro")}
             className="flex-1 ml-3 text-base text-[#1F2937]"
             placeholderTextColor="#94A3B8"
           />
@@ -97,12 +100,12 @@ export default function MicroEducation() {
 
         {/* Lesson List */}
         <StyledView className="space-y-4">
-          {EDUCATION_ITEMS.map((item) => (
+          {educationItems.map((item) => (
             <StyledTouchableOpacity
               key={item.id}
               activeOpacity={0.7}
               onPress={() => router.push("/home/micro-cards/lesson-detail")}
-              className={`flex-row items-center justify-between p-4 rounded-[24px] bg-[${item.color}] shadow-sm mb-4`}
+              className="flex-row items-center justify-between p-4 rounded-[24px] shadow-sm mb-4"
               style={{ backgroundColor: item.color }}
             >
               <StyledView className="flex-1 pr-4">

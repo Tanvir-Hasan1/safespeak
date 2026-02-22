@@ -12,6 +12,8 @@ import { styled } from "nativewind";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useLanguage } from "../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
@@ -19,6 +21,7 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function SignIn() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
 
   return (
@@ -35,10 +38,12 @@ export default function SignIn() {
             <Ionicons name="arrow-back" size={24} color="black" />
           </StyledTouchableOpacity>
 
-          <StyledText className="text-2xl font-bold mb-8">Sign In</StyledText>
+          <StyledText className="text-2xl font-bold mb-8">
+            {t("signInTitle")}
+          </StyledText>
 
           <StyledTextInput
-            placeholder="Email"
+            placeholder={t("emailPlaceholder")}
             placeholderTextColor="#000"
             value={email}
             onChangeText={setEmail}
@@ -53,7 +58,7 @@ export default function SignIn() {
           onPress={() => router.push("/auth/verify")}
         >
           <StyledText className="text-white text-lg font-bold">
-            Continue
+            {t("continueBtn")}
           </StyledText>
         </StyledTouchableOpacity>
       </KeyboardAvoidingView>

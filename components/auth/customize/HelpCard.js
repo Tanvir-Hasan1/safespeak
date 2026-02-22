@@ -3,10 +3,13 @@ import { View, Text } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useLanguage } from "../../../context/LanguageContext";
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 
 const HelpCard = () => {
+  const { t } = useLanguage();
   return (
     <StyledView
       className="bg-[#E6F0FF] p-3 rounded-3xl mb-8 flex-row items-center"
@@ -21,10 +24,10 @@ const HelpCard = () => {
       </StyledView>
       <StyledView className="flex-1">
         <StyledText className="text-[#002B49] font-bold text-lg">
-          How SafeSpeak helps
+          {t("howSafeSpeakHelps")}
         </StyledText>
         <StyledText className="text-gray-600 text-sm">
-          Take a 30s tour of our secure reporting tools.
+          {t("takeTour")}
         </StyledText>
       </StyledView>
       <Ionicons name="chevron-forward" size={24} color="#005b96" />
