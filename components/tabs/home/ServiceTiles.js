@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -10,6 +11,7 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const ServiceTiles = React.memo(() => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <StyledView className="px-6 flex-row mb-10 h-72">
@@ -23,10 +25,10 @@ const ServiceTiles = React.memo(() => {
         >
           <StyledView>
             <StyledText className="text-white/60 text-[10px] font-bold uppercase tracking-widest">
-              Cyber
+              {t("cyber")}
             </StyledText>
             <StyledText className="text-white text-lg font-bold mt-1">
-              SCAM{"\n"}SHIELD
+              {t("scamShield")}
             </StyledText>
           </StyledView>
           <Ionicons name="shield-checkmark" size={32} color="white" />
@@ -40,10 +42,10 @@ const ServiceTiles = React.memo(() => {
         >
           <StyledView>
             <StyledText className="text-black/60 text-[10px] font-bold uppercase tracking-widest">
-              Legal
+              {t("legal")}
             </StyledText>
             <StyledText className="text-black text-lg font-bold mt-1">
-              RESOURCES
+              {t("resources")}
             </StyledText>
           </StyledView>
           <Ionicons name="folder-open" size={32} color="black" />
@@ -60,13 +62,13 @@ const ServiceTiles = React.memo(() => {
         >
           <StyledView className="mb-4">
             <StyledText className="text-white text-2xl font-extrabold leading-tight">
-              Micro-{"\n"}Cards
+              {t("microCards")}
             </StyledText>
           </StyledView>
 
           <StyledView className="bg-white/20 p-4 rounded-[25px] border border-white/10">
             <StyledText className="text-white text-[9px] font-bold">
-              4 Lessons • 12 mins
+              {t("microCardsMeta")}
             </StyledText>
           </StyledView>
         </StyledTouchableOpacity>

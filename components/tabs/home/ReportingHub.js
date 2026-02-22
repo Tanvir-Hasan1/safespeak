@@ -15,6 +15,7 @@ import BottomRightCard from "../../../assets/images/home/bottom-right-card.svg";
 const Sphere = require("../../../assets/images/home/Sphere.png");
 
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ const SPHERE_SIZE = HUB_SIZE * 0.42; // Precisely sized sphere
 
 const ReportingHub = React.memo(() => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <View style={styles.outerContainer}>
@@ -76,7 +78,7 @@ const ReportingHub = React.memo(() => {
               resizeMode="contain"
             />
             <View style={styles.textOverlay}>
-              <Text style={styles.sphereText}>Report{"\n"}an incident</Text>
+              <Text style={styles.sphereText}>{t("reportIncident")}</Text>
             </View>
           </TouchableOpacity>
         </View>

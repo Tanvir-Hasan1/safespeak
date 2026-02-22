@@ -35,8 +35,10 @@ export default function IncidentBuilder() {
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
         title={isRecording ? "" : "Timeline Builder"}
-        onRightPress={() => {}}
-        rightIcon={isRecording ? "document-text-outline" : undefined}
+        onRightPress={() => router.push("/home/incident-builder/reports")}
+        rightIcon={
+          isRecording ? "document-text-outline" : "document-text-outline"
+        }
       />
 
       <StyledScrollView

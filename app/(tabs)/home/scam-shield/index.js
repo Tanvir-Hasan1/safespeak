@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -26,6 +27,7 @@ const { width } = Dimensions.get("window");
 
 export default function AnalyzeMessage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [message, setMessage] = useState("");
   const [images, setImages] = useState([]);
 
@@ -36,7 +38,7 @@ export default function AnalyzeMessage() {
     if (status !== "granted") {
       Alert.alert(
         "Permission Required",
-        "We need access to your gallery to upload screenshots."
+        "We need access to your gallery to upload screenshots.",
       );
       return;
     }
@@ -62,7 +64,7 @@ export default function AnalyzeMessage() {
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Analyze Message" showCancel={true} />
+      <CustomHeader title={t("scamShieldTitle")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -72,19 +74,18 @@ export default function AnalyzeMessage() {
         {/* Instructions */}
         <StyledView className="mt-4 mb-6">
           <StyledText className="text-[#1F2937] text-base font-medium leading-6">
-            Paste the suspicious message or upload a screenshot to check for
-            safety risks.
+            {t("scamShieldInstructions")}
           </StyledText>
         </StyledView>
 
         {/* Message Content Card */}
         <StyledView className="bg-white rounded-[24px] p-5 shadow-sm mb-6">
           <StyledText className="text-[#005B96] text-[10px] font-bold uppercase tracking-widest mb-3">
-            MESSAGE CONTENT
+            {t("scamShieldMsgContent")}
           </StyledText>
           <StyledTextInput
             multiline
-            placeholder="Paste SMS, Email, or Web link text here..."
+            placeholder={t("scamShieldPlaceholder")}
             className="text-[#94A3B8] text-base font-medium leading-6"
             placeholderTextColor="#94A3B8"
             value={message}
@@ -101,7 +102,7 @@ export default function AnalyzeMessage() {
         >
           <Ionicons name="camera-outline" size={20} color="white" />
           <StyledText className="text-white text-base font-bold ml-3">
-            Upload Screenshot
+            {t("scamShieldUpload")}
           </StyledText>
         </StyledTouchableOpacity>
 
@@ -148,7 +149,7 @@ export default function AnalyzeMessage() {
         >
           <Ionicons name="shield-outline" size={22} color="white" />
           <StyledText className="text-white text-lg font-bold uppercase tracking-widest ml-3">
-            ANALYZE NOW
+            {t("scamShieldAnalyze")}
           </StyledText>
         </StyledTouchableOpacity>
       </StyledScrollView>

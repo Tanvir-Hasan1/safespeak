@@ -10,6 +10,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../../components/CustomHeader";
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -51,10 +52,11 @@ const RECOMMENDATIONS = [
 
 export default function RecommendedSteps() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <StyledView className="flex-1 bg-[#FDFDFD]">
-      <CustomHeader title="Recommended Steps" showCancel={true} />
+      <CustomHeader title={t("recommendedSteps")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -76,11 +78,10 @@ export default function RecommendedSteps() {
         {/* Header Section */}
         <StyledView className="mt-8 items-center">
           <StyledText className="text-[#1F2937] text-2xl font-black">
-            Next Steps
+            {t("nextSteps")}
           </StyledText>
           <StyledText className="text-[#94A3B8] text-sm font-medium text-center mt-1 leading-5 px-4">
-            Follow these critical actions to secure your assets and report the
-            incident.
+            {t("nextStepsDesc")}
           </StyledText>
         </StyledView>
 
@@ -93,11 +94,7 @@ export default function RecommendedSteps() {
                   className="w-10 h-10 rounded-2xl items-center justify-center"
                   style={{ backgroundColor: step.bgColor }}
                 >
-                  <Ionicons
-                    name={step.icon}
-                    size={20}
-                    color={step.iconColor}
-                  />
+                  <Ionicons name={step.icon} size={20} color={step.iconColor} />
                 </StyledView>
                 <StyledView className="flex-1 ml-4">
                   <StyledText className="text-[#1F2937] text-lg font-bold">
@@ -118,7 +115,7 @@ export default function RecommendedSteps() {
                   {step.buttonText}
                 </StyledText>
               </StyledTouchableOpacity>
-              
+
               {/* Divider */}
               <StyledView className="w-full h-[1px] bg-[#F1F5F9] mt-8" />
             </StyledView>
@@ -131,7 +128,11 @@ export default function RecommendedSteps() {
             <Ionicons name="time-outline" size={20} color="#94A3B8" />
             <StyledText className="ml-3 flex-1 text-[#64748B] text-sm font-medium leading-5">
               All generated documentation and chat logs are automatically saved
-              to your <StyledText className="text-[#005B96] font-bold">History</StyledText>.
+              to your{" "}
+              <StyledText className="text-[#005B96] font-bold">
+                History
+              </StyledText>
+              .
             </StyledText>
           </StyledView>
 
@@ -141,7 +142,7 @@ export default function RecommendedSteps() {
           >
             <Ionicons name="download-outline" size={18} color="#002B49" />
             <StyledText className="text-[#002B49] text-sm font-bold ml-3">
-              Prefilled Report
+              {t("prefilledReport")}
             </StyledText>
           </StyledTouchableOpacity>
 
@@ -151,9 +152,9 @@ export default function RecommendedSteps() {
           >
             <Ionicons name="document-text-outline" size={18} color="#002B49" />
             <StyledView className="ml-3 items-center">
-                <StyledText className="text-[#002B49] text-sm font-bold">
-                Incident Summary
-                </StyledText>
+              <StyledText className="text-[#002B49] text-sm font-bold">
+                {t("incidentSummary")}
+              </StyledText>
             </StyledView>
           </StyledTouchableOpacity>
         </StyledView>

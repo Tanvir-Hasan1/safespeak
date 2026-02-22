@@ -10,6 +10,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../../components/CustomHeader";
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -20,7 +21,8 @@ const RED_FLAGS = [
   {
     id: 1,
     title: "Urgent Language",
-    description: "The message uses high-pressure tactics to force immediate action.",
+    description:
+      "The message uses high-pressure tactics to force immediate action.",
     icon: "warning-outline",
     color: "#FEF3C7", // Amber-50
     iconColor: "#F59E0B", // Amber-500
@@ -28,7 +30,8 @@ const RED_FLAGS = [
   {
     id: 2,
     title: "Suspicious Sender",
-    description: "The sender's domain (noreply-security.net) does not match the official source.",
+    description:
+      "The sender's domain (noreply-security.net) does not match the official source.",
     icon: "at-outline",
     color: "#FEF7E6", // Custom lighter amber
     iconColor: "#F59E0B",
@@ -37,10 +40,11 @@ const RED_FLAGS = [
 
 export default function ScamRiskResults() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title="Scam Risk Results" showCancel={true} />
+      <CustomHeader title={t("scamRiskResults")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -53,22 +57,21 @@ export default function ScamRiskResults() {
             85%
           </StyledText>
           <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-[2px] mt-[-6px]">
-            HIGH RISK
+            {t("highRisk")}
           </StyledText>
 
           <StyledText className="text-[#EF4444] text-xl font-black mt-6 text-center">
-            High Risk Detected
+            {t("highRiskDetected")}
           </StyledText>
           <StyledText className="text-[#64748B] text-sm font-medium text-center leading-5 mt-3">
-            This communication matches known scam patterns. We strongly advise
-            against clicking any links or providing personal information.
+            {t("highRiskDesc")}
           </StyledText>
         </StyledView>
 
         {/* Detected Red Flags Section */}
         <StyledView className="mt-8 mb-4 flex-row justify-between items-center">
           <StyledText className="text-[#1F2937] text-lg font-black">
-            Detected Red Flags
+            {t("detectedRedFlags")}
           </StyledText>
           <StyledView className="bg-[#FEE2E2] px-3 py-1 rounded-full">
             <StyledText className="text-[#EF4444] text-[10px] font-bold uppercase tracking-wider">
@@ -98,12 +101,14 @@ export default function ScamRiskResults() {
                   {flag.description}
                 </StyledText>
 
-                <StyledTouchableOpacity 
-                  onPress={() => router.push("/home/scam-shield/recommended-steps")}
+                <StyledTouchableOpacity
+                  onPress={() =>
+                    router.push("/home/scam-shield/recommended-steps")
+                  }
                   className="flex-row items-center mt-3 justify-end"
                 >
                   <StyledText className="text-[#005B96] text-xs font-bold">
-                    How to stay safe
+                    {t("howToStaySafe")}
                   </StyledText>
                   <Ionicons
                     name="chevron-forward"
@@ -124,7 +129,7 @@ export default function ScamRiskResults() {
         >
           <Ionicons name="alert-circle-outline" size={20} color="white" />
           <StyledText className="text-white text-base font-bold ml-3">
-            Report This Incident
+            {t("reportThisIncident")}
           </StyledText>
         </StyledTouchableOpacity>
 
@@ -133,13 +138,11 @@ export default function ScamRiskResults() {
           <StyledView className="flex-row items-center mb-2">
             <Ionicons name="shield-checkmark" size={18} color="#3B82F6" />
             <StyledText className="ml-2 text-[#005B96] font-bold text-sm">
-              Stay Protected
+              {t("stayProtected")}
             </StyledText>
           </StyledView>
           <StyledText className="text-[#475569] text-xs font-medium leading-4">
-            Always verify communications through official channels. When in
-            doubt, contact the organization directly using their official
-            contact information.
+            {t("stayProtectedDesc")}
           </StyledText>
 
           <StyledView className="mt-5 bg-[#FEFCE8] p-3 rounded-xl border border-[#FEF08A]">

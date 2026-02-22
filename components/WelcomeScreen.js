@@ -7,6 +7,7 @@ import SocialSignIns from "./SocialSignIns";
 import { LinearGradient } from "expo-linear-gradient";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useNavigation } from "expo-router";
+import { useLanguage } from "../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -16,6 +17,7 @@ const videoSource = require("../assets/videos/Australia_Map_Cinematic_Loop_Anima
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
+  const { t } = useLanguage();
   const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
     player.muted = false; // User changed this to false
@@ -72,7 +74,7 @@ const WelcomeScreen = () => {
             </StyledText>
           </StyledView>
           <StyledText className="text-black/80 font-bold mb-2">
-            SafeSpeak: Real Stories, Real Support
+            {t("welcomeTagline")}
           </StyledText>
         </StyledView>
 
@@ -80,12 +82,12 @@ const WelcomeScreen = () => {
         <StyledView className="w-full items-center space-y-6">
           {/* Hero Text */}
           <StyledText className="text-white text-3xl font-bold text-center leading-tight mb-2">
-            A safe, multilingual space to understand, report, and get support
+            {t("welcomeHero")}
           </StyledText>
 
           {/* Disclaimer */}
           <StyledText className="text-white/80 text-center text-sm px-4 mb-4">
-            We don't track you. We don't sell data. You control what you share
+            {t("welcomeDisclaimer")}
           </StyledText>
 
           {/* Buttons */}
@@ -93,9 +95,10 @@ const WelcomeScreen = () => {
 
           {/* Footer Links */}
           <StyledText className="text-white/60 text-xs mt-4">
-            By signing up, you agree to our{" "}
-            <Text className="underline">Terms</Text> and{" "}
-            <Text className="underline">Privacy Policy</Text>.
+            {t("welcomeTerms")}{" "}
+            <Text className="underline">{t("welcomeTermsLink")}</Text>{" "}
+            {t("welcomeAnd")}{" "}
+            <Text className="underline">{t("welcomePrivacyLink")}</Text>.
           </StyledText>
         </StyledView>
       </StyledView>

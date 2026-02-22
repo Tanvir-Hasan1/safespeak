@@ -12,6 +12,7 @@ import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import CustomHeader from "../../../../components/CustomHeader";
 import { useRouter } from "expo-router";
+import { useLanguage } from "../../../../context/LanguageContext";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -21,13 +22,18 @@ const StyledTextInput = styled(TextInput);
 
 export default function SubmitReport() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isPrivacyAccepted, setIsPrivacyAccepted] = useState(false);
   const [expandedAgencies, setExpandedAgencies] = useState(["ACCC Scamwatch"]);
 
   // State for editable fields
   const [acccData, setAcccData] = useState([
     { label: "Sender Name", value: "Unknown/PayPal Spoof", verified: true },
-    { label: "Scam Category", value: "Phishing / Identity Theft", icon: "swap-vertical" },
+    {
+      label: "Scam Category",
+      value: "Phishing / Identity Theft",
+      icon: "swap-vertical",
+    },
     { label: "Platform", value: "Email / Gmail" },
   ]);
 
@@ -39,7 +45,11 @@ export default function SubmitReport() {
 
   const [bankData, setBankData] = useState([
     { label: "Bank Name", value: "Commonwealth Bank (CBA)" },
-    { label: "Account Status", value: "Compromised / Suspended", icon: "lock-closed" },
+    {
+      label: "Account Status",
+      value: "Compromised / Suspended",
+      icon: "lock-closed",
+    },
     { label: "Reference ID", value: "TXN-882190-SS" },
   ]);
 
@@ -90,7 +100,7 @@ export default function SubmitReport() {
       {isExpanded && fields && (
         <StyledView className="px-5 pb-6">
           <StyledView className="h-[1px] bg-[#F1F5F9] mb-5" />
-          
+
           <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-4">
             PREFILLED DETAILS
           </StyledText>
@@ -107,7 +117,11 @@ export default function SubmitReport() {
                   className="flex-1 text-[#64748B] text-sm font-medium"
                 />
                 {field.verified && (
-                  <Ionicons name="checkmark-circle-outline" size={16} color="#22C55E" />
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={16}
+                    color="#22C55E"
+                  />
                 )}
                 {field.icon && (
                   <Ionicons name={field.icon} size={16} color="#94A3B8" />
@@ -122,7 +136,7 @@ export default function SubmitReport() {
 
   return (
     <StyledView className="flex-1 bg-[#FDFDFD]">
-      <CustomHeader title="Submit Report" showCancel={true} />
+      <CustomHeader title={t("submitReport")} showCancel={true} />
 
       <StyledScrollView
         className="flex-1 px-6"
@@ -132,12 +146,10 @@ export default function SubmitReport() {
         {/* Header Section */}
         <StyledView className="mt-8 mb-8">
           <StyledText className="text-[#1F2937] text-2xl font-black">
-            Prefilled Agency Reports
+            {t("prefilledAgencyReports")}
           </StyledText>
           <StyledText className="text-[#94A3B8] text-sm font-medium leading-5 mt-2">
-            Our AI has prefilled these forms based on your conversation analysis.
-            Please review each section carefully before submitting to the
-            relevant authorities.
+            {t("prefilledAgencyDesc")}
           </StyledText>
         </StyledView>
 
@@ -168,11 +180,10 @@ export default function SubmitReport() {
           <StyledView className="flex-row items-start">
             <StyledView className="flex-1 mr-4">
               <StyledText className="text-[#1F2937] text-base font-bold">
-                Privacy Consent
+                {t("privacyConsent")}
               </StyledText>
               <StyledText className="text-[#64748B] text-xs font-medium leading-4 mt-1">
-                I authorize SafeSpeak to securely transmit this data to the
-                selected agencies in accordance with the Privacy Policy.
+                {t("privacyConsentDesc")}
               </StyledText>
             </StyledView>
             <Switch
@@ -187,20 +198,27 @@ export default function SubmitReport() {
         {/* Submit Button */}
         <StyledTouchableOpacity
           activeOpacity={0.8}
-          onPress={() => Alert.alert("Reports Submitted", "Your prefilled reports have been securely transmitted to the selected agencies.")}
+          onPress={() =>
+            Alert.alert(
+              "Reports Submitted",
+              "Your prefilled reports have been securely transmitted to the selected agencies.",
+            )
+          }
           className={`rounded-full py-4 items-center justify-center flex-row mt-8 shadow-lg ${
-            isPrivacyAccepted ? "bg-[#FF8A00] shadow-orange-300" : "bg-gray-300 shadow-none"
+            isPrivacyAccepted
+              ? "bg-[#FF8A00] shadow-orange-300"
+              : "bg-gray-300 shadow-none"
           }`}
           disabled={!isPrivacyAccepted}
         >
           <Ionicons name="send" size={20} color="white" />
           <StyledText className="text-white text-lg font-bold ml-3 uppercase tracking-wider">
-            Submit All Reports
+            {t("submitAllReports")}
           </StyledText>
         </StyledTouchableOpacity>
 
         <StyledText className="text-[#94A3B8] text-[10px] font-bold text-center mt-4 uppercase tracking-widest">
-          END-TO-END ENCRYPTED SUBMISSION
+          {t("encryptedSubmission")}
         </StyledText>
       </StyledScrollView>
     </StyledView>

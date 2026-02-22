@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { styled } from "nativewind";
 import CustomHeader from "../../../components/CustomHeader";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -33,9 +34,10 @@ const InfoContent = () => {
 };
 
 export default function AboutScreen() {
+  const { t } = useLanguage();
   return (
     <StyledView className="flex-1 bg-[#F8FAFC]">
-      <CustomHeader title="About us" />
+      <CustomHeader title={t("aboutUsHeader")} />
       <StyledScrollView showsVerticalScrollIndicator={false}>
         <InfoContent />
       </StyledScrollView>

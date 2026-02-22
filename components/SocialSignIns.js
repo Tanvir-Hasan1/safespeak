@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import GoogleLogo from "../assets/icons/Google.svg";
 import MailLogo from "../assets/icons/Mail.svg";
+import { useLanguage } from "../context/LanguageContext";
 
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledView = styled(View);
@@ -13,6 +14,7 @@ const StyledText = styled(Text);
 
 const SocialSignIns = () => {
   const router = useRouter();
+  const { t } = useLanguage();
   return (
     <StyledView className="w-full space-y-3">
       {/* Apple */}
@@ -32,7 +34,7 @@ const SocialSignIns = () => {
         >
           <Ionicons name="logo-apple" size={24} color="white" />
           <StyledText className="text-white font-semibold text-lg ml-2">
-            Sign In with Apple
+            {t("signInApple")}
           </StyledText>
         </LinearGradient>
       </StyledTouchableOpacity>
@@ -41,7 +43,7 @@ const SocialSignIns = () => {
       <StyledTouchableOpacity className="w-full bg-white py-4 rounded-full flex-row items-center justify-center border border-gray-300">
         <GoogleLogo width={24} height={24} />
         <StyledText className="text-black font-semibold text-lg ml-2">
-          Sign In with Google
+          {t("signInGoogle")}
         </StyledText>
       </StyledTouchableOpacity>
 
@@ -52,7 +54,7 @@ const SocialSignIns = () => {
       >
         <MailLogo width={24} height={24} />
         <StyledText className="text-gray-600 font-semibold text-lg ml-2">
-          Sign In with Email
+          {t("signInEmail")}
         </StyledText>
       </StyledTouchableOpacity>
     </StyledView>

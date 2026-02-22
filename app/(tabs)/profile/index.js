@@ -11,6 +11,7 @@ import CulturalFaithCard from "../../../components/tabs/profile/CulturalFaithCar
 import FeatureCard from "../../../components/tabs/profile/FeatureCard";
 import HelpSupportCard from "../../../components/tabs/profile/HelpSupportCard";
 import FAQCard from "../../../components/tabs/profile/FAQCard";
+import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -18,6 +19,7 @@ const StyledScrollView = styled(ScrollView);
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <StyledView className="flex-1 bg-[#F8FAFC]">
@@ -32,10 +34,10 @@ export default function ProfileScreen() {
         {/* Greeting */}
         <StyledView className="items-center mb-8">
           <StyledText className="text-[#002B49] text-3xl font-bold mb-1">
-            Hey Alex!
+            {t("heyAlex")}
           </StyledText>
           <StyledText className="text-[#94A3B8] text-base">
-            Your space is safe and secure.
+            {t("yourSpaceSafe")}
           </StyledText>
         </StyledView>
 
@@ -47,17 +49,17 @@ export default function ProfileScreen() {
           <StyledView className="w-[47%]">
             <FeatureCard
               icon="language"
-              title="Language"
-              subtitle="English"
-              action="UPDATE"
+              title={t("language")}
+              subtitle={t("english")}
+              action={t("update")}
               iconBg="bg-[#E0F2FE]"
               iconColor="#0369A1"
             />
             <FeatureCard
               icon="shield-checkmark"
-              title="Email & Security"
-              subtitle="Active & Secure"
-              action="MANAGE"
+              title={t("emailSecurity")}
+              subtitle={t("activeSecure")}
+              action={t("manage")}
               iconBg="bg-[#DCFCE7]"
               iconColor="#15803D"
             />
@@ -76,15 +78,15 @@ export default function ProfileScreen() {
         {/* Footer Links */}
         <StyledView className="mt-8 mb-12">
           <ProfileMenuItem
-            title="Terms and conditions"
+            title={t("termsConditions")}
             onPress={() => router.push("/profile/terms")}
           />
           <ProfileMenuItem
-            title="Privacy Policy"
+            title={t("privacyPolicy")}
             onPress={() => router.push("/profile/privacy")}
           />
           <ProfileMenuItem
-            title="About us"
+            title={t("aboutUs")}
             onPress={() => router.push("/profile/about")}
           />
         </StyledView>

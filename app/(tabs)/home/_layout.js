@@ -8,6 +8,7 @@ export default function HomeLayout() {
       <Stack.Screen name="micro-cards" />
       <Stack.Screen name="resources" />
       <Stack.Screen name="report-submission" />
+      <Stack.Screen name="notifications" />
     </Stack>
   );
 }

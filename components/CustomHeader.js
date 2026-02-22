@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EmergencyBar from "./tabs/home/EmergencyBar";
+import { useLanguage } from "../context/LanguageContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -17,6 +18,7 @@ const CustomHeader = ({
   onRightPress,
 }) => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <SafeAreaView className="bg-[#F0F4FA]" edges={["top"]}>
@@ -51,7 +53,7 @@ const CustomHeader = ({
             onPress={() => router.back()}
           >
             <StyledText className="text-[#94A3B8] text-base font-medium">
-              Cancel
+              {t("cancel")}
             </StyledText>
           </StyledTouchableOpacity>
         ) : (
