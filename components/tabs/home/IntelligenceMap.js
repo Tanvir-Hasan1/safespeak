@@ -18,7 +18,7 @@ const IntelligenceMap = React.memo(() => {
 
       <StyledView className="h-60 rounded-[40px] overflow-hidden shadow-sm relative">
         <ImageBackground
-          source={require("../../../assets/map-bg.png")}
+          source={require("../../../assets/map-bg.jpg")}
           className="flex-1"
           resizeMode="cover"
         >
