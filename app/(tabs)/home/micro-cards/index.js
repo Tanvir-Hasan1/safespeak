@@ -59,6 +59,13 @@ export default function MicroCards() {
             className="flex-1 ml-3 text-base text-[#1F2937]"
             placeholderTextColor="#94A3B8"
           />
+          <StyledTouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/home/micro-cards/filter")}
+            className="ml-2 p-1.5 rounded-xl border border-[#CBD5E1]"
+          >
+            <Ionicons name="options-outline" size={20} color="#005B96" />
+          </StyledTouchableOpacity>
         </StyledView>
 
         {/* Filter Chips */}

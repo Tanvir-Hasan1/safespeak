@@ -450,6 +450,17 @@ const translations = {
     includeIncidentSummary: "Include Incident Summary",
     sharesRecentReport: "Shares your recent report securely.",
     sendReferral: "Send Referral",
+    // Filter Page
+    filterLessons: "Filter Lessons",
+    filterCategory: "CATEGORY",
+    filterDuration: "DURATION",
+    filterMigrantRights: "Migrant Rights",
+    filterQuick: "Quick",
+    filterQuickSub: "< 5 minutes",
+    filterDeepDive: "Deep Dive",
+    filterDeepDiveSub: "> 15 minutes",
+    filterApply: "Apply Filters",
+
     relevantResources: "Relevant Resources",
   },
 
@@ -907,6 +918,17 @@ const translations = {
     includeIncidentSummary: "Incluir Resumen del Incidente",
     sharesRecentReport: "Comparte su reporte reciente de forma segura.",
     sendReferral: "Enviar Referencia",
+    // Filter Page
+    filterLessons: "Filtrar Lecciones",
+    filterCategory: "CATEGORÍA",
+    filterDuration: "DURACIÓN",
+    filterMigrantRights: "Derechos del Migrante",
+    filterQuick: "Rápido",
+    filterQuickSub: "< 5 minutos",
+    filterDeepDive: "Profundo",
+    filterDeepDiveSub: "> 15 minutos",
+    filterApply: "Aplicar Filtros",
+
     relevantResources: "Recursos Relevantes",
   },
 };

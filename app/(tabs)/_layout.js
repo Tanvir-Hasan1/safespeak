@@ -1,9 +1,80 @@
-import { Tabs, useSegments } from "expo-router";
+import { Tabs, useSegments, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Platform } from "react-native";
+import {
+  View,
+  Platform,
+  TouchableOpacity,
+  BackHandler,
+  Alert,
+} from "react-native";
 import { styled } from "nativewind";
 
 const StyledView = styled(View);
+
+const ACTIVE = "#FF8A00";
+const INACTIVE = "#9CA3AF";
+
+const exitApp = () => {
+  Alert.alert(
+    "Exit App",
+    "Are you sure you want to exit?",
+    [
+      { text: "No", style: "cancel" },
+      {
+        text: "Yes",
+        style: "destructive",
+        onPress: () => {
+          if (Platform.OS === "android") {
+            BackHandler.exitApp();
+          }
+        },
+      },
+    ],
+    { cancelable: true },
+  );
+};
+
+function HomeTabButton({ onPress }) {
+  const pathname = usePathname();
+  const focused = pathname === "/home" || pathname.startsWith("/home/");
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    >
+      <StyledView className="items-center justify-center">
+        <Ionicons name="home" size={26} color={focused ? ACTIVE : INACTIVE} />
+        {focused && (
+          <StyledView className="w-1.5 h-1.5 bg-[#FF8A00] rounded-full mt-1" />
+        )}
+      </StyledView>
+    </TouchableOpacity>
+  );
+}
+
+function ProfileTabButton({ onPress }) {
+  const pathname = usePathname();
+  const focused = pathname === "/profile" || pathname.startsWith("/profile/");
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    >
+      <StyledView className="items-center justify-center">
+        <Ionicons
+          name="person"
+          size={26}
+          color={focused ? ACTIVE : "#94A3B8"}
+        />
+        {focused && (
+          <StyledView className="w-1.5 h-1.5 bg-[#FF8A00] rounded-full mt-1" />
+        )}
+      </StyledView>
+    </TouchableOpacity>
+  );
+}
 
 export default function TabLayout() {
   const segments = useSegments();
@@ -44,39 +115,38 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <StyledView className="items-center justify-center">
-              <Ionicons
-                name="home"
-                size={26}
-                color={focused ? "#FF8A00" : "#9CA3AF"}
-              />
-              {focused && (
-                <StyledView className="w-1.5 h-1.5 bg-[#FF8A00] rounded-full mt-1" />
-              )}
-            </StyledView>
-          ),
+          tabBarButton: ({ onPress }) => <HomeTabButton onPress={onPress} />,
         }}
       />
 
       <Tabs.Screen
         name="reporting"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <StyledView
-              className="w-12 h-12 rounded-full bg-[#EF4444] items-center justify-center"
+          tabBarButton: () => (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={exitApp}
               style={{
-                shadowColor: "#EF4444",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.4,
-                shadowRadius: 10,
-                elevation: 10,
-                borderWidth: 3,
-                borderColor: "white",
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Ionicons name="exit-outline" size={24} color="white" />
-            </StyledView>
+              <StyledView
+                className="w-12 h-12 rounded-full bg-[#EF4444] items-center justify-center"
+                style={{
+                  shadowColor: "#EF4444",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 10,
+                  elevation: 10,
+                  borderWidth: 3,
+                  borderColor: "white",
+                }}
+              >
+                <Ionicons name="exit-outline" size={24} color="white" />
+              </StyledView>
+            </TouchableOpacity>
           ),
         }}
       />
@@ -84,18 +154,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <StyledView className="items-center justify-center">
-              <Ionicons
-                name="person"
-                size={26}
-                color={focused ? "#FF8A00" : "#94A3B8"}
-              />
-              {focused && (
-                <StyledView className="w-1.5 h-1.5 bg-[#FF8A00] rounded-full mt-1" />
-              )}
-            </StyledView>
-          ),
+          tabBarButton: ({ onPress }) => <ProfileTabButton onPress={onPress} />,
         }}
       />
     </Tabs>

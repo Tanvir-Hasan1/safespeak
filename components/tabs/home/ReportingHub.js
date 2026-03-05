@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
+import { scale, verticalScale } from "react-native-size-matters";
 import TopLeftCard from "../../../assets/images/home/top-left-card.svg";
 import TopRightCard from "../../../assets/images/home/top-right-card.svg";
 import BottomLeftCard from "../../../assets/images/home/bottom-left-card.svg";
@@ -23,7 +24,7 @@ const { width } = Dimensions.get("window");
 const HUB_SIZE = Math.min(width * 0.95, 400); // Responsive max width
 const GAP = HUB_SIZE * 0.04; // Responsive gap (4% of hub size)
 const CARD_SIZE = (HUB_SIZE - GAP) / 2;
-const SPHERE_SIZE = HUB_SIZE * 0.42; // Precisely sized sphere
+const SPHERE_SIZE = 150; // Precisely sized sphere
 
 const ReportingHub = React.memo(() => {
   const router = useRouter();
@@ -32,40 +33,39 @@ const ReportingHub = React.memo(() => {
   return (
     <View style={styles.outerContainer}>
       <View style={styles.hubContainer}>
-        {/* The 2x2 Grid using absolute positioning */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.cardContainer, styles.topLeft]}
-          onPress={() => router.push("/home/incident-builder")}
-        >
-          <TopLeftCard width={CARD_SIZE} height={CARD_SIZE} />
-        </TouchableOpacity>
+        {/* Top row */}
+        <View style={styles.flexRow}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/home/incident-builder")}
+          >
+            <TopLeftCard width={scale(145)} height={scale(190)} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/home/incident-builder")}
+          >
+            <TopRightCard width={scale(145)} height={scale(190)} />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.cardContainer, styles.topRight]}
-          onPress={() => router.push("/home/incident-builder")}
-        >
-          <TopRightCard width={CARD_SIZE} height={CARD_SIZE} />
-        </TouchableOpacity>
+        {/* Bottom row */}
+        <View style={styles.flexRow}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/home/incident-builder")}
+          >
+            <BottomLeftCard width={scale(145)} height={scale(190)} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/home/incident-builder")}
+          >
+            <BottomRightCard width={scale(145)} height={scale(190)} />
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.cardContainer, styles.bottomLeft]}
-          onPress={() => router.push("/home/incident-builder")}
-        >
-          <BottomLeftCard width={CARD_SIZE} height={CARD_SIZE} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={[styles.cardContainer, styles.bottomRight]}
-          onPress={() => router.push("/home/incident-builder")}
-        >
-          <BottomRightCard width={CARD_SIZE} height={CARD_SIZE} />
-        </TouchableOpacity>
-
-        {/* Central Sphere with centered text */}
+        {/* Central Sphere with centered text — overlaid via absolute */}
         <View style={styles.sphereWrapper}>
           <TouchableOpacity
             activeOpacity={0.7}
@@ -74,7 +74,7 @@ const ReportingHub = React.memo(() => {
           >
             <Image
               source={Sphere}
-              style={{ width: SPHERE_SIZE, height: SPHERE_SIZE }}
+              style={{ width: scale(SPHERE_SIZE), height: scale(SPHERE_SIZE) }}
               resizeMode="contain"
             />
             <View style={styles.textOverlay}>
@@ -94,40 +94,25 @@ const styles = StyleSheet.create({
     marginVertical: 32,
   },
   hubContainer: {
+    gap: scale(14),
     width: HUB_SIZE,
-    height: HUB_SIZE,
-    position: "relative",
+    flexDirection: "column",
   },
-  cardContainer: {
-    position: "absolute",
-    width: CARD_SIZE,
-    height: CARD_SIZE,
+  flexRow: {
+    gap: scale(12),
+    justifyContent: "center",
+    flexDirection: "row",
   },
-  topLeft: {
-    top: 0,
-    left: 0,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-  },
+
   sphereWrapper: {
     position: "absolute",
     zIndex: 10,
     top: "50%",
     left: "50%",
-    width: SPHERE_SIZE,
-    height: SPHERE_SIZE,
-    marginTop: -(SPHERE_SIZE / 2),
-    marginLeft: -(SPHERE_SIZE / 2),
+    width: scale(SPHERE_SIZE),
+    height: scale(SPHERE_SIZE),
+    marginTop: -scale(SPHERE_SIZE) / 2,
+    marginLeft: -scale(SPHERE_SIZE) / 2,
     alignItems: "center",
     justifyContent: "center",
   },
