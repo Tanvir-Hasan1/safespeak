@@ -15,12 +15,19 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledScrollView = styled(ScrollView);
 
+const LANGUAGES = [
+  { code: "en", label: "English (US)", flag: "🇬🇧" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
+];
+
 export default function Customize() {
   const router = useRouter();
-  const { t, language } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
 
-  const selectedLangLabel = language === "es" ? "Español" : "English (US)";
+  const selectedLang =
+    LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
 
   return (
     <SafeAreaView className="flex-1 bg-[#F0F4FA]">
@@ -34,19 +41,67 @@ export default function Customize() {
               <Tick width={30} height={30} />
             </StyledView>
           </StyledView>
-          <StyledView className="bg-white px-3 py-3 rounded-full flex-row items-center shadow-sm">
-            <Ionicons name="flag-outline" size={16} color="black" />
-            <StyledText className="text-black ml-2 font-medium">
-              {selectedLangLabel}
-            </StyledText>
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color="gray"
-              className="ml-1"
-            />
+
+          {/* Language Toggle */}
+          <StyledView className="relative">
+            <StyledTouchableOpacity
+              className="bg-white px-3 py-3 rounded-full flex-row items-center shadow-sm"
+              onPress={() => setShowLangDropdown((v) => !v)}
+            >
+              <StyledText className="text-base mr-1">
+                {selectedLang.flag}
+              </StyledText>
+              <StyledText className="text-black ml-1 font-medium">
+                {selectedLang.label}
+              </StyledText>
+              <Ionicons
+                name={showLangDropdown ? "chevron-up" : "chevron-down"}
+                size={16}
+                color="gray"
+                style={{ marginLeft: 4 }}
+              />
+            </StyledTouchableOpacity>
+
+            {showLangDropdown && (
+              <StyledView className="absolute top-12 right-0 bg-white rounded-2xl shadow-lg z-50 overflow-hidden w-44">
+                {LANGUAGES.map((lang) => (
+                  <StyledTouchableOpacity
+                    key={lang.code}
+                    className={`flex-row items-center px-4 py-3 ${
+                      language === lang.code ? "bg-orange-50" : ""
+                    }`}
+                    onPress={() => {
+                      setLanguage(lang.code);
+                      setShowLangDropdown(false);
+                    }}
+                  >
+                    <StyledText className="text-base mr-2">
+                      {lang.flag}
+                    </StyledText>
+                    <StyledText
+                      className={`font-medium ${
+                        language === lang.code
+                          ? "text-[#FB923C]"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {lang.label}
+                    </StyledText>
+                    {language === lang.code && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color="#FB923C"
+                        style={{ marginLeft: "auto" }}
+                      />
+                    )}
+                  </StyledTouchableOpacity>
+                ))}
+              </StyledView>
+            )}
           </StyledView>
         </StyledView>
+
         <StyledText className="text-[#002B49] text-3xl font-serif font-bold mb-8 mt-[-20px]">
           Speak
         </StyledText>

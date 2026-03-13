@@ -47,14 +47,11 @@ export default function Verify() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 px-6 justify-between py-6"
       >
-        <StyledView>
-          <StyledTouchableOpacity
-            onPress={() => router.back()}
-            className="mb-8"
-          >
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </StyledTouchableOpacity>
+        <StyledTouchableOpacity onPress={() => router.back()} className="mb-8">
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </StyledTouchableOpacity>
 
+        <StyledView>
           <StyledText className="text-2xl font-bold mb-2">
             {t("verifyTitle")}
           </StyledText>

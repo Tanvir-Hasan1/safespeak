@@ -8,8 +8,8 @@ import {
   Image,
 } from "react-native";
 import { scale, verticalScale } from "react-native-size-matters";
-import TopLeftCard from "../../../assets/images/home/top-left-card.svg";
-import TopRightCard from "../../../assets/images/home/top-right-card.svg";
+const TopLeftCard = require("../../../assets/images/home/top-left-card.png");
+const TopRightCard = require("../../../assets/images/home/top-right-card.png");
 import BottomLeftCard from "../../../assets/images/home/bottom-left-card.svg";
 import BottomRightCard from "../../../assets/images/home/bottom-right-card.svg";
 
@@ -39,13 +39,21 @@ const ReportingHub = React.memo(() => {
             activeOpacity={0.7}
             onPress={() => router.push("/home/incident-builder")}
           >
-            <TopLeftCard width={scale(145)} height={scale(190)} />
+            <Image
+              source={TopLeftCard}
+              style={{ width: scale(145), height: scale(190) }}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => router.push("/home/incident-builder")}
           >
-            <TopRightCard width={scale(145)} height={scale(190)} />
+            <Image
+              source={TopRightCard}
+              style={{ width: scale(145), height: scale(190) }}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
 

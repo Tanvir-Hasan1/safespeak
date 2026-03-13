@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  Linking,
+} from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -10,9 +17,11 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const LANGUAGES = [
-  { code: "EN", key: "en", label: "English" },
-  { code: "ES", key: "es", label: "Español" },
+  { code: "EN", key: "en", label: "English", flag: "🇬🇧" },
+  { code: "ES", key: "es", label: "Español", flag: "🇪🇸" },
 ];
+
+const callEmergency = () => Linking.openURL("tel:000");
 
 const EmergencyBar = React.memo(() => {
   const { language, setLanguage, t } = useLanguage();
@@ -43,7 +52,8 @@ const EmergencyBar = React.memo(() => {
     <>
       <StyledTouchableOpacity
         className="w-full px-4 pt-2 pb-2"
-        activeOpacity={1}
+        activeOpacity={0.8}
+        onPress={callEmergency}
       >
         <LinearGradient
           colors={["#F43F5E", "#E11D48"]}
@@ -65,7 +75,9 @@ const EmergencyBar = React.memo(() => {
             activeOpacity={0.7}
           >
             <StyledView className="bg-white/20 px-2 py-0.5 rounded-full flex-row items-center">
-              <Ionicons name="globe-outline" size={12} color="white" />
+              <Text style={{ fontSize: 14, lineHeight: 18 }}>
+                {selectedLang.flag}
+              </Text>
               <StyledText className="text-white text-[10px] font-bold ml-1">
                 {selectedLang.code}
               </StyledText>
@@ -122,13 +134,9 @@ const EmergencyBar = React.memo(() => {
                   borderBottomColor: "#F1F5F9",
                 }}
               >
-                <Ionicons
-                  name="globe-outline"
-                  size={14}
-                  color={
-                    selectedLang.code === lang.code ? "#E11D48" : "#64748B"
-                  }
-                />
+                <Text style={{ fontSize: 18, lineHeight: 22 }}>
+                  {lang.flag}
+                </Text>
                 <Text
                   style={{
                     marginLeft: 8,

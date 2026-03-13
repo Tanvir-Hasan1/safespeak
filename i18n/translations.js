@@ -399,9 +399,8 @@ const translations = {
     didntReceive: "Didn't receive the code?",
     resend: "Resend",
     verifyBtn: "Verify",
-    customizeTitle: "Customize your experience",
-    customizeSubtitle:
-      "Tailor SafeSpeak to your specific needs and safety preferences.",
+    customizeTitle: "Verify to protect your access",
+    customizeSubtitle: "This helps keep your information safe.",
     getStarted: "Get Started",
     notSubstitute:
       "Not a substitute for legal advice, counselling, or crisis services.",
@@ -866,9 +865,8 @@ const translations = {
     didntReceive: "¿No recibiste el código?",
     resend: "Reenviar",
     verifyBtn: "Verificar",
-    customizeTitle: "Personaliza tu experiencia",
-    customizeSubtitle:
-      "Adapta SafeSpeak a tus necesidades específicas y preferencias de seguridad.",
+    customizeTitle: "Verifique para proteger su acceso",
+    customizeSubtitle: "Esto ayuda a mantener su información segura.",
     getStarted: "Comenzar",
     notSubstitute:
       "No es un sustituto de asesoría legal, consejería o servicios de crisis.",

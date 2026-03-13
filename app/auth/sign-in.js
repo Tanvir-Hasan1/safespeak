@@ -28,16 +28,15 @@ export default function SignIn() {
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1 px-6 justify-between py-6"
+        className="flex-1 px-6 py-6"
       >
-        <StyledView>
-          <StyledTouchableOpacity
-            onPress={() => router.back()}
-            className="mb-8"
-          >
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </StyledTouchableOpacity>
+        {/* Top: Back arrow */}
+        <StyledTouchableOpacity onPress={() => router.back()} className="mb-4">
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </StyledTouchableOpacity>
 
+        {/* Middle: centered content */}
+        <StyledView className="flex-1 justify-center">
           <StyledText className="text-2xl font-bold mb-8">
             {t("signInTitle")}
           </StyledText>
@@ -51,8 +50,12 @@ export default function SignIn() {
             autoCapitalize="none"
             className="w-full border border-gray-300 rounded-lg p-4 text-base text-gray-800"
           />
+          <StyledText className="text-lg text-black text-center mt-6 font-bold">
+            We don't track you. We don't sell data. You control what you share.
+          </StyledText>
         </StyledView>
 
+        {/* Bottom: Continue button */}
         <StyledTouchableOpacity
           className="w-full bg-[#FB923C] py-4 rounded-full items-center"
           onPress={() => router.push("/auth/verify")}

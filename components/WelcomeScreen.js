@@ -20,7 +20,7 @@ const WelcomeScreen = () => {
   const { t } = useLanguage();
   const player = useVideoPlayer(videoSource, (player) => {
     player.loop = true;
-    player.muted = false; // User changed this to false
+    player.muted = true; // User changed this to false
     player.play();
   });
 
