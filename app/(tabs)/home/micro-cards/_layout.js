@@ -5,7 +5,7 @@ export default function MicroCardsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="micro-education" />
-      <Stack.Screen name="lesson-detail" />
+      <Stack.Screen name="lesson-detail" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

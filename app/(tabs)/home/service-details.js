@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, Switch } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Switch, Linking, Alert } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useLanguage } from "../../../context/LanguageContext";
 import CustomHeader from "../../../components/CustomHeader";
-import ScaleIcon from "../../../assets/icons/scale.svg";
-import HandWithHeartIcon from "../../../assets/icons/hand-with-heart.svg";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -14,152 +12,346 @@ const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function ServiceDetails() {
+  const router = useRouter();
   const { t } = useLanguage();
-  const [includeSummary, setIncludeSummary] = useState(false);
+  const [includeSummary, setIncludeSummary] = useState(true);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [isResourcesOpen, setIsResourcesOpen] = useState(true);
+  const [isReferralPreviewExpanded, setIsReferralPreviewExpanded] = useState(false);
+  const [showReferralPrepared, setShowReferralPrepared] = useState(false);
+
+  const handleScroll = (event) => {
+    const currentOffsetY = event.nativeEvent.contentOffset.y;
+    if (currentOffsetY <= 10) {
+      setHeaderVisible(true);
+    } else if (currentOffsetY > 50) {
+      setHeaderVisible(false);
+    }
+  };
+
+  const handleSendReferral = () => {
+    if (!isReferralPreviewExpanded) {
+      setIsReferralPreviewExpanded(true);
+    } else {
+      setShowReferralPrepared(true);
+    }
+  };
 
   return (
-    <StyledView className="flex-1 bg-[#F9FAFB]">
-      <CustomHeader title={t("serviceDetails")} />
+    <StyledView className="flex-1 bg-[#F0F4FA]">
+      <CustomHeader
+        title=""
+        backText="Service Details"
+        rightText="Cancel"
+        headerVisible={headerVisible}
+      />
 
       <StyledScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 10, paddingHorizontal: 24 }}
       >
         {/* Service Header Card */}
-        <StyledView className="items-center px-6 pt-10 pb-8">
-          <StyledView className="w-24 h-24 bg-white rounded-[30px] items-center justify-center shadow-sm relative mb-6">
-            <ScaleIcon width={40} height={40} />
-            <StyledView className="absolute bottom-1 right-1 w-4 h-4 bg-[#22C55E] rounded-full border-2 border-white" />
+        <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-6 items-center shadow-xs mb-6 mt-4">
+          {/* Custom Shield icon with status dot */}
+          <StyledView className="w-16 h-16 bg-[#EFF6FF] rounded-2xl items-center justify-center relative mb-4">
+            <Ionicons name="shield-half" size={32} color="#005B96" />
+            <StyledView className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#22C55E] rounded-full border-2 border-white" />
           </StyledView>
 
-          <StyledText className="text-[#111827] text-2xl font-black mb-1">
-            {t("communityLegalCentre")}
+          <StyledText className="text-[#002B49] text-[22px] font-black text-center mb-1">
+            Legal Aid NSW
           </StyledText>
-          <StyledText className="text-[#3B82F6] text-base font-semibold mb-4">
-            {t("legalSupportServices")}
+          <StyledText className="text-[#64748B] text-xs text-center leading-5 px-2 mb-4">
+            Free legal information, advice, and support for people who need help understanding their rights and legal options.
           </StyledText>
 
-          <StyledView className="flex-row items-center bg-[#F0FDF4] px-4 py-1.5 rounded-full border border-[#DCFCE7]">
-            <Ionicons name="checkmark-circle" size={16} color="#22C55E" />
-            <StyledText className="text-[#15803D] text-[13px] font-bold ml-1.5">
-              {t("availableNow")}
+          {/* Available Pill */}
+          <StyledView className="flex-row items-center bg-[#E2F0D9] px-4 py-1.5 rounded-full border border-[#D0E4C5]">
+            <StyledView className="w-2 h-2 bg-[#385723] rounded-full mr-2" />
+            <StyledText className="text-[#385723] text-[10px] font-extrabold uppercase tracking-wider">
+              Available Now
             </StyledText>
           </StyledView>
         </StyledView>
 
-        {/* Contact Information */}
-        <StyledView className="px-6 mb-10">
-          <StyledText className="text-[#111827] text-lg font-bold mb-4 ml-1">
-            {t("contactInformation")}
+        {/* Contact Information Section */}
+        <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-5 shadow-xs mb-6">
+          <StyledText className="text-[#002B49] text-[15px] font-black mb-4">
+            Contact Information
           </StyledText>
 
-          <StyledTouchableOpacity
-            className="flex-row items-center bg-white p-5 rounded-[32px] mb-4 shadow-sm"
-            activeOpacity={0.7}
-          >
-            <StyledView className="w-14 h-14 bg-[#EFF6FF] rounded-2xl items-center justify-center mr-4">
-              <Ionicons name="call" size={24} color="#3B82F6" />
-            </StyledView>
-            <StyledView className="flex-1">
-              <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                {t("phone")}
-              </StyledText>
-              <StyledText className="text-[#002B49] text-[20px] font-black">
-                (02) 5550 0123
-              </StyledText>
-            </StyledView>
-            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-          </StyledTouchableOpacity>
+          <StyledView className="space-y-3.5 mb-4">
+            {/* Phone Option */}
+            <StyledTouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL("tel:1300888529")}
+              className="flex-row items-center bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px]"
+            >
+              <StyledView className="w-10 h-10 bg-[#EFF6FF] rounded-xl items-center justify-center mr-4">
+                <Ionicons name="call" size={18} color="#005B96" />
+              </StyledView>
+              <StyledView className="flex-1">
+                <StyledText className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wider">
+                  PHONE
+                </StyledText>
+                <StyledText className="text-[#002B49] text-base font-black">
+                  1300 888 529
+                </StyledText>
+              </StyledView>
+            </StyledTouchableOpacity>
 
-          <StyledTouchableOpacity
-            className="flex-row items-center bg-white p-5 rounded-[32px] mb-4 shadow-sm"
-            activeOpacity={0.7}
-          >
-            <StyledView className="w-14 h-14 bg-[#EFF6FF] rounded-2xl items-center justify-center mr-4">
-              <Ionicons name="mail" size={24} color="#3B82F6" />
+            {/* Email Option */}
+            <StyledTouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL("mailto:contact@legalaid.nsw.gov.au")}
+              className="flex-row items-center bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px]"
+            >
+              <StyledView className="w-10 h-10 bg-[#EFF6FF] rounded-xl items-center justify-center mr-4">
+                <Ionicons name="mail" size={18} color="#005B96" />
+              </StyledView>
+              <StyledView className="flex-1">
+                <StyledText className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wider">
+                  EMAIL
+                </StyledText>
+                <StyledText className="text-[#002B49] text-[14px] font-black">
+                  contact@legalaid.nsw.gov.au
+                </StyledText>
+              </StyledView>
+            </StyledTouchableOpacity>
+
+            {/* Languages Option */}
+            <StyledView
+              className="flex-row items-center bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px]"
+            >
+              <StyledView className="w-10 h-10 bg-[#EFF6FF] rounded-xl items-center justify-center mr-4">
+                <Ionicons name="language" size={18} color="#005B96" />
+              </StyledView>
+              <StyledView className="flex-1">
+                <StyledText className="text-[#94A3B8] text-[8px] font-bold uppercase tracking-wider">
+                  LANGUAGES
+                </StyledText>
+                <StyledText className="text-[#002B49] text-xs font-bold leading-5">
+                  en | English
+                </StyledText>
+              </StyledView>
             </StyledView>
-            <StyledView className="flex-1">
-              <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                {t("email")}
+          </StyledView>
+
+          {/* Eligibility Box & Visit Website Link */}
+          <StyledView className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-xl p-3 mb-1">
+            <StyledText className="text-[#64748B] text-[10px] font-semibold leading-4">
+              <StyledText className="font-bold text-[#002B49]">Eligibility: </StyledText>
+              legal-help, domestic-violence, discrimination
+            </StyledText>
+            <StyledTouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => Linking.openURL("https://www.legalaid.nsw.gov.au/")}
+              className="mt-2"
+            >
+              <StyledText className="text-[#005B96] text-[11px] font-bold">
+                Visit website
               </StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
+        </StyledView>
+
+        {/* Warm Referral Prepared Card OR Warm Referral Section */}
+        {showReferralPrepared ? (
+          <StyledView className="w-full bg-[#F3FAF0] border border-[#D0E4C5] rounded-[24px] p-5 mb-6 shadow-xs">
+            <StyledText className="text-[#385723] text-[10px] font-extrabold uppercase tracking-wider mb-2">
+              WARM REFERRAL PREPARED
+            </StyledText>
+            <StyledText className="text-[#002B49] text-[20px] font-black mb-2">
+              Legal Aid NSW intake handoff is ready.
+            </StyledText>
+            <StyledText className="text-[#64748B] text-[11px] leading-[17px] font-semibold mb-2">
+              The referral will include a concise incident summary, immediate safety needs, and the user's preferred contact method.
+            </StyledText>
+            <StyledText className="text-[#64748B] text-[10px] font-semibold mb-4">
+              2 advocate options are available for follow-up support if needed.
+            </StyledText>
+
+            {/* Referral Preview Inset Box */}
+            <StyledView className="bg-white border border-[#E2E8F0] rounded-2xl p-4 mb-5">
+              <StyledText className="text-[#94A3B8] text-[9px] font-extrabold uppercase tracking-wider mb-2">
+                REFERRAL PREVIEW
+              </StyledText>
+              <StyledText className="text-[#64748B] text-[11px] leading-[17px] font-semibold">
+                Warm referral request for Legal Aid NSW. Prepared to include: incident summary, immediate safety concerns, and preferred contact method. Interpreter preference: English. Cultural profile withheld at the user's request. SafeSpeak is acting as a guidance and connection layer, not a legal or clinical provider.
+              </StyledText>
+            </StyledView>
+
+            {/* Buttons Stack */}
+            <StyledView className="space-y-2.5">
+              {/* Call Service Button */}
+              <StyledTouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => Linking.openURL("tel:1300888529")}
+                className="bg-[#005B96] py-3 rounded-full items-center justify-center"
+              >
+                <StyledText className="text-white text-xs font-bold">
+                  Call service
+                </StyledText>
+              </StyledTouchableOpacity>
+
+              {/* Email Intro Button */}
+              <StyledTouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => Linking.openURL("mailto:contact@legalaid.nsw.gov.au?subject=SafeSpeak Support referral")}
+                className="bg-white border border-[#005B96] py-3 rounded-full items-center justify-center"
+              >
+                <StyledText className="text-[#005B96] text-xs font-bold">
+                  Email intro
+                </StyledText>
+              </StyledTouchableOpacity>
+
+              {/* Copy Summary Button */}
+              <StyledTouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert("Summary Copied", "Warm Referral summary copied to clipboard.");
+                }}
+                className="bg-white border border-[#CBD5E1] py-3 rounded-full items-center justify-center"
+              >
+                <StyledText className="text-[#002B49] text-xs font-bold">
+                  Copy summary
+                </StyledText>
+              </StyledTouchableOpacity>
+            </StyledView>
+          </StyledView>
+        ) : (
+          /* Warm Referral Section */
+          <StyledView className="w-full bg-[#EBF3FC] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs mb-6">
+            <StyledView className="flex-row items-center mb-3">
+              <StyledView className="w-8 h-8 bg-[#EFF6FF] rounded-lg items-center justify-center mr-3">
+                <Ionicons name="shuffle" size={16} color="#005B96" />
+              </StyledView>
               <StyledText className="text-[#002B49] text-[18px] font-black">
-                contact@clc.org.au
+                Warm Referral
               </StyledText>
             </StyledView>
-            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-          </StyledTouchableOpacity>
 
-          <StyledTouchableOpacity
-            className="flex-row items-center bg-white p-5 rounded-[32px] shadow-sm"
-            activeOpacity={0.7}
-          >
-            <StyledView className="w-14 h-14 bg-[#EFF6FF] rounded-2xl items-center justify-center mr-4">
-              <Ionicons name="globe" size={24} color="#3B82F6" />
-            </StyledView>
-            <StyledView className="flex-1">
-              <StyledText className="text-[#9CA3AF] text-[10px] font-bold uppercase tracking-[1px] mb-0.5">
-                {t("languages")}
-              </StyledText>
-              <StyledText className="text-[#002B49] text-[18px] font-black">
-                English, Arabic, Mandarin
-              </StyledText>
-            </StyledView>
-          </StyledTouchableOpacity>
-        </StyledView>
-
-        {/* Warm Referral Section */}
-        <StyledView className="bg-[#F3F4F6]/60 mx-4 rounded-[50px] p-8 pb-10">
-          <StyledView className="flex-row items-center mb-4">
-            <StyledView className="bg-white p-3 rounded-2xl mr-4 shadow-sm">
-              <HandWithHeartIcon width={28} height={28} />
-            </StyledView>
-            <StyledText className="text-[#002B49] text-[24px] font-black">
-              {t("warmReferral")}
+            <StyledText className="text-[#64748B] text-[11px] leading-[17px] font-semibold mb-4">
+              A warm referral ensures the provider has the context they need to help you immediately without repeating your story. This secure transfer of information helps build trust and accelerates support.
             </StyledText>
-          </StyledView>
 
-          <StyledText className="text-[#6B7280] text-[15px] font-medium leading-5 mb-8">
-            {t("warmReferralDesc")}
-          </StyledText>
-
-          <StyledView className="bg-white rounded-[40px] p-4 mb-8 shadow-sm flex-row items-center justify-between">
-            <StyledView className="flex-1 pr-4">
-              <StyledText className="text-[#111827] text-sm font-bold mb-1">
-                {t("includeIncidentSummary")}
+            {/* Profile Context Card */}
+            <StyledView className="bg-white border border-[#CBD5E1]/30 rounded-2xl p-4 mb-4">
+              <StyledText className="text-[#002B49] text-xs font-bold">
+                Migrant family | Muslim
               </StyledText>
-              <StyledText className="text-[#9CA3AF] text-sm">
-                {t("sharesRecentReport")}
+              <StyledText className="text-[#94A3B8] text-[9px] font-semibold mt-1">
+                Warm referral will exclude profile context until you choose to share it.
               </StyledText>
             </StyledView>
-            <Switch
-              value={includeSummary}
-              onValueChange={setIncludeSummary}
-              trackColor={{ false: "#E5E7EB", true: "#005696" }}
-              thumbColor="white"
-              style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] }}
-            />
-          </StyledView>
 
-          <StyledTouchableOpacity
-            className="bg-[#FF8A00] flex-row items-center justify-center py-4 rounded-full shadow-lg shadow-orange-300"
-            activeOpacity={0.5}
-          >
-            <StyledText className="text-white text-[18px] font-black mr-2">
-              {t("sendReferral")}
-            </StyledText>
-            <Ionicons name="paper-plane-outline" size={24} color="white" />
-          </StyledTouchableOpacity>
-        </StyledView>
+            {/* Include Incident Summary Card */}
+            <StyledView className="bg-white border border-[#CBD5E1]/30 rounded-2xl p-4 flex-row items-center justify-between mb-5">
+              <StyledView className="flex-1 pr-3">
+                <StyledText className="text-[#002B49] text-xs font-bold">
+                  Include Incident Summary
+                </StyledText>
+                <StyledText className="text-[#94A3B8] text-[9px] font-semibold mt-0.5">
+                  Shares your recent report securely.
+                </StyledText>
+              </StyledView>
+              <Switch
+                trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
+                thumbColor={"#FFFFFF"}
+                ios_backgroundColor="#E2E8F0"
+                onValueChange={setIncludeSummary}
+                value={includeSummary}
+                style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+              />
+            </StyledView>
+
+            {/* Sharing Preview (Expanded Section) */}
+            {isReferralPreviewExpanded && (
+              <StyledView className="w-full bg-white border border-[#DBEAFE] rounded-2xl p-4 mb-4">
+                <StyledText className="text-[#64748B] text-[10px] font-bold uppercase tracking-wider mb-3">
+                  SHARING PREVIEW
+                </StyledText>
+                
+                <StyledText className="text-[#64748B] text-xs leading-5">
+                  <StyledText className="font-bold text-[#002B49]">Service:</StyledText> Legal Aid NSW
+                </StyledText>
+
+                <StyledText className="text-[#64748B] text-xs leading-5 mt-1">
+                  <StyledText className="font-bold text-[#002B49]">Safe contact:</StyledText> hasantanvir529@gmail.com
+                </StyledText>
+
+                <StyledText className="text-[#64748B] text-xs leading-5 mt-1">
+                  <StyledText className="font-bold text-[#002B49]">Summary:</StyledText> The user is requesting support and has approved sharing a concise incident summary prepared in SafeSpeak.
+                </StyledText>
+
+                <StyledText className="text-[#64748B] text-xs leading-5 mt-1">
+                  <StyledText className="font-bold text-[#002B49]">Interpreter:</StyledText> English
+                </StyledText>
+
+                <StyledText className="text-[#94A3B8] text-[9.5px] font-semibold mt-3.5 leading-4">
+                  No evidence files, full report payload, or hidden profile data will be shared by this request.
+                </StyledText>
+
+                <StyledTouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setIsReferralPreviewExpanded(false)}
+                  className="mt-3.5"
+                >
+                  <StyledText className="text-[#005B96] text-xs font-bold">
+                    Edit before sending
+                  </StyledText>
+                </StyledTouchableOpacity>
+              </StyledView>
+            )}
+
+            {/* Send Referral Orange Button */}
+            <StyledTouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleSendReferral}
+              className="bg-[#FF9000] py-3.5 rounded-full flex-row items-center justify-center shadow-xs"
+            >
+              <StyledText className="text-white text-xs font-bold mr-1.5">
+                {isReferralPreviewExpanded ? "Confirm and send referral" : "Send Referral"}
+              </StyledText>
+              <Ionicons name="arrow-forward" size={14} color="white" />
+            </StyledTouchableOpacity>
+          </StyledView>
+        )}
 
         {/* Relevant Resources Accordion */}
-        <StyledView className="px-8 mt-10 mb-10">
-          <StyledTouchableOpacity className="flex-row items-center justify-between">
-            <StyledText className="text-[#002B49] text-xl font-black">
-              {t("relevantResources")}
+        <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-5 shadow-xs mb-4">
+          <StyledTouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setIsResourcesOpen(!isResourcesOpen)}
+            className="flex-row items-center justify-between"
+          >
+            <StyledText className="text-[#002B49] text-[15px] font-black">
+              Relevant Resources
             </StyledText>
-            <Ionicons name="chevron-down" size={24} color="#9CA3AF" />
+            <Ionicons
+              name={isResourcesOpen ? "chevron-down" : "chevron-forward"}
+              size={18}
+              color="#94A3B8"
+            />
           </StyledTouchableOpacity>
+
+          {isResourcesOpen && (
+            <StyledView className="mt-4 border-t border-[#E2E8F0] pt-4 space-y-2.5">
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => Linking.openURL("https://www.legalaid.nsw.gov.au/")}
+                className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center"
+              >
+                <StyledText className="text-[#005B96] text-xs font-bold">
+                  Legal Aid NSW
+                </StyledText>
+                <Ionicons name="chevron-forward" size={14} color="#CBD5E1" />
+              </StyledTouchableOpacity>
+            </StyledView>
+          )}
         </StyledView>
       </StyledScrollView>
     </StyledView>

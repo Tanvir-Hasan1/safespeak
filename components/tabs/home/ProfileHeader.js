@@ -9,18 +9,27 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const ProfileHeader = React.memo(({ name = "Alex Rivera" }) => {
+const ProfileHeader = React.memo(({ name = "Alex Rivera", onMenuPress }) => {
   const { t } = useLanguage();
   const router = useRouter();
   return (
     <StyledView className="flex-row items-center justify-between px-6 py-4 bg-white mx-4 rounded-3xl shadow-sm border border-gray-100">
-      <StyledView>
-        <StyledText className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">
-          {t("welcomeBack")}
-        </StyledText>
-        <StyledText className="text-[#002B49] text-xl font-bold">
-          {name}
-        </StyledText>
+      <StyledView className="flex-row items-center">
+        <StyledTouchableOpacity
+          activeOpacity={0.7}
+          onPress={onMenuPress}
+          className="mr-3 p-1"
+        >
+          <Ionicons name="menu" size={28} color="#002B49" />
+        </StyledTouchableOpacity>
+        <StyledView>
+          <StyledText className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">
+            {t("welcomeBack")}
+          </StyledText>
+          <StyledText className="text-[#002B49] text-xl font-bold">
+            {name}
+          </StyledText>
+        </StyledView>
       </StyledView>
 
       <StyledTouchableOpacity

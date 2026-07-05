@@ -2,6 +2,31 @@ const translations = {
   en: {
     // EmergencyBar
     emergencyCall: "In case of emergency call (000)",
+    emergencyCallShort: "Emergency: 000",
+    respectCallLabel: "1800RESPECT",
+    smartDialer: "SMART DIALLER",
+    covertExit: "COVERT EXIT",
+    safetyInfoOnly: "SAFETY INFO ONLY",
+
+    // Smart Dialer Screen
+    smartDialerTitle: "Smart Dialler",
+    smartDialerDesc: "Use verified numbers, interpreter prompts, and a short call-prep script. SafeSpeak does not place calls automatically.",
+    smartDialerCallNow: "Call now",
+    smartDialerSource: "Source",
+    smartDialerCallPrep: "Call prep script",
+    smartDialerCallPrepDesc: "Edit before calling if you want to shorten or simplify it.",
+    smartDialerCovertGuidance: "Covert help guidance",
+    smartDialerCovertGuidanceDesc: "If it is not safe to speak for long, say that first. You can ask the service to slow down, keep questions short, or connect an interpreter through TIS National.",
+    respectDesc: "Domestic, family, and sexual violence counselling, information, and support.",
+    emergencyDesc: "Triple Zero for urgent police, ambulance, or fire support.",
+    lifelineDesc: "Crisis support and suicide prevention.",
+    policeAssistanceDesc: "Non-urgent police help.",
+    tisNationalDesc: "Immediate phone interpreter connection within Australia.",
+    respectLabel: "1800RESPECT",
+    emergencyLabel: "Emergency",
+    lifelineLabel: "Lifeline",
+    policeAssistanceLabel: "Police Assistance Line",
+    tisNationalLabel: "TIS National",
 
     // WelcomeScreen
     welcomeTagline: "SafeSpeak: Real Stories, Real Support",
@@ -333,7 +358,7 @@ const translations = {
     when: "When",
 
     // Incident Builder
-    timelineBuilder: "Timeline Builder",
+    timelineBuilder: "Report Incident",
     incidentGreeting: "Hi Raihan, can you remind me, how can I help you today?",
     typeResponse: "Type your response...",
     metadataCapture: "Metadata Capture",
@@ -466,6 +491,31 @@ const translations = {
   es: {
     // EmergencyBar
     emergencyCall: "En caso de emergencia llame al (000)",
+    emergencyCallShort: "Emergencia: 000",
+    respectCallLabel: "1800RESPECT",
+    smartDialer: "MARCACIÓN INTEL.",
+    covertExit: "SALIDA RÁPIDA",
+    safetyInfoOnly: "SOLO INFO DE SEGURIDAD",
+
+    // Smart Dialer Screen
+    smartDialerTitle: "Marcación Inteligente",
+    smartDialerDesc: "Use números verificados, indicaciones de intérprete y un guion de preparación. SafeSpeak no realiza llamadas automáticamente.",
+    smartDialerCallNow: "Llamar ahora",
+    smartDialerSource: "Fuente",
+    smartDialerCallPrep: "Guion de preparación",
+    smartDialerCallPrepDesc: "Edítelo antes de llamar si desea acortarlo o simplificarlo.",
+    smartDialerCovertGuidance: "Guía de ayuda encubierta",
+    smartDialerCovertGuidanceDesc: "Si no es seguro hablar por mucho tiempo, dígalo primero. Puede pedir al servicio que vaya más despacio, que haga preguntas cortas o que conecte a un intérprete a través de TIS National.",
+    respectDesc: "Asesoramiento, información y apoyo sobre violencia doméstica, familiar y sexual.",
+    emergencyDesc: "Triple Cero para apoyo policial, médico o de bomberos urgente.",
+    lifelineDesc: "Apoyo en crisis y prevención del suicidio.",
+    policeAssistanceDesc: "Ayuda policial no urgente.",
+    tisNationalDesc: "Conexión telefónica inmediata con un intérprete en Australia.",
+    respectLabel: "1800RESPECT",
+    emergencyLabel: "Emergencia",
+    lifelineLabel: "Lifeline",
+    policeAssistanceLabel: "Línea de Asistencia Policial",
+    tisNationalLabel: "TIS National",
 
     // WelcomeScreen
     welcomeTagline: "SafeSpeak: Historias Reales, Apoyo Real",
@@ -798,7 +848,7 @@ const translations = {
     when: "Cuándo",
 
     // Incident Builder
-    timelineBuilder: "Constructor de Cronología",
+    timelineBuilder: "Reportar Incidente",
     incidentGreeting:
       "Hola Raihan, ¿puedes recordarme en qué puedo ayudarte hoy?",
     typeResponse: "Escribe tu respuesta...",

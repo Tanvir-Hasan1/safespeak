@@ -106,6 +106,17 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("today");
+  const [headerVisible, setHeaderVisible] = useState(true);
+
+  const handleScroll = (event) => {
+    const currentOffsetY = event.nativeEvent.contentOffset.y;
+
+    if (currentOffsetY <= 10) {
+      setHeaderVisible(true);
+    } else if (currentOffsetY > 50) {
+      setHeaderVisible(false);
+    }
+  };
 
   const notifications =
     activeTab === "today" ? TODAY_NOTIFICATIONS(t) : PAST_NOTIFICATIONS(t);
@@ -113,7 +124,7 @@ export default function NotificationsScreen() {
   return (
     <StyledView style={{ flex: 1, backgroundColor: "#F0F4FA" }}>
       <SafeAreaView edges={["top"]}>
-        <EmergencyBar />
+        <EmergencyBar visible={headerVisible} />
 
         {/* Header */}
         <StyledView style={styles.headerRow}>
@@ -178,12 +189,10 @@ export default function NotificationsScreen() {
       {/* Notification List */}
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: 40,
-          paddingTop: 8,
-        }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {notifications.map((item) => (
           <NotificationItem key={item.id} item={item} />

@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   BackHandler,
   Alert,
+  Linking,
+  NativeModules,
 } from "react-native";
 import { styled } from "nativewind";
 
@@ -14,24 +16,66 @@ const StyledView = styled(View);
 const ACTIVE = "#FF8A00";
 const INACTIVE = "#9CA3AF";
 
-const exitApp = () => {
-  Alert.alert(
-    "Exit App",
-    "Are you sure you want to exit?",
-    [
-      { text: "No", style: "cancel" },
-      {
-        text: "Yes",
-        style: "destructive",
-        onPress: () => {
-          if (Platform.OS === "android") {
-            BackHandler.exitApp();
-          }
+const CALCULATOR_PACKAGES = [
+  "com.google.android.calculator",
+  "com.android.calculator2",
+  "com.sec.android.app.popupcalculator",
+  "com.miui.calculator",
+  "com.android.bbkcalculator",
+  "com.coloros.calculator",
+  "com.oneplus.calculator",
+  "com.oppo.calculator",
+  "com.huawei.calculator",
+];
+
+const { AppLauncher } = NativeModules;
+
+const exitApp = async () => {
+  if (Platform.OS === "android") {
+    // 1. Try launching via our Kotlin Native Module AppLauncher
+    for (const pkg of CALCULATOR_PACKAGES) {
+      try {
+        const success = await AppLauncher.openApp(pkg);
+        if (success) {
+          return;
+        }
+      } catch (err) {
+        console.log(`Failed to launch package ${pkg}:`, err);
+      }
+    }
+
+    // 2. Try the standard generic calculator category intent as fallback
+    try {
+      await Linking.sendIntent("android.intent.action.MAIN", [
+        {
+          key: "category",
+          value: "android.intent.category.APP_CALCULATOR",
         },
-      },
-    ],
-    { cancelable: true },
-  );
+      ]);
+      return;
+    } catch (e) {
+      console.log("Generic calculator intent failed");
+    }
+
+    // 3. Fallback: exit the app
+    BackHandler.exitApp();
+  } else {
+    Alert.alert(
+      "Exit App",
+      "Are you sure you want to exit?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: () => {
+            // Fallback for iOS
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  }
 };
 
 function HomeTabButton({ onPress }) {

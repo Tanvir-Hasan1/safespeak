@@ -9,6 +9,7 @@ export default function HomeLayout() {
       <Stack.Screen name="resources" />
       <Stack.Screen name="report-submission" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="smart-dialer" />
     </Stack>
   );
 }

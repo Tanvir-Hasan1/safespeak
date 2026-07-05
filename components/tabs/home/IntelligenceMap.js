@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledView = styled(View);
@@ -10,13 +11,18 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const IntelligenceMap = React.memo(() => {
   const { t } = useLanguage();
+  const router = useRouter();
   return (
-    <StyledView className="px-6 mb-20">
+    <StyledView className="px-6 mb-6">
       <StyledText className="text-[#1F2937] text-2xl font-bold mb-4">
         {t("localIntelligence")}
       </StyledText>
 
-      <StyledView className="h-60 rounded-[40px] overflow-hidden shadow-sm relative">
+      <StyledTouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => router.push("/home/local-intelligence")}
+        className="h-60 rounded-[40px] overflow-hidden shadow-sm relative"
+      >
         <ImageBackground
           source={require("../../../assets/map-bg.jpg")}
           className="flex-1"
@@ -47,14 +53,17 @@ const IntelligenceMap = React.memo(() => {
               </StyledText>
             </StyledView>
 
-            <StyledTouchableOpacity className="bg-[#FF8A00] px-5 py-2.5 rounded-full ml-2">
+            <StyledTouchableOpacity 
+              onPress={() => router.push("/home/local-intelligence")}
+              className="bg-[#FF8A00] px-5 py-2.5 rounded-full ml-2"
+            >
               <StyledText className="text-white font-bold text-[12px]">
                 {t("details")}
               </StyledText>
             </StyledTouchableOpacity>
           </StyledView>
         </ImageBackground>
-      </StyledView>
+      </StyledTouchableOpacity>
     </StyledView>
   );
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   Modal,
   Pressable,
   Linking,
+  Animated,
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useLanguage } from "../../../context/LanguageContext";
+import { useRouter } from "expo-router";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -22,12 +23,24 @@ const LANGUAGES = [
 ];
 
 const callEmergency = () => Linking.openURL("tel:000");
+const callRespect = () => Linking.openURL("tel:1800737732");
 
-const EmergencyBar = React.memo(() => {
+const EmergencyBar = React.memo(({ visible = true, absolute = false }) => {
   const { language, setLanguage, t } = useLanguage();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [anchorPosition, setAnchorPosition] = useState({ top: 0, right: 0 });
   const langButtonRef = React.useRef(null);
+  const router = useRouter();
+
+  const animatedValue = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: visible ? 1 : 0,
+      duration: 200,
+      useNativeDriver: absolute,
+    }).start();
+  }, [visible, absolute]);
 
   const selectedLang =
     LANGUAGES.find((l) => l.key === language) || LANGUAGES[0];
@@ -48,48 +61,100 @@ const EmergencyBar = React.memo(() => {
     setDropdownVisible(false);
   };
 
+  const goToSmartDialer = () => {
+    router.push("/home/smart-dialer");
+  };
+
+  const translateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-150, 0],
+  });
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const height = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 125],
+  });
+
+  const containerStyle = absolute
+    ? {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        transform: [{ translateY }],
+        opacity,
+      }
+    : {
+        height,
+        opacity,
+        overflow: "hidden",
+      };
+
   return (
     <>
-      <StyledTouchableOpacity
-        className="w-full px-4 pt-2 pb-2"
-        activeOpacity={0.8}
-        onPress={callEmergency}
-      >
-        <LinearGradient
-          colors={["#F43F5E", "#E11D48"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="rounded-full flex-row items-center justify-between px-4 py-2"
-          style={{ borderRadius: 999 }}
-        >
-          <StyledView className="flex-row items-center space-x-2">
-            <Ionicons name="sunny" size={16} color="white" />
-            <StyledText className="text-white font-semibold text-xs">
-              {t("emergencyCall")}
-            </StyledText>
-          </StyledView>
+      <Animated.View style={containerStyle}>
+        <StyledView className="w-full px-4 pt-2 pb-2">
+          <StyledView className="bg-slate-100 p-3 rounded-[28px] border border-rose-500/85 shadow-sm">
+            {/* Row 1: Emergency & 1800RESPECT */}
+            <StyledView className="flex-row justify-between mb-2">
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                onPress={callEmergency}
+                className="flex-1 mr-1 bg-[#EF4444] rounded-full py-2.5 items-center justify-center flex-row"
+              >
+                <Ionicons name="alert-circle" size={14} color="white" style={{ marginRight: 4 }} />
+                <StyledText className="text-white font-extrabold text-[11px] uppercase">
+                  {t("emergencyCallShort")}
+                </StyledText>
+              </StyledTouchableOpacity>
 
-          <TouchableOpacity
-            ref={langButtonRef}
-            onPress={openDropdown}
-            activeOpacity={0.7}
-          >
-            <StyledView className="bg-white/20 px-2 py-0.5 rounded-full flex-row items-center">
-              <Text style={{ fontSize: 14, lineHeight: 18 }}>
-                {selectedLang.flag}
-              </Text>
-              <StyledText className="text-white text-[10px] font-bold ml-1">
-                {selectedLang.code}
-              </StyledText>
-              <Ionicons
-                name={dropdownVisible ? "chevron-up" : "chevron-down"}
-                size={12}
-                color="white"
-              />
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                onPress={callRespect}
+                className="flex-1 ml-1 bg-[#0F5D9F] rounded-full py-2.5 items-center justify-center flex-row"
+              >
+                <Ionicons name="call" size={14} color="white" style={{ marginRight: 4 }} />
+                <StyledText className="text-white font-extrabold text-[11px] uppercase">
+                  {t("respectCallLabel")}
+                </StyledText>
+              </StyledTouchableOpacity>
             </StyledView>
-          </TouchableOpacity>
-        </LinearGradient>
-      </StyledTouchableOpacity>
+
+            {/* Row 2: Smart Dialer & Language Selector */}
+            <StyledView className="flex-row justify-between items-center">
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                onPress={goToSmartDialer}
+                className="flex-1 mr-1 bg-[#10B981] rounded-full py-2.5 items-center justify-center flex-row"
+              >
+                <Ionicons name="call-outline" size={13} color="white" style={{ marginRight: 4 }} />
+                <StyledText className="text-white font-extrabold text-[11px] uppercase">
+                  {t("smartDialer")}
+                </StyledText>
+              </StyledTouchableOpacity>
+
+              <StyledTouchableOpacity
+                ref={langButtonRef}
+                onPress={openDropdown}
+                activeOpacity={0.7}
+                className="flex-1 ml-1 bg-slate-700 rounded-full py-2.5 flex-row items-center justify-center"
+              >
+                <Text style={{ fontSize: 13, marginRight: 4 }}>{selectedLang.flag}</Text>
+                <StyledText className="text-white font-bold text-[11px]">
+                  {selectedLang.code}
+                </StyledText>
+                <Ionicons name="chevron-down" size={10} color="white" style={{ marginLeft: 4 }} />
+              </StyledTouchableOpacity>
+            </StyledView>
+          </StyledView>
+        </StyledView>
+      </Animated.View>
 
       {/* Dropdown Modal */}
       <Modal

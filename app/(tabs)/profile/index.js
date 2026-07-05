@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
@@ -20,16 +20,29 @@ const StyledScrollView = styled(ScrollView);
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  const [headerVisible, setHeaderVisible] = useState(true);
+
+  const handleScroll = (event) => {
+    const currentOffsetY = event.nativeEvent.contentOffset.y;
+
+    if (currentOffsetY <= 10) {
+      setHeaderVisible(true);
+    } else if (currentOffsetY > 50) {
+      setHeaderVisible(false);
+    }
+  };
 
   return (
     <StyledView className="flex-1 bg-[#F8FAFC]">
       <SafeAreaView className="bg-white" edges={["top"]}>
-        <EmergencyBar />
+        <EmergencyBar visible={headerVisible} />
       </SafeAreaView>
 
       <StyledScrollView
         className="flex-1 px-4 pt-6 mb-16"
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* Greeting */}
         <StyledView className="items-center mb-8">

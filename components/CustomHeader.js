@@ -16,27 +16,45 @@ const CustomHeader = ({
   showCancel = true,
   rightIcon,
   onRightPress,
+  headerVisible = true,
+  backText,
+  rightText,
 }) => {
   const router = useRouter();
   const { t } = useLanguage();
 
   return (
     <SafeAreaView className="bg-[#F0F4FA]" edges={["top"]}>
-      <EmergencyBar />
+      <EmergencyBar visible={headerVisible} />
       <StyledView className="flex-row items-center justify-between px-6 py-4">
         {/* Back Button */}
-        <StyledTouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => router.back()}
-          className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
-        >
-          <Ionicons name="chevron-back" size={20} color="#FB923C" />
-        </StyledTouchableOpacity>
+        {backText ? (
+          <StyledTouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            className="flex-row items-center"
+          >
+            <Ionicons name="chevron-back" size={20} color="#1F2937" />
+            <StyledText className="text-[#1F2937] text-base font-semibold ml-1">
+              {backText}
+            </StyledText>
+          </StyledTouchableOpacity>
+        ) : (
+          <StyledTouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
+          >
+            <Ionicons name="chevron-back" size={20} color="#FB923C" />
+          </StyledTouchableOpacity>
+        )}
 
         {/* Title */}
-        <StyledText className="text-[#1F2937] text-lg font-bold">
-          {title}
-        </StyledText>
+        {!backText && (
+          <StyledText className="text-[#1F2937] text-lg font-bold">
+            {title}
+          </StyledText>
+        )}
 
         {/* Right Action */}
         {rightIcon ? (
@@ -53,7 +71,7 @@ const CustomHeader = ({
             onPress={() => router.back()}
           >
             <StyledText className="text-[#94A3B8] text-base font-medium">
-              {t("cancel")}
+              {rightText || t("cancel")}
             </StyledText>
           </StyledTouchableOpacity>
         ) : (
