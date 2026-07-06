@@ -197,14 +197,115 @@ const translations = {
 
     // Triage Explanation
     triageExplanation: "Triage Explanation",
+    triageSubtitle: "Understanding your current status and next steps.",
     incidentClassification: "INCIDENT CLASSIFICATION",
+    reviewYourOptions: "Review Your Options",
     mentalHealthSupport: "Mental Health Support",
     triageDesc:
-      "Based on your inputs, we have identified a need for emotional support and resources.",
+      "SafeSpeak does not have enough clear detail to place this into one strong pathway yet. You can review the facts, update anything important, and then look through broad support options.",
     aiAssessmentDisclaimer:
-      "This is an AI assessment and not a clinical diagnosis.",
+      "This is not a formal finding. You choose what to do next.",
     legalAdviceDisclaimer:
       "This is information only and not legal advice. Please consult with a professional for legal representation.",
+    yourControl: "YOUR CONTROL",
+    yourControlDesc:
+      "SafeSpeak does not call, email, report, or share anything automatically. Opening a service, calling a number, or sharing information only happens if you choose that next step.",
+    yourControlSub:
+      "Some options below are official fallback resources because no closer in-app support service match was available for this triage.",
+    whyThisPath: "WHY THIS PATH",
+    whyThisPathDesc:
+      "SafeSpeak does not have enough detail to place this into one strong pathway yet. Some details are still missing, especially what details and when details.",
+    possiblePathways: "POSSIBLE PATHWAYS",
+    possiblePathwaysDesc:
+      "This may relate to one or more support or reporting pathways. You may wish to explore the options below without sending anything automatically.",
+    generalSupportOptions: "This may relate to general support options.",
+    generalSupportOptionsDesc:
+      "You may wish to explore support, safety, and evidence pathways at your own pace.",
+    preparePathway: "PREPARE FOR THIS PATHWAY",
+    preparePathwayDesc:
+      "SafeSpeak can prepare the next questions for this pathway without sending anything anywhere.",
+    whatAskNext: "WHAT WE MAY ASK NEXT",
+    shortSummary: "Short summary",
+    helpfulAvailable: "HELPFUL IF AVAILABLE",
+    datesTiming: "Dates or timing",
+    reportDraftStatus: "REPORT DRAFT STATUS",
+    reportDraftStatusDesc:
+      "This draft is information only and has not been sent anywhere.",
+    statusLabel: "STATUS",
+    draftLabel: "draft",
+    statusDesc:
+      "The user described a possible general support concern and is reviewing options.",
+    stillMissingLabel: "STILL MISSING",
+    missingItems: "what details, when details, where details, who details",
+    viewHistory: "View history",
+    checkKeyFacts: "Check or edit the key facts",
+    checkKeyFactsDesc:
+      "Add the main details that feel safest to share, such as what happened, who was involved, where it happened, and any immediate safety worries.",
+    immediateDangerTitle: "Immediate danger",
+    immediateDangerDesc:
+      "If safety changes at any point, you can stop here and use emergency or support options first.",
+    immediateDangerSub:
+      "This stays visible so urgent safety options are always easy to reach. SafeSpeak does not call emergency services for you.",
+    call000Label: "Call 000",
+    reviewSupportTitle: "Review broad support options",
+    reviewSupportDesc:
+      "You can still look through support, reporting, privacy, and safety options without locking yourself into one path.",
+    reviewSupportSub:
+      "Suggested from your current triage pathway. SafeSpeak does not call, email, report, or share anything unless you choose the next step yourself.",
+    reviewOptionsLabel: "Review options",
+    getSupportOverwhelmingTitle: "Get support if this feels overwhelming",
+    getSupportOverwhelmingDesc:
+      "You can choose emotional support now even if you are not ready to report or take another step.",
+    getSupportOverwhelmingSub:
+      "Suggested from your current triage pathway. SafeSpeak does not call, email, report, or share anything unless you choose the next step yourself.",
+    findSupportLabel: "Find support",
+    suggestedGuides: "Suggested guides",
+    matchedTriageProfile: "Matched to the current triage profile.",
+    noGuidesSuggested:
+      "No specific guide cards were suggested for this triage yet. You can still review the steps and resources below.",
+    additionalSafetyResources: "Additional Safety Resources",
+    noResourcesMatched:
+      "No extra resources were matched yet. You can still review the detailed explanation page or browse general support in the explorer.",
+    yourReports: "Your Reports",
+    yourIncidentHistory: "Your Incident History",
+    historySubtitle: "Live report records, lifecycle state, and audit-safe actions.",
+    totalReportsLabel: "TOTAL REPORTS",
+    submittedOrReceivedLabel: "SUBMITTED OR RECEIVED",
+    lifecycleActionsLabel: "LIFECYCLE ACTIONS",
+    searchPlaceholder: "Search by report title, date, or status",
+    allReportsLabel: "All Reports",
+    draftsLabelText: "Drafts",
+    inReviewLabel: "In Review",
+    draftStatusLabel: "Draft",
+    harassmentTitle: "Harassment near main corridor",
+    harassmentUpdated: "Updated 05 July 2026, 1:28 am",
+    openDetail: "Open detail >",
+    reviewSubmission: "Review submission",
+    withdraw: "Withdraw",
+    markInfoOnly: "Mark info-only",
+    requestDeletion: "Request deletion",
+    delete: "Delete",
+    reportOverview: "Report Overview",
+    incidentNarrative: "INCIDENT NARRATIVE",
+    incidentNarrativeText:
+      '"A manager used threatening language and blocked the reporter\'s path."',
+    reportId: "REPORT ID",
+    createdLabel: "CREATED",
+    lifecycleDesc:
+      "Actions are audit logged and refresh this report after completion.",
+    statusTimeline: "STATUS TIMELINE",
+    draftCreatedTimeline: "05 July 2026, 1:28 am | created",
+    submissionRecords: "SUBMISSION RECORDS",
+    noSubmissionRecords:
+      "No destination submissions have been created for this report.",
+    reportMetadata: "REPORT METADATA",
+    lastUpdate: "LAST UPDATE",
+    supportKey: "SUPPORT KEY",
+    locationLabel: "LOCATION",
+    locationValue: "Near the elevator",
+    editReport: "Edit report",
+    proceedSubmission: "Proceed to submission",
+    submissionHistory: "Submission history",
     saveToHistory: "Save to history",
     feelingStressed: "I'm feeling stressed",
     mindfulnessGrounding: "Mindfulness & grounding",
@@ -686,14 +787,115 @@ const translations = {
 
     // Triage Explanation
     triageExplanation: "Explicación de Triage",
+    triageSubtitle: "Entendiendo su estado actual y los siguientes pasos.",
     incidentClassification: "CLASIFICACIÓN DEL INCIDENTE",
+    reviewYourOptions: "Revise Sus Opciones",
     mentalHealthSupport: "Apoyo de Salud Mental",
     triageDesc:
-      "Basado en sus entradas, hemos identificado una necesidad de apoyo emocional y recursos.",
+      "SafeSpeak aún no tiene suficientes detalles claros para ubicar esto en una vía específica. Puede revisar los hechos, actualizar cualquier dato importante y luego buscar opciones de apoyo generales.",
     aiAssessmentDisclaimer:
-      "Esta es una evaluación de IA y no un diagnóstico clínico.",
+      "Esta no es una conclusión formal. Usted elige qué hacer a continuación.",
     legalAdviceDisclaimer:
       "Esta es solo información y no asesoría legal. Por favor consulte con un profesional para representación legal.",
+    yourControl: "SU CONTROL",
+    yourControlDesc:
+      "SafeSpeak no llama, envía correos electrónicos, informa ni comparte nada automáticamente. Abrir un servicio, llamar a un número o compartir información solo ocurre si usted elige ese siguiente paso.",
+    yourControlSub:
+      "Algunas opciones a continuación son recursos de respaldo oficiales porque no había un servicio de apoyo más cercano disponible para este triaje.",
+    whyThisPath: "SABER POR QUÉ ESTA VÍA",
+    whyThisPathDesc:
+      "SafeSpeak aún no tiene suficientes detalles para colocar esto en una vía específica. Aún faltan algunos detalles, especialmente los detalles de qué y cuándo.",
+    possiblePathways: "VÍAS POSIBLES",
+    possiblePathwaysDesc:
+      "Esto puede estar relacionado con una o más vías de apoyo o denuncia. Es posible que desee explorar las opciones a continuación sin enviar nada automáticamente.",
+    generalSupportOptions: "Esto puede relacionarse con opciones de apoyo general.",
+    generalSupportOptionsDesc:
+      "Es posible que desee explorar las vías de apoyo, seguridad y evidencia a su propio ritmo.",
+    preparePathway: "PREPÁRESE PARA ESTA VÍA",
+    preparePathwayDesc:
+      "SafeSpeak puede preparar las siguientes preguntas para esta vía sin enviar nada a ningún lado.",
+    whatAskNext: "LO QUE PODRÍAMOS PREGUNTAR A CONTINUACIÓN",
+    shortSummary: "Resumen corto",
+    helpfulAvailable: "ÚTIL SI ESTÁ DISPONIBLE",
+    datesTiming: "Fechas o plazos",
+    reportDraftStatus: "ESTADO DEL BORRADOR DEL INFORME",
+    reportDraftStatusDesc:
+      "Este borrador es solo de información y no se ha enviado a ningún lado.",
+    statusLabel: "ESTADO",
+    draftLabel: "borrador",
+    statusDesc:
+      "El usuario describió una posible preocupación de apoyo general y está revisando opciones.",
+    stillMissingLabel: "AÚN FALTA",
+    missingItems: "detalles de qué, detalles de cuándo, detalles de dónde, detalles de quién",
+    viewHistory: "Ver historial",
+    checkKeyFacts: "Verificar o editar los datos clave",
+    checkKeyFactsDesc:
+      "Agregue los detalles principales que se sienta más seguro de compartir, como qué sucedió, quién estuvo involucrado, dónde sucedió y cualquier preocupación de seguridad inmediata.",
+    immediateDangerTitle: "Peligro inmediato",
+    immediateDangerDesc:
+      "Si la seguridad cambia en cualquier momento, puede detenerse aquí y usar las opciones de emergencia o apoyo primero.",
+    immediateDangerSub:
+      "Esto permanece visible para que las opciones de seguridad urgentes siempre sean fáciles de alcanzar. SafeSpeak no llama a los servicios de emergencia por usted.",
+    call000Label: "Llamar al 000",
+    reviewSupportTitle: "Revisar opciones de apoyo general",
+    reviewSupportDesc:
+      "Aún puede buscar opciones de apoyo, denuncia, privacidad y seguridad sin limitarse a una sola vía.",
+    reviewSupportSub:
+      "Sugerido a partir de su vía de triaje actual. SafeSpeak no llama, envía correos electrónicos, informa ni comparte nada a menos que usted mismo elija el siguiente paso.",
+    reviewOptionsLabel: "Revisar opciones",
+    getSupportOverwhelmingTitle: "Obtenga apoyo si esto se siente abrumador",
+    getSupportOverwhelmingDesc:
+      "Puede elegir apoyo emocional ahora incluso si no está listo para denunciar o dar otro paso.",
+    getSupportOverwhelmingSub:
+      "Sugerido a partir de su vía de triaje actual. SafeSpeak no llama, envía correos electrónicos, informa ni comparte nada a menos que usted mismo elija el siguiente paso.",
+    findSupportLabel: "Buscar apoyo",
+    suggestedGuides: "Guías sugeridas",
+    matchedTriageProfile: "Adaptado al perfil de triaje actual.",
+    noGuidesSuggested:
+      "Aún no se sugirieron tarjetas de guía específicas para este triaje. Aún puede revisar los pasos y recursos a continuación.",
+    additionalSafetyResources: "Recursos de seguridad adicionales",
+    noResourcesMatched:
+      "Aún no se encontraron recursos adicionales. Aún puede revisar la página de explicación detallada o buscar apoyo general en el explorador.",
+    yourReports: "Sus Reportes",
+    yourIncidentHistory: "Su Historial de Incidentes",
+    historySubtitle: "Registros de reportes en vivo, estado del ciclo de vida y acciones de auditoría seguras.",
+    totalReportsLabel: "REPORTES TOTALES",
+    submittedOrReceivedLabel: "ENVIADOS O RECIBIDOS",
+    lifecycleActionsLabel: "ACCIONES DEL CICLO DE VIDA",
+    searchPlaceholder: "Buscar por título de reporte, fecha o estado",
+    allReportsLabel: "Todos los reportes",
+    draftsLabelText: "Borradores",
+    inReviewLabel: "En revisión",
+    draftStatusLabel: "Borrador",
+    harassmentTitle: "Acoso cerca del corredor principal",
+    harassmentUpdated: "Actualizado 05 julio 2026, 1:28 am",
+    openDetail: "Abrir detalle >",
+    reviewSubmission: "Revisar envío",
+    withdraw: "Retirar",
+    markInfoOnly: "Marcar solo información",
+    requestDeletion: "Solicitar eliminación",
+    delete: "Eliminar",
+    reportOverview: "Resumen del reporte",
+    incidentNarrative: "NARRATIVA DEL INCIDENTE",
+    incidentNarrativeText:
+      '"Un gerente usó lenguaje amenazante y bloqueó el camino del reportero."',
+    reportId: "ID DEL REPORTE",
+    createdLabel: "CREADO",
+    lifecycleDesc:
+      "Las acciones se registran en la auditoría y actualizan este reporte después de completarse.",
+    statusTimeline: "CRONOLOGÍA DE ESTADO",
+    draftCreatedTimeline: "05 julio 2026, 1:28 am | creado",
+    submissionRecords: "REGISTROS DE ENVÍO",
+    noSubmissionRecords:
+      "No se han creado envíos de destino para este reporte.",
+    reportMetadata: "METADATOS DEL REPORTE",
+    lastUpdate: "ÚLTIMA ACTUALIZACIÓN",
+    supportKey: "CLAVE DE SOPORTE",
+    locationLabel: "UBICACIÓN",
+    locationValue: "Cerca del ascensor",
+    editReport: "Editar reporte",
+    proceedSubmission: "Proceder al envío",
+    submissionHistory: "Historial de envíos",
     saveToHistory: "Guardar en historial",
     feelingStressed: "Me siento estresado",
     mindfulnessGrounding: "Mindfulness y conexión",

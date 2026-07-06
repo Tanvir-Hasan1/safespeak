@@ -77,7 +77,7 @@ const EmergencyBar = React.memo(({ visible = true, absolute = false }) => {
 
   const height = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 125],
+    outputRange: [0, 175],
   });
 
   const containerStyle = absolute
@@ -126,15 +126,15 @@ const EmergencyBar = React.memo(({ visible = true, absolute = false }) => {
               </StyledTouchableOpacity>
             </StyledView>
 
-            {/* Row 2: Smart Dialer & Language Selector */}
-            <StyledView className="flex-row justify-between items-center">
+            {/* Row 2: Smart Dialer, Language Selector & Covert Exit */}
+            <StyledView className="flex-row justify-between items-center mb-2">
               <StyledTouchableOpacity
                 activeOpacity={0.7}
                 onPress={goToSmartDialer}
                 className="flex-1 mr-1 bg-[#10B981] rounded-full py-2.5 items-center justify-center flex-row"
               >
                 <Ionicons name="call-outline" size={13} color="white" style={{ marginRight: 4 }} />
-                <StyledText className="text-white font-extrabold text-[11px] uppercase">
+                <StyledText className="text-white font-extrabold text-[9px] uppercase">
                   {t("smartDialer")}
                 </StyledText>
               </StyledTouchableOpacity>
@@ -143,13 +143,36 @@ const EmergencyBar = React.memo(({ visible = true, absolute = false }) => {
                 ref={langButtonRef}
                 onPress={openDropdown}
                 activeOpacity={0.7}
-                className="flex-1 ml-1 bg-slate-700 rounded-full py-2.5 flex-row items-center justify-center"
+                className="flex-row items-center justify-center bg-slate-800 rounded-full py-2.5 px-3 mr-1"
               >
-                <Text style={{ fontSize: 13, marginRight: 4 }}>{selectedLang.flag}</Text>
-                <StyledText className="text-white font-bold text-[11px]">
+                <Text style={{ fontSize: 13, marginRight: 2 }}>{selectedLang.flag}</Text>
+                <StyledText className="text-white font-bold text-[10px]">
                   {selectedLang.code}
                 </StyledText>
-                <Ionicons name="chevron-down" size={10} color="white" style={{ marginLeft: 4 }} />
+                <Ionicons name="chevron-down" size={8} color="white" style={{ marginLeft: 2 }} />
+              </StyledTouchableOpacity>
+
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => Linking.openURL("https://www.google.com")}
+                className="flex-1 bg-[#EF4444] rounded-full py-2.5 items-center justify-center flex-row"
+              >
+                <Ionicons name="exit-outline" size={13} color="white" style={{ marginRight: 4 }} />
+                <StyledText className="text-white font-extrabold text-[9px] uppercase">
+                  {t("covertExit")}
+                </StyledText>
+              </StyledTouchableOpacity>
+            </StyledView>
+
+            {/* Row 3: Safety Info Only */}
+            <StyledView className="w-full">
+              <StyledTouchableOpacity
+                activeOpacity={0.7}
+                className="w-full bg-white border border-[#94A3B8] rounded-full py-2 items-center justify-center flex-row"
+              >
+                <StyledText className="text-[#64748B] font-extrabold text-[10px] uppercase tracking-wider">
+                  {t("safetyInfoOnly")}
+                </StyledText>
               </StyledTouchableOpacity>
             </StyledView>
           </StyledView>

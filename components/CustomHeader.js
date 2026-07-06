@@ -19,6 +19,9 @@ const CustomHeader = ({
   headerVisible = true,
   backText,
   rightText,
+  blueTheme = false,
+  showDivider = false,
+  simpleBack = false,
 }) => {
   const router = useRouter();
   const { t } = useLanguage();
@@ -26,7 +29,10 @@ const CustomHeader = ({
   return (
     <SafeAreaView className="bg-[#F0F4FA]" edges={["top"]}>
       <EmergencyBar visible={headerVisible} />
-      <StyledView className="flex-row items-center justify-between px-6 py-4">
+      <StyledView
+        className={`flex-row items-center justify-between px-6 py-4 bg-[#F0F4FA] ${showDivider ? "border-b border-[#E2E8F0]" : ""
+          }`}
+      >
         {/* Back Button */}
         {backText ? (
           <StyledTouchableOpacity
@@ -34,8 +40,15 @@ const CustomHeader = ({
             onPress={() => router.back()}
             className="flex-row items-center"
           >
-            <Ionicons name="chevron-back" size={20} color="#1F2937" />
-            <StyledText className="text-[#1F2937] text-base font-semibold ml-1">
+            <Ionicons
+              name="chevron-back"
+              size={20}
+              color={blueTheme ? "#005B96" : "#1F2937"}
+            />
+            <StyledText
+              className={`text-base font-semibold ml-1 ${blueTheme ? "text-[#005B96]" : "text-[#1F2937]"
+                }`}
+            >
               {backText}
             </StyledText>
           </StyledTouchableOpacity>

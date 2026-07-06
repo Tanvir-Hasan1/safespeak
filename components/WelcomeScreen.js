@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Component, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { styled } from "nativewind";
 import Constants from "expo-constants";
@@ -15,13 +15,32 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 const videoSource = require("../assets/videos/Australia_Map_Cinematic_Loop_Animation.mp4");
 
-const WelcomeScreen = () => {
-  const navigation = useNavigation();
-  const { t } = useLanguage();
-  const player = useVideoPlayer(videoSource, (player) => {
-    player.loop = true;
-    player.muted = true; // User changed this to false
-    player.play();
+// Error boundary to catch native VideoPlayer constructor failures on recycled activities
+class VideoErrorBoundary extends Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn("VideoPlayer failed to initialize, falling back to static background:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
+// Inner component using the official hook for playing local video assets
+const VideoBackground = ({ navigation }) => {
+  const player = useVideoPlayer(videoSource, (playerInstance) => {
+    playerInstance.loop = true;
+    playerInstance.muted = true;
+    playerInstance.play();
   });
 
   useEffect(() => {
@@ -40,13 +59,24 @@ const WelcomeScreen = () => {
   }, [navigation, player]);
 
   return (
+    <VideoView
+      style={StyleSheet.absoluteFill}
+      player={player}
+      resizeMode="cover"
+      nativeControls={false}
+    />
+  );
+};
+
+const WelcomeScreen = () => {
+  const navigation = useNavigation();
+  const { t } = useLanguage();
+
+  return (
     <View style={styles.container}>
-      <VideoView
-        style={StyleSheet.absoluteFill}
-        player={player}
-        resizeMode="cover"
-        nativeControls={false}
-      />
+      <VideoErrorBoundary>
+        <VideoBackground navigation={navigation} />
+      </VideoErrorBoundary>
 
       {/* Overlay for readability */}
       <StyledView className="absolute inset-0 bg-black/40" />

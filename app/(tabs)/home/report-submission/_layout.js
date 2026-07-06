@@ -8,6 +8,8 @@ export default function ReportSubmissionLayout() {
       <Stack.Screen name="attachments" />
       <Stack.Screen name="evidence-review" />
       <Stack.Screen name="detailed-explanations" />
+      <Stack.Screen name="history" />
+      <Stack.Screen name="detail" />
     </Stack>
   );
 }

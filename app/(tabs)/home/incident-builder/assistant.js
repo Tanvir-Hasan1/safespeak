@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,9 @@ import {
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useLanguage } from "../../../../context/LanguageContext";
 
@@ -25,13 +26,187 @@ const StyledScrollView = styled(ScrollView);
 
 const Sphere = require("../../../../assets/images/home/Sphere.png");
 
+const TOPICS = {
+  domestic_violence: {
+    title: "Domestic violence",
+    greetingPhrase: "with domestic violence concerns",
+    description: "I experienced domestic violence and want to understand my options safely.",
+    startText: "I may be experiencing domestic or family violence and I want to understand safe options.",
+    legalTitle: "Domestic Violence Support & Pathways",
+    legalDesc: "Information only, not legal advice. SafeSpeak will cite only approved, current, legally reviewed sources.",
+    pathways: [
+      { title: "Start incident report", desc: "Open the report flow with domestic violence context." },
+      { title: "Understand reporting options", desc: "Open guided reporting options with SafeSpeak." },
+      { title: "Find support", desc: "Browse support services and immediate safety planning." },
+      { title: "Save evidence", desc: "Go to the evidence step with this topic in context." },
+      { title: "Talk with SafeSpeak", desc: "Start a guided assistant conversation with this topic." }
+    ],
+    nswPoints: [
+      "Keep a dated record of what happened if it is safe to do so.",
+      "NSW Police and national domestic violence hotlines (like 1800RESPECT) provide immediate support and intervention.",
+      "Safety planning is vital. SafeSpeak can guide you through securing your digital and physical footprints."
+    ],
+    nswPathways: [
+      {
+        title: "NSW domestic violence pathway",
+        desc: "SafeSpeak can help organize details for domestic violence reporting or support applications once approved sources are available.",
+        req: "DETAILED LEGAL EXPLANATIONS REQUIRE APPROVED NSW SOURCES."
+      },
+      {
+        title: "Family law & protection pathways",
+        desc: "Some safety concerns may involve Apprehended Domestic Violence Orders (ADVO) information.",
+        req: "CITATIONS APPEAR ONLY FROM APPROVED FAMILY LAW SOURCES."
+      },
+      {
+        title: "eSafety & digital stalking pathway",
+        desc: "For digital stalking or abuse, safety planning, app audits, and eSafety information are critical.",
+        req: "USE APPROVED eSAFETY SOURCES BEFORE PUBLIC CITATION."
+      }
+    ]
+  },
+  racial_abuse: {
+    title: "Racial Abuse",
+    greetingPhrase: "with racial abuse concerns",
+    description: "I experienced racial abuse and want to understand my options safely.",
+    startText: "I experienced racial abuse and want to understand my options safely.",
+    legalTitle: "NSW Legal Awareness",
+    legalDesc: "Information only, not legal advice. SafeSpeak will cite only approved, current, legally reviewed sources.",
+    pathways: [
+      { title: "Start incident report", desc: "Open the report flow with racial abuse context." },
+      { title: "Understand reporting options", desc: "Open guided reporting options with SafeSpeak." },
+      { title: "Find support", desc: "Browse support services and community support options." },
+      { title: "Save evidence", desc: "Go to the evidence step with this topic in context." },
+      { title: "Talk with SafeSpeak", desc: "Start a guided assistant conversation with this topic." }
+    ],
+    nswPoints: [
+      "Keep a dated record of what happened if it is safe.",
+      "NSW and Commonwealth pathways can both be relevant for racial abuse or discrimination concerns.",
+      "Online abuse may also involve platform reporting, eSafety information, and immediate safety planning."
+    ],
+    nswPathways: [
+      {
+        title: "NSW discrimination pathway",
+        desc: "SafeSpeak can help organize details for Anti-Discrimination NSW style complaint information once approved sources are available.",
+        req: "DETAILED LEGAL EXPLANATIONS REQUIRE APPROVED NSW SOURCES."
+      },
+      {
+        title: "Commonwealth pathway",
+        desc: "Some racial discrimination concerns may involve Australian Human Rights Commission information.",
+        req: "CITATIONS APPEAR ONLY FROM APPROVED COMMONWEALTH SOURCES."
+      },
+      {
+        title: "Online abuse pathway",
+        desc: "For online incidents, evidence collection, platform reports, and eSafety information may be relevant.",
+        req: "USE APPROVED ESAFETY SOURCES BEFORE PUBLIC CITATION."
+      }
+    ]
+  },
+  cyber_scam: {
+    title: "Cyber scam",
+    greetingPhrase: "with cyber scam concerns",
+    description: "I experienced a cyber scam and want to understand my options safely.",
+    startText: "I think I may be dealing with a cyber scam and need help assessing it.",
+    legalTitle: "Cyber Scam & Security Awareness",
+    legalDesc: "Information only, not legal advice. SafeSpeak will cite only approved, current, legally reviewed sources.",
+    pathways: [
+      { title: "Start incident report", desc: "Open the report flow with cyber scam context." },
+      { title: "Understand reporting options", desc: "Open guided reporting options with SafeSpeak." },
+      { title: "Find support", desc: "Browse scam support services and identity protection options." },
+      { title: "Save evidence", desc: "Go to the evidence step with this topic in context." },
+      { title: "Talk with SafeSpeak", desc: "Start a guided assistant conversation with this topic." }
+    ],
+    nswPoints: [
+      "Keep records of messages, transaction receipts, bank details, and communication headers.",
+      "Report to Scamwatch and the Australian Signals Directorate (ACSC) as soon as possible.",
+      "Contact your financial institution immediately to stop pending transfers and secure accounts."
+    ],
+    nswPathways: [
+      {
+        title: "Scam recovery pathway",
+        desc: "SafeSpeak can help organize details for financial complaints or ID recovery once approved sources are available.",
+        req: "DETAILED COMPLAINT DETAILS REQUIRE APPROVED FINANCIAL CORRESPONDENCE."
+      },
+      {
+        title: "IDCARE & identity pathway",
+        desc: "If identity credentials were compromised, IDCARE offers free support to safeguard your credentials.",
+        req: "CITATIONS REQUIRE COMPROMISED CREDENTIAL DOCUMENTATION."
+      },
+      {
+        title: "eSafety & online safety pathway",
+        desc: "If scammers use social platforms or threaten dissemination, platform safety guidelines and eSafety reports apply.",
+        req: "USE APPROVED PLATFORM SOURCES BEFORE PUBLIC CITATION."
+      }
+    ]
+  },
+  migrant_challenges: {
+    title: "Migrant Challenges",
+    greetingPhrase: "with migrant challenges",
+    description: "I experienced migrant challenges and want to understand my options safely.",
+    startText: "I am facing migrant-related challenges and want safe, culturally appropriate guidance.",
+    legalTitle: "Migrant & International Student Support",
+    legalDesc: "Information only, not legal advice. SafeSpeak will cite only approved, current, legally reviewed sources.",
+    pathways: [
+      { title: "Start incident report", desc: "Open the report flow with migrant challenges context." },
+      { title: "Understand reporting options", desc: "Open guided reporting options with SafeSpeak." },
+      { title: "Find support", desc: "Browse support services and student/migrant community options." },
+      { title: "Save evidence", desc: "Go to the evidence step with this topic in context." },
+      { title: "Talk with SafeSpeak", desc: "Start a guided assistant conversation with this topic." }
+    ],
+    nswPoints: [
+      "Workplace exploitation, visa threats, and language barriers are common student and migrant challenges.",
+      "Your visa status is protected in many cases when reporting workplace or wage exploitation under the Assurance Protocol.",
+      "Local community legal centers offer free, confidential advice that will not affect your visa status."
+    ],
+    nswPathways: [
+      {
+        title: "Fair Work Ombudsman pathway",
+        desc: "SafeSpeak can help organize details of wage underpayment or workplace unfairness without fear of visa cancellation.",
+        req: "DETAILED EXPLANATIONS REQUIRE APPROVED WORKPLACE RESTRICTIONS INFO."
+      },
+      {
+        title: "Visa and migration pathway",
+        desc: "Information regarding your rights under specific student or working visas in Australia.",
+        req: "CITATIONS APPEAR ONLY FROM APPROVED DEPARTMENT OF HOME AFFAIRS LAWS."
+      },
+      {
+        title: "Community legal support",
+        desc: "Connection points for community legal advice and advocacy services near you.",
+        req: "USE APPROVED LOCAL ADVICE SERVICES BEFORE PUBLIC CITATION."
+      }
+    ]
+  }
+};
+
+const KeyboardAvoidingViewWrapper = KeyboardAvoidingView;
+
 export default function VoiceAssistant() {
   const router = useRouter();
+  const { topic } = useLocalSearchParams();
   const { t } = useLanguage();
+  const scrollViewRef = useRef(null);
+  const insets = useSafeAreaInsets();
+
+  const currentTopicKey = (topic && TOPICS[topic]) ? topic : "racial_abuse";
+  const currentTopic = TOPICS[currentTopicKey];
   
   // State variables
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [conversationStarted, setConversationStarted] = useState(false);
   const [response, setResponse] = useState("");
   const [metadataEnabled, setMetadataEnabled] = useState(true);
+  const [showTriageButton, setShowTriageButton] = useState(false);
+
+  const isDraggingRef = useRef(false);
+
+  const handleScroll = (event) => {
+    if (!isDraggingRef.current) return;
+    const currentOffsetY = event.nativeEvent.contentOffset.y;
+    if (currentOffsetY <= 10) {
+      setHeaderVisible(true);
+    } else if (currentOffsetY > 50) {
+      setHeaderVisible(false);
+    }
+  };
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
@@ -73,6 +248,8 @@ export default function VoiceAssistant() {
   const sendMessage = (textVal) => {
     if (!textVal || textVal.trim().length === 0) return;
 
+    setConversationStarted(true);
+
     // Append user message
     const userMsg = {
       id: Date.now(),
@@ -81,13 +258,26 @@ export default function VoiceAssistant() {
     };
     setMessages((prev) => [...prev, userMsg]);
 
+    // Check if user is asking for triage
+    const isTriageRequest = textVal.toLowerCase().includes("triage");
+
     // Simulate AI response after 1.2 seconds
     setTimeout(() => {
-      const aiMsg = {
-        id: Date.now() + 1,
-        type: "ai",
-        text: "I've processed that detail and added it to your timeline. Let's capture the rest of the incident specifics. Do you have any evidence or screenshots?",
-      };
+      let aiMsg;
+      if (isTriageRequest) {
+        setShowTriageButton(true);
+        aiMsg = {
+          id: Date.now() + 1,
+          type: "ai",
+          text: "Continue to Triage",
+        };
+      } else {
+        aiMsg = {
+          id: Date.now() + 1,
+          type: "ai",
+          text: "I've processed that detail and added it to your timeline. Let's capture the rest of the incident specifics. Do you have any evidence or screenshots?",
+        };
+      }
       setMessages((prev) => [...prev, aiMsg]);
     }, 1200);
   };
@@ -186,65 +376,201 @@ export default function VoiceAssistant() {
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
-        title="Report Incident"
+        backText="AI Conversation"
+        rightText="Cancel"
+        blueTheme={true}
+        showDivider={true}
+        headerVisible={headerVisible}
       />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <KeyboardAvoidingViewWrapper
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         style={{ flex: 1 }}
       >
         <StyledScrollView
+          ref={scrollViewRef}
           className="flex-1"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingBottom: 40,
             paddingTop: 10,
+            paddingBottom: 20,
             paddingHorizontal: 24,
             flexGrow: 1,
           }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          onScrollBeginDrag={() => {
+            isDraggingRef.current = true;
+          }}
+          onScrollEndDrag={() => {
+            isDraggingRef.current = false;
+          }}
+          onMomentumScrollBegin={() => {
+            isDraggingRef.current = true;
+          }}
+          onMomentumScrollEnd={() => {
+            isDraggingRef.current = false;
+          }}
         >
-          {messages.length === 0 ? (
+          {messages.length === 0 && !conversationStarted ? (
             <StyledView className="my-8 items-center justify-center min-h-[140px]">
               <StyledText className="text-[#002B49] text-[22px] font-semibold text-center leading-8 px-4">
                 Hi{" "}
                 <StyledText className="text-[#3B82F6] font-bold">
                   Hasantanvir529
                 </StyledText>
-                , can you remind me, how can I help you today?
+                , can you remind me, how can I help you {topic && TOPICS[topic] ? currentTopic.greetingPhrase : "today"}?
               </StyledText>
             </StyledView>
           ) : (
             <StyledView className="w-full space-y-4 my-4">
               {messages.map((msg) => (
-                <StyledView
-                  key={msg.id}
-                  className={`max-w-[80%] ${
-                    msg.type === "user" ? "self-end" : "self-start"
-                  }`}
-                >
+                <StyledView key={msg.id} className="w-full flex-col mb-4">
                   <StyledView
-                    className={`p-4 rounded-[24px] ${
-                      msg.type === "user"
-                        ? "bg-white border border-[#E2E8F0]"
-                        : "bg-white/60 border border-white"
+                    className={`max-w-[80%] ${
+                      msg.type === "user" ? "self-end" : "self-start"
                     }`}
-                    style={
-                      msg.type === "user"
-                        ? { borderBottomRightRadius: 4 }
-                        : { borderTopLeftRadius: 4 }
-                    }
                   >
-                    <StyledText className="text-[#002B49] text-[15px] leading-5">
-                      {msg.text}
-                    </StyledText>
+                    <StyledView
+                      className={`p-4 rounded-[24px] ${
+                        msg.type === "user"
+                          ? "bg-white border border-[#E2E8F0]"
+                          : "bg-white/60 border border-white"
+                      }`}
+                      style={
+                        msg.type === "user"
+                          ? { borderBottomRightRadius: 4 }
+                          : { borderTopLeftRadius: 4 }
+                      }
+                    >
+                      <StyledText className="text-[#002B49] text-[15px] leading-5">
+                        {msg.text}
+                      </StyledText>
+                    </StyledView>
                   </StyledView>
                 </StyledView>
               ))}
             </StyledView>
           )}
 
-          <StyledView className="w-full mt-4 space-y-4">
+
+          {!conversationStarted && (
+            <StyledView className="w-full space-y-6 mt-6">
+              <StyledView className="w-full bg-[#EBF3FC] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
+              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
+                {currentTopic.title}
+              </StyledText>
+              <StyledText className="text-[#002B49] text-[15px] font-semibold mt-1.5 mb-3 leading-5">
+                {currentTopic.description}
+              </StyledText>
+
+              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
+                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
+                  This information is general information only.
+                </StyledText>
+              </StyledView>
+
+              <StyledTouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setResponse(currentTopic.startText);
+                  setConversationStarted(true);
+                  scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+                }}
+                className="bg-[#005B96] py-3.5 rounded-full flex-row items-center justify-center shadow-xs mb-5"
+              >
+                <StyledText className="text-white text-xs font-bold mr-1">
+                  Start with this topic
+                </StyledText>
+                <Ionicons name="arrow-forward" size={14} color="white" />
+              </StyledTouchableOpacity>
+
+              <StyledView className="space-y-2.5">
+                {currentTopic.pathways.map((act, idx) => (
+                  <StyledTouchableOpacity
+                    key={idx}
+                    activeOpacity={0.7}
+                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
+                  >
+                    <StyledText className="text-[#002B49] text-[14px] font-bold">
+                      {act.title}
+                    </StyledText>
+                    <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 leading-4">
+                      {act.desc}
+                    </StyledText>
+                  </StyledTouchableOpacity>
+                ))}
+              </StyledView>
+            </StyledView>
+
+            <StyledView className="w-full bg-[#F4F9FD] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
+              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
+                {currentTopic.legalTitle}
+              </StyledText>
+              <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 mb-4 leading-4">
+                {currentTopic.legalDesc}
+              </StyledText>
+
+              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
+                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
+                  Sources pending approval
+                </StyledText>
+              </StyledView>
+
+              <StyledView className="mb-4">
+                {currentTopic.nswPoints.map((pt, idx) => (
+                  <StyledView key={idx} className="flex-row items-start mb-3 px-1">
+                    <StyledView className="w-1.5 h-1.5 bg-[#82AEE8] rounded-full mt-1.5 mr-2.5 shrink-0" />
+                    <StyledText className="flex-1 text-[#64748B] text-[12px] leading-5 font-semibold">
+                      {pt}
+                    </StyledText>
+                  </StyledView>
+                ))}
+              </StyledView>
+
+              <StyledView className="space-y-3">
+                {currentTopic.nswPathways.map((path, idx) => (
+                  <StyledView
+                    key={idx}
+                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
+                  >
+                    <StyledText className="text-[#002B49] text-[13px] font-bold">
+                      {path.title}
+                    </StyledText>
+                    <StyledText className="text-[#64748B] text-[11px] leading-4 mt-1 font-semibold">
+                      {path.desc}
+                    </StyledText>
+                    <StyledText className="text-[#94A3B8] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
+                      {path.req}
+                    </StyledText>
+                  </StyledView>
+                ))}
+              </StyledView>
+            </StyledView>
+          </StyledView>
+          )}
+        </StyledScrollView>
+
+        {/* Sticky Triage Button */}
+        {showTriageButton && (
+          <StyledView className="w-full bg-[#F0F4FA] items-center pt-2 pb-1">
+            <StyledTouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push("/home/report-submission")}
+              className="bg-[#005B96] py-3.5 px-6 rounded-full flex-row items-center justify-center shadow-md"
+            >
+              <StyledText className="text-white text-xs font-bold mr-1.5">
+                Continue to Triage
+              </StyledText>
+              <Ionicons name="arrow-forward" size={14} color="white" />
+            </StyledTouchableOpacity>
+          </StyledView>
+        )}
+
+        {/* Fixed bottom input and metadata capture area */}
+        <StyledView className="w-full px-6 pb-3 pt-2 bg-[#F0F4FA] border-t border-[#E2E8F0]/30 shadow-xs">
+          <StyledView className="w-full space-y-4">
             {isVoiceRecording ? (
               <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between h-[48px]">
                 <StyledText className="text-[#64748B] text-xs font-semibold">
@@ -280,7 +606,7 @@ export default function VoiceAssistant() {
                 </StyledView>
               </StyledView>
             ) : (
-              <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between">
+              <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between shadow-xs">
                 <StyledTextInput
                   placeholder={t("typeResponse")}
                   value={response}
@@ -324,145 +650,32 @@ export default function VoiceAssistant() {
               </StyledView>
             )}
 
-            <StyledView className="w-full bg-white rounded-[24px] flex-row items-center py-2 px-3.5 border border-[#E2E8F0]">
-              <StyledView className="w-8 h-8 bg-[#EFF6FF] rounded-full items-center justify-center">
-                <Ionicons name="location" size={16} color="#3B82F6" />
+            {!conversationStarted && (
+              <StyledView className="w-full bg-white rounded-[24px] flex-row items-center py-2 px-3.5 border border-[#E2E8F0]">
+                <StyledView className="w-8 h-8 bg-[#EFF6FF] rounded-full items-center justify-center">
+                  <Ionicons name="location" size={16} color="#3B82F6" />
+                </StyledView>
+                <StyledView className="flex-1 ml-3">
+                  <StyledText className="text-[#002B49] text-xs font-bold">
+                    {t("metadataCapture")}
+                  </StyledText>
+                  <StyledText className="text-[#94A3B8] text-[9px] font-bold uppercase tracking-wider">
+                    {t("gpsIntelligence")}
+                  </StyledText>
+                </StyledView>
+                <Switch
+                  trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
+                  thumbColor={"#FFFFFF"}
+                  ios_backgroundColor="#E2E8F0"
+                  onValueChange={setMetadataEnabled}
+                  value={metadataEnabled}
+                  style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+                />
               </StyledView>
-              <StyledView className="flex-1 ml-3">
-                <StyledText className="text-[#002B49] text-xs font-bold">
-                  {t("metadataCapture")}
-                </StyledText>
-                <StyledText className="text-[#94A3B8] text-[9px] font-bold uppercase tracking-wider">
-                  {t("gpsIntelligence")}
-                </StyledText>
-              </StyledView>
-              <Switch
-                trackColor={{ false: "#E2E8F0", true: "#3B82F6" }}
-                thumbColor={"#FFFFFF"}
-                ios_backgroundColor="#E2E8F0"
-                onValueChange={setMetadataEnabled}
-                value={metadataEnabled}
-                style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-              />
-            </StyledView>
+            )}
           </StyledView>
-
-          <StyledView className="w-full space-y-6 mt-6">
-            <StyledView className="w-full bg-[#EBF3FC] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
-              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
-                Racial Abuse
-              </StyledText>
-              <StyledText className="text-[#002B49] text-[15px] font-semibold mt-1.5 mb-3 leading-5">
-                I experienced racial abuse and want to understand my options safely.
-              </StyledText>
-
-              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
-                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
-                  This information is general information only.
-                </StyledText>
-              </StyledView>
-
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                className="bg-[#005B96] py-3.5 rounded-full flex-row items-center justify-center shadow-xs mb-5"
-              >
-                <StyledText className="text-white text-xs font-bold mr-1">
-                  Start with this topic
-                </StyledText>
-                <Ionicons name="arrow-forward" size={14} color="white" />
-              </StyledTouchableOpacity>
-
-              <StyledView className="space-y-2.5">
-                {[
-                  { title: "Start incident report", desc: "Open the report flow with racial abuse context." },
-                  { title: "Understand reporting options", desc: "Open guided reporting options with SafeSpeak." },
-                  { title: "Find support", desc: "Browse support services and community support options." },
-                  { title: "Save evidence", desc: "Go to the evidence step with this topic in context." },
-                  { title: "Talk with SafeSpeak", desc: "Start a guided assistant conversation with this topic." }
-                ].map((act, idx) => (
-                  <StyledTouchableOpacity
-                    key={idx}
-                    activeOpacity={0.7}
-                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
-                  >
-                    <StyledText className="text-[#002B49] text-[14px] font-bold">
-                      {act.title}
-                    </StyledText>
-                    <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 leading-4">
-                      {act.desc}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                ))}
-              </StyledView>
-            </StyledView>
-
-            <StyledView className="w-full bg-[#F4F9FD] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
-              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
-                NSW Legal Awareness
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 mb-4 leading-4">
-                Information only, not legal advice. SafeSpeak will cite only approved, current, legally reviewed sources.
-              </StyledText>
-
-              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
-                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
-                  Sources pending approval
-                </StyledText>
-              </StyledView>
-
-              <StyledView className="mb-4">
-                {[
-                  "Keep a dated record of what happened if it is safe.",
-                  "NSW and Commonwealth pathways can both be relevant for racial abuse or discrimination concerns.",
-                  "Online abuse may also involve platform reporting, eSafety information, and immediate safety planning."
-                ].map((pt, idx) => (
-                  <StyledView key={idx} className="flex-row items-start mb-3 px-1">
-                    <StyledView className="w-1.5 h-1.5 bg-[#82AEE8] rounded-full mt-1.5 mr-2.5 shrink-0" />
-                    <StyledText className="flex-1 text-[#64748B] text-[12px] leading-5 font-semibold">
-                      {pt}
-                    </StyledText>
-                  </StyledView>
-                ))}
-              </StyledView>
-
-              <StyledView className="space-y-3">
-                {[
-                  {
-                    title: "NSW discrimination pathway",
-                    desc: "SafeSpeak can help organize details for Anti-Discrimination NSW style complaint information once approved sources are available.",
-                    req: "DETAILED LEGAL EXPLANATIONS REQUIRE APPROVED NSW SOURCES."
-                  },
-                  {
-                    title: "Commonwealth pathway",
-                    desc: "Some racial discrimination concerns may involve Australian Human Rights Commission information.",
-                    req: "CITATIONS APPEAR ONLY FROM APPROVED COMMONWEALTH SOURCES."
-                  },
-                  {
-                    title: "Online abuse pathway",
-                    desc: "For online incidents, evidence collection, platform reports, and eSafety information may be relevant.",
-                    req: "USE APPROVED ESAFETY SOURCES BEFORE PUBLIC CITATION."
-                  }
-                ].map((path, idx) => (
-                  <StyledView
-                    key={idx}
-                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
-                  >
-                    <StyledText className="text-[#002B49] text-[13px] font-bold">
-                      {path.title}
-                    </StyledText>
-                    <StyledText className="text-[#64748B] text-[11px] leading-4 mt-1 font-semibold">
-                      {path.desc}
-                    </StyledText>
-                    <StyledText className="text-[#94A3B8] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
-                      {path.req}
-                    </StyledText>
-                  </StyledView>
-                ))}
-              </StyledView>
-            </StyledView>
-          </StyledView>
-        </StyledScrollView>
-      </KeyboardAvoidingView>
+        </StyledView>
+      </KeyboardAvoidingViewWrapper>
     </StyledView>
   );
 }

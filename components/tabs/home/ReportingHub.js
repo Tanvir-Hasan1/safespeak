@@ -37,7 +37,7 @@ const ReportingHub = React.memo(() => {
         <View style={styles.flexRow}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push("/home/incident-builder")}
+            onPress={() => router.push("/home/incident-builder/assistant?topic=domestic_violence")}
           >
             <Image
               source={TopLeftCard}
@@ -47,7 +47,7 @@ const ReportingHub = React.memo(() => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push("/home/incident-builder")}
+            onPress={() => router.push("/home/incident-builder/assistant?topic=racial_abuse")}
           >
             <Image
               source={TopRightCard}
@@ -61,13 +61,13 @@ const ReportingHub = React.memo(() => {
         <View style={styles.flexRow}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push("/home/incident-builder")}
+            onPress={() => router.push("/home/incident-builder/assistant?topic=cyber_scam")}
           >
             <BottomLeftCard width={scale(145)} height={scale(190)} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push("/home/incident-builder")}
+            onPress={() => router.push("/home/incident-builder/assistant?topic=migrant_challenges")}
           >
             <BottomRightCard width={scale(145)} height={scale(190)} />
           </TouchableOpacity>

@@ -1,33 +1,15 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import translations from "../i18n/translations";
+import React from "react";
+import { useLanguageStore } from "../store/useLanguageStore";
 
-const LanguageContext = createContext(null);
-
+// Retained as a pass-through to ensure top-level layouts wrapping children in <LanguageProvider> continue to function without error.
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState("en");
-
-  const t = useCallback(
-    (key) => {
-      return (
-        (translations[language] && translations[language][key]) ||
-        (translations["en"] && translations["en"][key]) ||
-        key
-      );
-    },
-    [language],
-  );
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <>{children}</>;
 };
 
 export const useLanguage = () => {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) {
-    throw new Error("useLanguage must be used inside <LanguageProvider>");
-  }
-  return ctx;
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const t = useLanguageStore((state) => state.t);
+
+  return { language, setLanguage, t };
 };
