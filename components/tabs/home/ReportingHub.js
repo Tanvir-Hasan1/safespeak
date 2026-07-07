@@ -78,7 +78,7 @@ const ReportingHub = React.memo(() => {
           <TouchableOpacity
             activeOpacity={0.7}
             style={styles.sphereContent}
-            onPress={() => router.push("/home/incident-builder")}
+            onPress={() => router.push("/home/incident-builder/assistant")}
           >
             <Image
               source={Sphere}

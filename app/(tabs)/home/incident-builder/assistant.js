@@ -455,7 +455,7 @@ export default function VoiceAssistant() {
           )}
 
 
-          {!conversationStarted && (
+          {!conversationStarted && topic && (
             <StyledView className="w-full space-y-6 mt-6">
               <StyledView className="w-full bg-[#EBF3FC] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
               <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">

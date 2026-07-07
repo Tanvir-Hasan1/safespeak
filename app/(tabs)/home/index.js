@@ -33,7 +33,7 @@ export default function Home() {
         <StyledScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 125, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingTop: 175, paddingBottom: 40 }}
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
