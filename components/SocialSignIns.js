@@ -57,6 +57,17 @@ const SocialSignIns = () => {
           {t("signInEmail")}
         </StyledText>
       </StyledTouchableOpacity>
+
+      {/* Guest Mode */}
+      <StyledTouchableOpacity
+        className="w-full bg-slate-100 py-4 rounded-full flex-row items-center justify-center border border-gray-300"
+        onPress={() => router.replace("/(tabs)/home")}
+      >
+        <Ionicons name="person-outline" size={24} color="#475569" />
+        <StyledText className="text-slate-700 font-semibold text-lg ml-2">
+          {t("signInGuest")}
+        </StyledText>
+      </StyledTouchableOpacity>
     </StyledView>
   );
 };

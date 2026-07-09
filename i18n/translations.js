@@ -43,6 +43,7 @@ const translations = {
     signInApple: "Sign In with Apple",
     signInGoogle: "Sign In with Google",
     signInEmail: "Sign In with Email",
+    signInGuest: "Continue as Guest",
 
     // ProfileHeader
     welcomeBack: "Welcome Back",
@@ -519,6 +520,9 @@ const translations = {
     // Auth Screens
     signInTitle: "Sign In",
     emailPlaceholder: "Email",
+    passwordPlaceholder: "Password",
+    forgotPasswordLink: "Forgot Password?",
+    signInBtn: "Sign In",
     continueBtn: "Continue",
     verifyTitle: "Verify to protect your access",
     verifySubtitle: "This helps keep your information safe.",
@@ -633,6 +637,7 @@ const translations = {
     signInApple: "Iniciar sesión con Apple",
     signInGoogle: "Iniciar sesión con Google",
     signInEmail: "Iniciar sesión con correo",
+    signInGuest: "Continuar como invitado",
 
     // ProfileHeader
     welcomeBack: "Bienvenido de nuevo",
@@ -1111,6 +1116,9 @@ const translations = {
     // Auth Screens
     signInTitle: "Iniciar Sesión",
     emailPlaceholder: "Correo electrónico",
+    passwordPlaceholder: "Contraseña",
+    forgotPasswordLink: "¿Olvidó su contraseña?",
+    signInBtn: "Iniciar Sesión",
     continueBtn: "Continuar",
     verifyTitle: "Verifica para proteger tu acceso",
     verifySubtitle: "Esto ayuda a mantener tu información segura.",

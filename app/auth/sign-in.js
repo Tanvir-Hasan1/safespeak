@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
@@ -23,6 +24,17 @@ export default function SignIn() {
   const router = useRouter();
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSignIn = () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Required Fields", "Please enter both your email and password.");
+      return;
+    }
+    // Proceed to OTP verification step
+    router.push("/auth/verify");
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -37,34 +49,93 @@ export default function SignIn() {
 
         {/* Middle: centered content */}
         <StyledView className="flex-1 justify-center">
-          <StyledText className="text-2xl font-bold mb-8">
+          <StyledText className="text-3xl font-bold text-[#002B49] mb-2">
             {t("signInTitle")}
           </StyledText>
+          <StyledText className="text-gray-500 mb-8 text-base">
+            Enter your credentials to access your secure profile.
+          </StyledText>
 
-          <StyledTextInput
-            placeholder={t("emailPlaceholder")}
-            placeholderTextColor="#000"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            className="w-full border border-gray-300 rounded-lg p-4 text-base text-gray-800"
-          />
-          <StyledText className="text-lg text-black text-center mt-6 font-bold">
+          {/* Email input group */}
+          <StyledView className="mb-5">
+            <StyledText className="text-sm font-semibold text-gray-700 mb-2">
+              Email Address
+            </StyledText>
+            <StyledView className="flex-row items-center border border-gray-300 rounded-lg px-4 bg-white">
+              <Ionicons name="mail-outline" size={20} color="#6B7280" style={{ marginRight: 10 }} />
+              <StyledTextInput
+                placeholder={t("emailPlaceholder")}
+                placeholderTextColor="#9CA3AF"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                className="flex-1 py-4 text-base text-gray-800"
+              />
+            </StyledView>
+          </StyledView>
+
+          {/* Password input group */}
+          <StyledView className="mb-2">
+            <StyledText className="text-sm font-semibold text-gray-700 mb-2">
+              Password
+            </StyledText>
+            <StyledView className="flex-row items-center border border-gray-300 rounded-lg px-4 bg-white">
+              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={{ marginRight: 10 }} />
+              <StyledTextInput
+                placeholder={t("passwordPlaceholder")}
+                placeholderTextColor="#9CA3AF"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                className="flex-1 py-4 text-base text-gray-800"
+              />
+              <StyledTouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#6B7280"
+                />
+              </StyledTouchableOpacity>
+            </StyledView>
+          </StyledView>
+
+          {/* Forgot Password link */}
+          <StyledTouchableOpacity 
+            className="items-end mb-6"
+            onPress={() => Alert.alert("Reset Password", "A password reset link will be sent to your email.")}
+          >
+            <StyledText className="text-[#FB923C] font-semibold text-sm">
+              {t("forgotPasswordLink")}
+            </StyledText>
+          </StyledTouchableOpacity>
+
+          <StyledText className="text-base text-gray-600 text-center font-bold mt-6 leading-relaxed">
             We don't track you. We don't sell data. You control what you share.
           </StyledText>
         </StyledView>
 
-        {/* Bottom: Continue button */}
-        <StyledTouchableOpacity
-          className="w-full bg-[#FB923C] py-4 rounded-full items-center"
-          onPress={() => router.push("/auth/verify")}
-        >
-          <StyledText className="text-white text-lg font-bold">
-            {t("continueBtn")}
-          </StyledText>
-        </StyledTouchableOpacity>
+        {/* Bottom actions */}
+        <StyledView className="mb-4">
+          <StyledTouchableOpacity
+            className="w-full bg-[#FB923C] py-4 rounded-full items-center shadow-md"
+            onPress={handleSignIn}
+          >
+            <StyledText className="text-white text-lg font-bold">
+              {t("signInBtn")}
+            </StyledText>
+          </StyledTouchableOpacity>
+
+          <StyledView className="flex-row justify-center mt-4">
+            <StyledText className="text-gray-500 text-sm">Don't have an account? </StyledText>
+            <StyledTouchableOpacity onPress={() => Alert.alert("Registration", "Please register on our web application.")}>
+              <StyledText className="text-[#FB923C] font-bold text-sm">Sign Up</StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
+        </StyledView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+

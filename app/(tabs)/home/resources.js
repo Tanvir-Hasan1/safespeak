@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, Linking, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { ScrollView, View, Text, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useLanguage } from "../../../context/LanguageContext";
 import CustomHeader from "../../../components/CustomHeader";
+import api from "../../../context/api";
+import { useEducationStore } from "../../../store/useEducationStore";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -15,6 +17,44 @@ export default function Resources() {
   const router = useRouter();
   const { t } = useLanguage();
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [resources, setResources] = useState([]);
+  const [educationItems, setEducationItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const setItems = useEducationStore((state) => state.setItems);
+  const setSelectedGuideId = useEducationStore((state) => state.setSelectedGuideId);
+
+  useEffect(() => {
+    setLoading(true);
+
+    const fetchResources = api.get("/resources")
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.resources)) {
+          setResources(json.data.resources);
+        }
+      })
+      .catch((error) => {
+        // Logging is handled globally in the API interceptors
+      });
+
+    const fetchEducation = api.get("/microeducation")
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.items)) {
+          setEducationItems(json.data.items);
+          setItems(json.data.items);
+        }
+      })
+      .catch((error) => {
+        // Logging is handled globally in the API interceptors
+      });
+
+    Promise.allSettled([fetchResources, fetchEducation])
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const handleScroll = (event) => {
     const currentOffsetY = event.nativeEvent.contentOffset.y;
@@ -153,63 +193,33 @@ export default function Resources() {
 
           {/* Grid of Micro Learning Cards */}
           <StyledView className="space-y-3 mb-4">
-            {/* Learning Item 1 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4">
-              <StyledText className="text-[#94A3B8] text-[8.5px] font-extrabold uppercase tracking-wider mb-1">
-                CYBER
-              </StyledText>
-              <StyledText className="text-[#002B49] text-xs font-black mb-1">
-                Bullying
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[10px] leading-4 font-semibold">
-                Protect your digital footprint & safer from potential online threats.
-              </StyledText>
-            </StyledView>
-
-            {/* Learning Item 2 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4">
-              <StyledText className="text-[#94A3B8] text-[8.5px] font-extrabold uppercase tracking-wider mb-1">
-                HARASSMENT
-              </StyledText>
-              <StyledText className="text-[#002B49] text-xs font-black mb-1">
-                Discrimination
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[10px] leading-4 font-semibold">
-                Discrimination occurs when employees are treated unfairly for personal traits.
-              </StyledText>
-            </StyledView>
-
-            {/* Learning Item 3 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4">
-              <StyledText className="text-[#94A3B8] text-[8.5px] font-extrabold uppercase tracking-wider mb-1">
-                PROTECTION
-              </StyledText>
-              <StyledText className="text-[#002B49] text-xs font-black mb-1">
-                Online Safety
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[10px] leading-4 font-semibold">
-                Protect your digital footprint & safer from potential online threats.
-              </StyledText>
-            </StyledView>
-
-            {/* Learning Item 4 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4">
-              <StyledText className="text-[#94A3B8] text-[8.5px] font-extrabold uppercase tracking-wider mb-1">
-                SCAM
-              </StyledText>
-              <StyledText className="text-[#002B49] text-xs font-black mb-1">
-                Protect Your Identity After a Scam
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[10px] leading-4 font-semibold">
-                Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.
-              </StyledText>
-            </StyledView>
+            {educationItems.slice(0, 4).map((item) => (
+              <StyledTouchableOpacity
+                key={item.id}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setSelectedGuideId(item.id);
+                  router.push("/home/micro-cards/micro-education");
+                }}
+                className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4"
+              >
+                <StyledText className="text-[#94A3B8] text-[8.5px] font-extrabold uppercase tracking-wider mb-1">
+                  {item.tag}
+                </StyledText>
+                <StyledText className="text-[#002B49] text-xs font-black mb-1">
+                  {item.title}
+                </StyledText>
+                <StyledText className="text-[#64748B] text-[10px] leading-4 font-semibold">
+                  {item.summary}
+                </StyledText>
+              </StyledTouchableOpacity>
+            ))}
           </StyledView>
 
           {/* Open All learning */}
           <StyledTouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.push("/home/micro-cards")}
+            onPress={() => router.push("/home/micro-cards/micro-education")}
             className="w-full bg-white border border-[#CBD5E1] py-2.5 rounded-full items-center justify-center flex-row"
           >
             <StyledText className="text-[#475569] text-xs font-bold mr-1">
@@ -233,66 +243,55 @@ export default function Resources() {
 
           <StyledView className="bg-[#EFF6FF] px-2.5 py-0.5 rounded-full border border-[#DBEAFE] self-start mb-4">
             <StyledText className="text-[#005B96] text-[9px] font-extrabold uppercase tracking-wider">
-              2 LISTED
+              {loading ? "..." : `${resources.length} LISTED`}
             </StyledText>
           </StyledView>
 
           {/* Directory Grid/List */}
-          <StyledView className="space-y-3">
-            {/* Listing 1 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4 flex-row justify-between items-start">
-              <StyledView className="flex-1 mr-3">
-                <StyledView className="bg-[#E2F0D9] px-2 py-0.5 rounded-md self-start mb-1.5">
-                  <StyledText className="text-[#385723] text-[8.5px] font-extrabold">
-                    Counseling
-                  </StyledText>
-                </StyledView>
-                <StyledText className="text-[#002B49] text-xs font-bold mb-1">
-                  Test
-                </StyledText>
-                <StyledText className="text-[#94A3B8] text-[10px] font-semibold">
-                  Australia
-                </StyledText>
-                <StyledTouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => Linking.openURL("tel:+54455453")}
-                  className="mt-1"
+          {loading ? (
+            <ActivityIndicator size="small" color="#005B96" className="py-6" />
+          ) : resources.length === 0 ? (
+            <StyledText className="text-[#64748B] text-xs text-center py-4 font-semibold">
+              No support listings found.
+            </StyledText>
+          ) : (
+            <StyledView className="space-y-3">
+              {resources.map((resource) => (
+                <StyledView
+                  key={resource.id || resource._id}
+                  className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4 flex-row justify-between items-start"
                 >
-                  <StyledText className="text-[#64748B] text-[10px] font-bold">
-                    +54 455 453
-                  </StyledText>
-                </StyledTouchableOpacity>
-              </StyledView>
-              <Ionicons name="heart" size={16} color="#005B96" className="mt-1" />
-            </StyledView>
-
-            {/* Listing 2 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4 flex-row justify-between items-start">
-              <StyledView className="flex-1 mr-3">
-                <StyledView className="bg-[#E2F0D9] px-2 py-0.5 rounded-md self-start mb-1.5">
-                  <StyledText className="text-[#385723] text-[8.5px] font-extrabold">
-                    Counseling
-                  </StyledText>
+                  <StyledView className="flex-1 mr-3">
+                    <StyledView className="bg-[#E2F0D9] px-2 py-0.5 rounded-md self-start mb-1.5">
+                      <StyledText className="text-[#385723] text-[8.5px] font-extrabold">
+                        {resource.category}
+                      </StyledText>
+                    </StyledView>
+                    <StyledText className="text-[#002B49] text-xs font-bold mb-1">
+                      {resource.name}
+                    </StyledText>
+                    <StyledText className="text-[#94A3B8] text-[10px] font-semibold">
+                      {resource.region}
+                    </StyledText>
+                    <StyledTouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (resource.contact) {
+                          Linking.openURL(`tel:${resource.contact.replace(/\s+/g, "")}`);
+                        }
+                      }}
+                      className="mt-1"
+                    >
+                      <StyledText className="text-[#64748B] text-[10px] font-bold">
+                        {resource.contact}
+                      </StyledText>
+                    </StyledTouchableOpacity>
+                  </StyledView>
+                  <Ionicons name="heart" size={16} color="#005B96" className="mt-1" />
                 </StyledView>
-                <StyledText className="text-[#002B49] text-xs font-bold mb-1">
-                  Test organization name
-                </StyledText>
-                <StyledText className="text-[#94A3B8] text-[10px] font-semibold">
-                  AU
-                </StyledText>
-                <StyledTouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => Linking.openURL("tel:+932382328")}
-                  className="mt-1"
-                >
-                  <StyledText className="text-[#64748B] text-[10px] font-bold">
-                    +93 2382 328
-                  </StyledText>
-                </StyledTouchableOpacity>
-              </StyledView>
-              <Ionicons name="heart" size={16} color="#005B96" className="mt-1" />
+              ))}
             </StyledView>
-          </StyledView>
+          )}
         </StyledView>
       </StyledScrollView>
     </StyledView>
