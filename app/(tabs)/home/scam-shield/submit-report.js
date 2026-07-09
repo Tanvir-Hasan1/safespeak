@@ -4,9 +4,8 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
-  Switch,
-  Alert,
+  Linking,
+  Platform,
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,213 +17,148 @@ const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
-const StyledTextInput = styled(TextInput);
 
 export default function SubmitReport() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [isPrivacyAccepted, setIsPrivacyAccepted] = useState(false);
-  const [expandedAgencies, setExpandedAgencies] = useState(["ACCC Scamwatch"]);
+  const [headerVisible, setHeaderVisible] = useState(true);
 
-  // State for editable fields
-  const [acccData, setAcccData] = useState([
-    {
-      label: t("senderNameLabel"),
-      value: "Unknown/PayPal Spoof",
-      verified: true,
-    },
-    {
-      label: t("scamCategoryLabel"),
-      value: t("phishingCategory"),
-      icon: "swap-vertical",
-    },
-    { label: t("platformLabel"), value: "Email / Gmail" },
-  ]);
-
-  const [reportCyberData, setReportCyberData] = useState([
-    { label: t("reportTypeLabel"), value: t("cybercrimeRequest") },
-    { label: t("incidentDateLabel"), value: "2026-02-20" },
-    {
-      label: t("urgencyLevelLabel"),
-      value: t("highUrgency"),
-      icon: "alert-circle",
-    },
-  ]);
-
-  const [bankData, setBankData] = useState([
-    { label: t("bankNameLabel"), value: "Commonwealth Bank (CBA)" },
-    {
-      label: t("accountStatusLabel"),
-      value: t("compromisedStatus"),
-      icon: "lock-closed",
-    },
-    { label: t("referenceIdLabel"), value: "TXN-882190-SS" },
-  ]);
-
-  const toggleAgency = (name) => {
-    if (expandedAgencies.includes(name)) {
-      setExpandedAgencies(expandedAgencies.filter((a) => a !== name));
-    } else {
-      setExpandedAgencies([...expandedAgencies, name]);
+  const handleScroll = (event) => {
+    const y = event.nativeEvent.contentOffset.y;
+    if (y <= 10) {
+      setHeaderVisible(true);
+    } else if (y > 50) {
+      setHeaderVisible(false);
     }
   };
 
-  const updateField = (agency, index, newValue) => {
-    if (agency === "ACCC Scamwatch") {
-      const updated = [...acccData];
-      updated[index].value = newValue;
-      setAcccData(updated);
-    } else if (agency === "ReportCyber (ACSC)") {
-      const updated = [...reportCyberData];
-      updated[index].value = newValue;
-      setReportCyberData(updated);
-    } else if (agency === "Bank Security Dept") {
-      const updated = [...bankData];
-      updated[index].value = newValue;
-      setBankData(updated);
-    }
-  };
-
-  const AgencyAccordion = ({ icon, name, fields, isExpanded }) => (
-    <StyledView className="bg-white rounded-[24px] mb-4 shadow-sm border border-[#F1F5F9] overflow-hidden">
-      <StyledTouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => toggleAgency(name)}
-        className="flex-row items-center p-5 bg-white"
-      >
-        <StyledView className="w-10 h-10 rounded-full bg-[#F0F4FA] items-center justify-center mr-4">
-          <Ionicons name={icon} size={20} color="#005B96" />
-        </StyledView>
-        <StyledText className="flex-1 text-[#1F2937] text-lg font-bold">
-          {name}
-        </StyledText>
-        <Ionicons
-          name={isExpanded ? "chevron-up" : "chevron-down"}
-          size={20}
-          color="#1F2937"
-        />
-      </StyledTouchableOpacity>
-
-      {isExpanded && fields && (
-        <StyledView className="px-5 pb-6">
-          <StyledView className="h-[1px] bg-[#F1F5F9] mb-5" />
-
-          <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-widest mb-4">
-            {t("prefilledDetails")}
-          </StyledText>
-
-          {fields.map((field, index) => (
-            <StyledView key={index} className="mb-4">
-              <StyledText className="text-[#1F2937] text-sm font-bold mb-2">
-                {field.label}
-              </StyledText>
-              <StyledView className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl px-4 py-3 flex-row items-center">
-                <StyledTextInput
-                  value={field.value}
-                  onChangeText={(val) => updateField(name, index, val)}
-                  className="flex-1 text-[#64748B] text-sm font-medium"
-                />
-                {field.verified && (
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={16}
-                    color="#22C55E"
-                  />
-                )}
-                {field.icon && (
-                  <Ionicons name={field.icon} size={16} color="#94A3B8" />
-                )}
-              </StyledView>
-            </StyledView>
-          ))}
-        </StyledView>
-      )}
-    </StyledView>
-  );
+  const steps = [
+    {
+      id: 1,
+      title: t("contactBank") || "Contact Your Bank",
+      icon: "business",
+      desc1: t("contactBankDesc") || "If you have lost money, shared your card details, or think someone can access your account, contact your bank immediately to freeze your accounts.",
+      desc2: t("highRiskDesc") || "Likely phishing/scam message using an urgent \"final notice\" and \"protection expires today\" payment-declined claim to pressure you into updating payment details, potentially to steal card info or credentials.",
+      buttonText: t("callFraudDept") || "Call Fraud Department",
+      action: () => Linking.openURL("tel:1300000000"),
+    },
+    {
+      id: 2,
+      title: "Report to ACCC Scamwatch",
+      icon: "hammer",
+      hasTag: true,
+      tagText: "COMMUNITY PREVENTION",
+      desc1: t("reportScamwatchDesc") || "Choose this if you have not lost money, but want the government to be aware of a scam.",
+      desc2: "Do not click any links or enter payment details from this message.",
+      buttonText: t("launchReportTool") || "Launch Report Tool",
+      action: () => Linking.openURL("https://www.scamwatch.gov.au/"),
+    },
+    {
+      id: 3,
+      title: "Report to ReportCyber",
+      icon: "shield",
+      desc1: t("reportCyberDesc") || "Report here if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk.",
+      desc2: "Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.",
+      buttonText: t("launchReportTool") || "Launch Report Tool",
+      action: () => Linking.openURL("https://www.cyber.gov.au/report-and-recover/report"),
+    },
+  ];
 
   return (
-    <StyledView className="flex-1 bg-[#FDFDFD]">
-      <CustomHeader title={t("submitReport")} showCancel={true} />
+    <StyledView className="flex-1 bg-[#F0F4FA]">
+      <CustomHeader
+        title=""
+        backText="Next Steps"
+        rightText="Cancel"
+        headerVisible={headerVisible}
+      />
 
       <StyledScrollView
-        className="flex-1 px-6"
+        className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {/* Header Section */}
-        <StyledView className="mt-8 mb-8">
-          <StyledText className="text-[#1F2937] text-2xl font-black">
-            {t("prefilledAgencyReports")}
+        {/* Secure Assets Main Card */}
+        <StyledView className="bg-white rounded-[32px] p-6 border border-[#E2E8F0] mb-5 shadow-xs">
+          <StyledText className="text-[#002B49] text-2xl font-black text-center mb-2 leading-8">
+            Secure your assets & report the incident
           </StyledText>
-          <StyledText className="text-[#94A3B8] text-sm font-medium leading-5 mt-2">
-            {t("prefilledAgencyDesc")}
+          <StyledText className="text-[#64748B] text-xs text-center leading-5 mb-5 px-1">
+            Likely phishing/scam message using an urgent "final notice" and "protection expires today" payment-declined claim to pressure you into updating payment details, potentially to steal card info or credentials.
           </StyledText>
-        </StyledView>
 
-        {/* Agencies */}
-        <AgencyAccordion
-          icon="shield-outline"
-          name="ACCC Scamwatch"
-          isExpanded={expandedAgencies.includes("ACCC Scamwatch")}
-          fields={acccData}
-        />
-
-        <AgencyAccordion
-          icon="hammer-outline"
-          name="ReportCyber (ACSC)"
-          isExpanded={expandedAgencies.includes("ReportCyber (ACSC)")}
-          fields={reportCyberData}
-        />
-
-        <AgencyAccordion
-          icon="business-outline"
-          name="Bank Security Dept"
-          isExpanded={expandedAgencies.includes("Bank Security Dept")}
-          fields={bankData}
-        />
-
-        {/* Privacy Consent */}
-        <StyledView className="mt-6 bg-[#FAFAFA] rounded-[24px] p-5 border border-[#F1F5F9]">
-          <StyledView className="flex-row items-start">
-            <StyledView className="flex-1 mr-4">
-              <StyledText className="text-[#1F2937] text-base font-bold">
-                {t("privacyConsent")}
+          {/* Recommended Next Steps Inner Box */}
+          <StyledView className="w-full border border-[#E2E8F0] rounded-2xl p-5 bg-[#F8FAFC]">
+            <StyledText className="text-[#64748B] text-[10px] font-black uppercase tracking-wider mb-3">
+              RECOMMENDED NEXT STEPS
+            </StyledText>
+            
+            <StyledView className="space-y-3">
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • Do not click any links or enter payment details from this message.
               </StyledText>
-              <StyledText className="text-[#64748B] text-xs font-medium leading-4 mt-1">
-                {t("privacyConsentDesc")}
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.
+              </StyledText>
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • If you already interacted or entered payment info, contact your card issuer to secure the account and monitor for fraudulent charges.
               </StyledText>
             </StyledView>
-            <Switch
-              value={isPrivacyAccepted}
-              onValueChange={setIsPrivacyAccepted}
-              trackColor={{ false: "#E2E8F0", true: "#005B96" }}
-              thumbColor="#FFFFFF"
-            />
           </StyledView>
         </StyledView>
 
-        {/* Submit Button */}
-        <StyledTouchableOpacity
-          activeOpacity={0.8}
-          onPress={() =>
-            Alert.alert(t("reportsSubmittedTitle"), t("reportsSubmittedDesc"))
-          }
-          className={`rounded-full py-4 items-center justify-center flex-row mt-8 shadow-lg ${
-            isPrivacyAccepted
-              ? "bg-[#FF8A00] shadow-orange-300"
-              : "bg-gray-300 shadow-none"
-          }`}
-          disabled={!isPrivacyAccepted}
-        >
-          <Ionicons name="send" size={20} color="white" />
-          <StyledText className="text-white text-lg font-bold ml-3 uppercase tracking-wider">
-            {t("submitAllReports")}
-          </StyledText>
-        </StyledTouchableOpacity>
+        {/* Steps List */}
+        <StyledView className="space-y-5">
+          {steps.map((step) => (
+            <StyledView
+              key={step.id}
+              className="bg-white rounded-[24px] p-5 border border-[#E2E8F0] shadow-xs"
+            >
+              {/* Step Header */}
+              <StyledView className="flex-row items-center mb-3">
+                <StyledView className="w-9 h-9 bg-[#FFF7ED] rounded-full items-center justify-center mr-3 shrink-0">
+                  <Ionicons name={step.icon} size={18} color="#F97316" />
+                </StyledView>
+                <StyledView className="flex-1">
+                  <StyledText className="text-[#002B49] text-[17px] font-black leading-6">
+                    {step.title}
+                  </StyledText>
+                  
+                  {step.hasTag && (
+                    <StyledView className="bg-[#EFF6FF] px-2 py-0.5 rounded-full border border-[#DBEAFE] self-start mt-1">
+                      <StyledText className="text-[#005B96] text-[8px] font-black uppercase tracking-wider">
+                        {step.tagText}
+                      </StyledText>
+                    </StyledView>
+                  )}
+                </StyledView>
+              </StyledView>
 
-        <StyledText className="text-[#94A3B8] text-[10px] font-bold text-center mt-4 uppercase tracking-widest">
-          {t("encryptedSubmission")}
-        </StyledText>
+              {/* Step Body */}
+              <StyledText className="text-[#475569] text-xs leading-5 mb-2 font-medium">
+                {step.desc1}
+              </StyledText>
+              
+              <StyledText className="text-[#475569] text-xs leading-5 mb-4 font-medium">
+                {step.desc2}
+              </StyledText>
+
+              {/* Action Button */}
+              <StyledTouchableOpacity
+                activeOpacity={0.8}
+                onPress={step.action}
+                className="bg-[#F59E0B] py-3 rounded-xl flex-row items-center justify-center"
+              >
+                <StyledText className="text-white text-xs font-bold mr-1">
+                  {step.buttonText}
+                </StyledText>
+                <Ionicons name="open-outline" size={13} color="white" />
+              </StyledTouchableOpacity>
+            </StyledView>
+          ))}
+        </StyledView>
       </StyledScrollView>
     </StyledView>
   );

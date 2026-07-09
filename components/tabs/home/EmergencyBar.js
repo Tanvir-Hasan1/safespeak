@@ -67,7 +67,7 @@ const EmergencyBar = React.memo(({ visible = true, absolute = false }) => {
 
   const translateY = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [-150, 0],
+    outputRange: [-280, 0],
   });
 
   const opacity = animatedValue.interpolate({

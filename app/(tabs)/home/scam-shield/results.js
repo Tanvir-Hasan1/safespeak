@@ -36,20 +36,54 @@ const RED_FLAGS = (t) => [
   },
 ];
 
+const EXTRACTED_ENTITIES_MOCK = {
+  "urls": [],
+  "emailAddresses": [
+    "nnadeems@hotmail.com"
+  ],
+  "phoneNumbers": [],
+  "amounts": [],
+  "paymentMethods": [],
+  "organizations": [],
+  "accountTerms": [],
+  "cryptoReferences": [],
+  "bankReferences": [],
+  "transactionIds": [],
+  "urlSignals": [],
+  "possibleSender": "nnadeems@hotmail.com"
+};
+
 export default function ScamRiskResults() {
   const router = useRouter();
   const { t } = useLanguage();
+  const [headerVisible, setHeaderVisible] = React.useState(true);
 
   const flags = RED_FLAGS(t);
 
+  const handleScroll = (event) => {
+    const y = event.nativeEvent.contentOffset.y;
+    if (y <= 10) {
+      setHeaderVisible(true);
+    } else if (y > 50) {
+      setHeaderVisible(false);
+    }
+  };
+
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title={t("scamRiskResults")} showCancel={true} />
+      <CustomHeader
+        title=""
+        backText={t("scamRiskResults")}
+        rightText="Cancel"
+        headerVisible={headerVisible}
+      />
 
       <StyledScrollView
         className="flex-1 px-6"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* Risk Score Card */}
         <StyledView className="bg-white rounded-[32px] p-6 mt-6 items-center shadow-sm">
@@ -66,6 +100,23 @@ export default function ScamRiskResults() {
           <StyledText className="text-[#64748B] text-sm font-medium text-center leading-5 mt-3">
             {t("highRiskDesc")}
           </StyledText>
+        </StyledView>
+
+        {/* Extracted Entities Card */}
+        <StyledView className="bg-white rounded-[24px] p-5 shadow-sm border border-[#E2E8F0] mt-6">
+          <StyledText className="text-[#1F2937] text-base font-bold mb-3">
+            Extracted entities
+          </StyledText>
+          
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="w-full bg-[#F8FAFC] rounded-xl p-4 border border-[#E2E8F0]"
+          >
+            <StyledText className="text-[#334155] font-mono text-[11.5px] leading-5">
+              {JSON.stringify(EXTRACTED_ENTITIES_MOCK, null, 2)}
+            </StyledText>
+          </ScrollView>
         </StyledView>
 
         {/* Detected Red Flags Section */}

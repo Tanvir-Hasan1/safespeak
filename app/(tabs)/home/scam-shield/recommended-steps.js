@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   View,
   Text,
   TouchableOpacity,
-  Dimensions,
+  Linking,
+  Platform,
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,133 +21,143 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 export default function RecommendedSteps() {
   const router = useRouter();
   const { t } = useLanguage();
+  const [headerVisible, setHeaderVisible] = useState(true);
 
-  const RECOMMENDATIONS = [
+  const handleScroll = (event) => {
+    const y = event.nativeEvent.contentOffset.y;
+    if (y <= 10) {
+      setHeaderVisible(true);
+    } else if (y > 50) {
+      setHeaderVisible(false);
+    }
+  };
+
+  const steps = [
     {
       id: 1,
-      title: t("contactBank"),
-      description: t("contactBankDesc"),
-      icon: "business-outline",
-      iconColor: "#FB923C",
-      bgColor: "#FFF7ED",
-      buttonText: t("callFraudDept"),
+      title: t("contactBank") || "Contact Your Bank",
+      icon: "business",
+      desc1: t("contactBankDesc") || "If you have lost money, shared your card details, or think someone can access your account, contact your bank immediately to freeze your accounts.",
+      desc2: t("highRiskDesc") || "Likely phishing/scam message using an urgent \"final notice\" and \"protection expires today\" payment-declined claim to pressure you into updating payment details, potentially to steal card info or credentials.",
+      buttonText: t("callFraudDept") || "Call Fraud Department",
+      action: () => Linking.openURL("tel:1300000000"),
     },
     {
       id: 2,
-      title: t("reportScamwatch"),
-      description: t("reportScamwatchDesc"),
-      icon: "trending-down-outline",
-      iconColor: "#FB923C",
-      bgColor: "#FFF7ED",
-      buttonText: t("launchReportTool"),
+      title: "Report to ACCC Scamwatch",
+      icon: "hammer",
+      hasTag: true,
+      tagText: "COMMUNITY PREVENTION",
+      desc1: t("reportScamwatchDesc") || "Choose this if you have not lost money, but want the government to be aware of a scam.",
+      desc2: "Do not click any links or enter payment details from this message.",
+      buttonText: t("launchReportTool") || "Launch Report Tool",
+      action: () => Linking.openURL("https://www.scamwatch.gov.au/"),
     },
     {
       id: 3,
-      title: t("reportCyber"),
-      description: t("reportCyberDesc"),
-      icon: "hammer-outline",
-      iconColor: "#FB923C",
-      bgColor: "#FFF7ED",
-      buttonText: t("launchReportTool"),
+      title: "Report to ReportCyber",
+      icon: "shield",
+      desc1: t("reportCyberDesc") || "Report here if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk.",
+      desc2: "Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.",
+      buttonText: t("launchReportTool") || "Launch Report Tool",
+      action: () => Linking.openURL("https://www.cyber.gov.au/report-and-recover/report"),
     },
   ];
 
   return (
-    <StyledView className="flex-1 bg-[#FDFDFD]">
-      <CustomHeader title={t("recommendedSteps")} showCancel={true} />
+    <StyledView className="flex-1 bg-[#F0F4FA]">
+      <CustomHeader
+        title=""
+        backText={t("nextSteps") || "Next Steps"}
+        rightText="Cancel"
+        headerVisible={headerVisible}
+      />
 
       <StyledScrollView
-        className="flex-1 px-6"
+        className="flex-1 px-4"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {/* Warning Banner */}
-        <StyledView className="mt-4 bg-[#FEFCE8] p-3 rounded-xl border border-[#FEF08A]">
-          <StyledView className="flex-row items-start">
-            <Ionicons name="warning-outline" size={16} color="#A16207" />
-            <StyledText className="ml-2 flex-1 text-[#A16207] text-[10px] font-bold leading-5">
-              {t("safespeakDisclaimer")}
-            </StyledText>
-          </StyledView>
-        </StyledView>
+        {/* Secure Assets Main Card */}
+        <StyledView className="bg-white rounded-[32px] p-6 border border-[#E2E8F0] mb-5 shadow-xs">
+          <StyledText className="text-[#002B49] text-2xl font-black text-center mb-2 leading-8">
+            Secure your assets & report the incident
+          </StyledText>
+          <StyledText className="text-[#64748B] text-xs text-center leading-5 mb-5 px-1">
+            Likely phishing/scam message using an urgent "final notice" and "protection expires today" payment-declined claim to pressure you into updating payment details, potentially to steal card info or credentials.
+          </StyledText>
 
-        {/* Header Section */}
-        <StyledView className="mt-8 items-center">
-          <StyledText className="text-[#1F2937] text-2xl font-black">
-            {t("nextSteps")}
-          </StyledText>
-          <StyledText className="text-[#94A3B8] text-sm font-medium text-center mt-1 leading-5 px-4">
-            {t("nextStepsDesc")}
-          </StyledText>
+          {/* Recommended Next Steps Inner Box */}
+          <StyledView className="w-full border border-[#E2E8F0] rounded-2xl p-5 bg-[#F8FAFC]">
+            <StyledText className="text-[#64748B] text-[10px] font-black uppercase tracking-wider mb-3">
+              RECOMMENDED NEXT STEPS
+            </StyledText>
+            
+            <StyledView className="space-y-3">
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • Do not click any links or enter payment details from this message.
+              </StyledText>
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.
+              </StyledText>
+              <StyledText className="text-[#334155] text-xs leading-5">
+                • If you already interacted or entered payment info, contact your card issuer to secure the account and monitor for fraudulent charges.
+              </StyledText>
+            </StyledView>
+          </StyledView>
         </StyledView>
 
         {/* Steps List */}
-        <StyledView className="mt-8 space-y-8">
-          {RECOMMENDATIONS.map((step) => (
-            <StyledView key={step.id} className="items-center">
-              <StyledView className="flex-row items-start w-full">
-                <StyledView
-                  className="w-10 h-10 rounded-2xl items-center justify-center"
-                  style={{ backgroundColor: step.bgColor }}
-                >
-                  <Ionicons name={step.icon} size={20} color={step.iconColor} />
+        <StyledView className="space-y-5">
+          {steps.map((step) => (
+            <StyledView
+              key={step.id}
+              className="bg-white rounded-[24px] p-5 border border-[#E2E8F0] shadow-xs"
+            >
+              {/* Step Header */}
+              <StyledView className="flex-row items-center mb-3">
+                <StyledView className="w-9 h-9 bg-[#FFF7ED] rounded-full items-center justify-center mr-3 shrink-0">
+                  <Ionicons name={step.icon} size={18} color="#F97316" />
                 </StyledView>
-                <StyledView className="flex-1 ml-4">
-                  <StyledText className="text-[#1F2937] text-lg font-bold">
+                <StyledView className="flex-1">
+                  <StyledText className="text-[#002B49] text-[17px] font-black leading-6">
                     {step.title}
                   </StyledText>
-                  <StyledText className="text-[#94A3B8] text-[11px] font-medium leading-4 mt-1">
-                    {step.description}
-                  </StyledText>
+                  
+                  {step.hasTag && (
+                    <StyledView className="bg-[#EFF6FF] px-2 py-0.5 rounded-full border border-[#DBEAFE] self-start mt-1">
+                      <StyledText className="text-[#005B96] text-[8px] font-black uppercase tracking-wider">
+                        {step.tagText}
+                      </StyledText>
+                    </StyledView>
+                  )}
                 </StyledView>
               </StyledView>
 
+              {/* Step Body */}
+              <StyledText className="text-[#475569] text-xs leading-5 mb-2 font-medium">
+                {step.desc1}
+              </StyledText>
+              
+              <StyledText className="text-[#475569] text-xs leading-5 mb-4 font-medium">
+                {step.desc2}
+              </StyledText>
+
+              {/* Action Button */}
               <StyledTouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => router.push("/home/scam-shield/submit-report")}
-                className="bg-[#FF8A00] rounded-full py-3 px-10 mt-4 shadow-sm w-full items-center"
+                onPress={step.action}
+                className="bg-[#F59E0B] py-3 rounded-xl flex-row items-center justify-center"
               >
-                <StyledText className="text-white text-base font-bold">
+                <StyledText className="text-white text-xs font-bold mr-1">
                   {step.buttonText}
                 </StyledText>
+                <Ionicons name="open-outline" size={13} color="white" />
               </StyledTouchableOpacity>
-
-              {/* Divider */}
-              <StyledView className="w-full h-[1px] bg-[#F1F5F9] mt-8" />
             </StyledView>
           ))}
-        </StyledView>
-
-        {/* Documentation Section */}
-        <StyledView className="mt-8 bg-white rounded-[32px] p-6 shadow-sm border border-[#F1F5F9]">
-          <StyledView className="flex-row items-center mb-4">
-            <Ionicons name="time-outline" size={20} color="#94A3B8" />
-            <StyledText className="ml-3 flex-1 text-[#64748B] text-sm font-medium leading-5">
-              {t("historySaved")}
-            </StyledText>
-          </StyledView>
-
-          <StyledTouchableOpacity
-            activeOpacity={0.7}
-            className="bg-[#F1F5F9] rounded-full py-3 flex-row items-center justify-center mb-4"
-          >
-            <Ionicons name="download-outline" size={18} color="#002B49" />
-            <StyledText className="text-[#002B49] text-sm font-bold ml-3">
-              {t("downloadPrefilled")}
-            </StyledText>
-          </StyledTouchableOpacity>
-
-          <StyledTouchableOpacity
-            activeOpacity={0.7}
-            className="bg-[#F1F5F9] rounded-full py-3 flex-row items-center justify-center"
-          >
-            <Ionicons name="document-text-outline" size={18} color="#002B49" />
-            <StyledView className="ml-3 items-center">
-              <StyledText className="text-[#002B49] text-sm font-bold">
-                {t("downloadSummary")}
-              </StyledText>
-            </StyledView>
-          </StyledTouchableOpacity>
         </StyledView>
       </StyledScrollView>
     </StyledView>
