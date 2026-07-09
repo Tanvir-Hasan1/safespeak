@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, Animated, Dimensions } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, Animated, Dimensions, Linking, Platform } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
+import * as IntentLauncher from "expo-intent-launcher";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,6 +9,7 @@ import { useLanguage } from "../../../../context/LanguageContext";
 import CustomHeader from "../../../../components/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEducationStore } from "../../../../store/useEducationStore";
+import api from "../../../../context/api";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -93,6 +96,20 @@ export default function MicroEducation() {
 
   // Modal States & Animation Ref
   const [selectedGuide, setSelectedGuide] = useState(null);
+  const [contentResources, setContentResources] = useState([]);
+
+  useEffect(() => {
+    api.get("/content-resources")
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.resources)) {
+          setContentResources(json.data.resources);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch content resources:", err);
+      });
+  }, []);
   const [modalVisible, setModalVisible] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -121,8 +138,57 @@ export default function MicroEducation() {
     }
   };
 
-  const handleDownload = (fileName) => {
-    Alert.alert("Download Started", `${fileName} is downloading...`);
+  const handleDownload = (fileName, downloadPath) => {
+    if (downloadPath) {
+      const fullUrl = `${api.defaults.baseURL}${downloadPath}`;
+      Alert.alert(
+        "Download Resource",
+        `Do you want to download and open "${fileName}"?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Download",
+            onPress: async () => {
+              try {
+                if (Platform.OS === "android") {
+                  const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, "_") + ".pdf";
+                  const localUri = `${FileSystem.documentDirectory}${safeFileName}`;
+
+                  Alert.alert("Downloading", "Please wait while the PDF is downloading...");
+
+                  const { uri } = await FileSystem.downloadAsync(
+                    fullUrl,
+                    localUri,
+                    {
+                      headers: {
+                        "ngrok-skip-browser-warning": "true"
+                      }
+                    }
+                  );
+
+                  const contentUri = await FileSystem.getContentUriAsync(uri);
+
+                  await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+                    data: contentUri,
+                    flags: 1, // Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    type: "application/pdf",
+                  });
+                } else {
+                  Linking.openURL(fullUrl).catch((err) => {
+                    Alert.alert("Error", "Could not open download link.");
+                  });
+                }
+              } catch (err) {
+                console.error(err);
+                Alert.alert("Error", "Failed to download and open PDF. Please ensure a PDF reader is installed.");
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Download Started", `${fileName} is downloading...`);
+    }
   };
 
   const openCardDetail = (guide) => {
@@ -286,57 +352,40 @@ export default function MicroEducation() {
             Downloadable safety resources
           </StyledText>
           <StyledText className="text-[#94A3B8] text-[9px] font-semibold mb-4 mt-0.5">
-            2 listed
+            {contentResources.length} listed
           </StyledText>
 
           <StyledView className="space-y-3">
-            {/* Doc 1 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
-              <StyledView className="flex-row items-center flex-1 mr-3">
-                <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
-                  <Ionicons name="document-text" size={14} color="#005B96" />
+            {contentResources.length > 0 ? (
+              contentResources.map((item) => (
+                <StyledView key={item.id} className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
+                  <StyledView className="flex-row items-center flex-1 mr-3">
+                    <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
+                      <Ionicons name="document-text" size={14} color="#005B96" />
+                    </StyledView>
+                    <StyledView className="flex-1">
+                      <StyledText className="text-[#002B49] text-xs font-bold">
+                        {item.name}
+                      </StyledText>
+                      <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
+                        {item.category} | {item.language} | {item.jurisdiction}
+                      </StyledText>
+                    </StyledView>
+                  </StyledView>
+                  <StyledTouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleDownload(item.name, item.downloadPath)}
+                    className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
+                  >
+                    <Ionicons name="download" size={14} color="white" />
+                  </StyledTouchableOpacity>
                 </StyledView>
-                <StyledView className="flex-1">
-                  <StyledText className="text-[#002B49] text-xs font-bold">
-                    Legal Support Framework 2024
-                  </StyledText>
-                  <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
-                    Legal Awareness | English | Federal
-                  </StyledText>
-                </StyledView>
-              </StyledView>
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleDownload("Legal Support Framework 2024")}
-                className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
-              >
-                <Ionicons name="download" size={14} color="white" />
-              </StyledTouchableOpacity>
-            </StyledView>
-
-            {/* Doc 2 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
-              <StyledView className="flex-row items-center flex-1 mr-3">
-                <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
-                  <Ionicons name="document-text" size={14} color="#005B96" />
-                </StyledView>
-                <StyledView className="flex-1">
-                  <StyledText className="text-[#002B49] text-xs font-bold">
-                    Legal Support Framework 2026
-                  </StyledText>
-                  <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
-                    Online Abuse | English | NSW
-                  </StyledText>
-                </StyledView>
-              </StyledView>
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleDownload("Legal Support Framework 2026")}
-                className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
-              >
-                <Ionicons name="download" size={14} color="white" />
-              </StyledTouchableOpacity>
-            </StyledView>
+              ))
+            ) : (
+              <StyledText className="text-[#64748B] text-xs text-center py-4 font-semibold">
+                No downloadable resources found.
+              </StyledText>
+            )}
           </StyledView>
         </StyledView>
       </StyledScrollView>

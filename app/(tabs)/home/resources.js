@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, View, Text, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Linking, Alert, ActivityIndicator, Platform } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
+import * as IntentLauncher from "expo-intent-launcher";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -82,15 +84,45 @@ export default function Resources() {
       const fullUrl = `${api.defaults.baseURL}${downloadPath}`;
       Alert.alert(
         "Download Resource",
-        `Do you want to download "${fileName}"?`,
+        `Do you want to download and open "${fileName}"?`,
         [
           { text: "Cancel", style: "cancel" },
           {
             text: "Download",
-            onPress: () => {
-              Linking.openURL(fullUrl).catch((err) => {
-                Alert.alert("Error", "Could not open download link.");
-              });
+            onPress: async () => {
+              try {
+                if (Platform.OS === "android") {
+                  const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, "_") + ".pdf";
+                  const localUri = `${FileSystem.documentDirectory}${safeFileName}`;
+
+                  Alert.alert("Downloading", "Please wait while the PDF is downloading...");
+
+                  const { uri } = await FileSystem.downloadAsync(
+                    fullUrl,
+                    localUri,
+                    {
+                      headers: {
+                        "ngrok-skip-browser-warning": "true"
+                      }
+                    }
+                  );
+
+                  const contentUri = await FileSystem.getContentUriAsync(uri);
+
+                  await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+                    data: contentUri,
+                    flags: 1, // Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    type: "application/pdf",
+                  });
+                } else {
+                  Linking.openURL(fullUrl).catch((err) => {
+                    Alert.alert("Error", "Could not open download link.");
+                  });
+                }
+              } catch (err) {
+                console.error(err);
+                Alert.alert("Error", "Failed to download and open PDF. Please ensure a PDF reader is installed.");
+              }
             }
           }
         ]

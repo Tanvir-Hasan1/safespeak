@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, ImageBackground, Animated, Dimensions } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, ImageBackground, Animated, Dimensions, Linking, Platform } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
+import * as IntentLauncher from "expo-intent-launcher";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,6 +9,7 @@ import { useLanguage } from "../../../../context/LanguageContext";
 import CustomHeader from "../../../../components/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEducationStore } from "../../../../store/useEducationStore";
+import api from "../../../../context/api";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -130,6 +133,14 @@ const detailContentByTheme = {
 
 const hackerImage = { uri: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop" };
 
+const getFullImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  return `${api.defaults.baseURL}${path}`;
+};
+
 export default function MicroCards() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -139,6 +150,20 @@ export default function MicroCards() {
 
   // Modal States & Animation Ref
   const [selectedGuide, setSelectedGuide] = useState(null);
+  const [contentResources, setContentResources] = useState([]);
+
+  useEffect(() => {
+    api.get("/content-resources")
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.resources)) {
+          setContentResources(json.data.resources);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch content resources:", err);
+      });
+  }, []);
   const [modalVisible, setModalVisible] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
 
@@ -162,6 +187,7 @@ export default function MicroCards() {
     detailBody: item.detailBody,
     detailTakeaway: item.detailTakeaway,
     cta: item.cta,
+    imagePath: item.imagePath,
   }));
 
   // Auto-open guide modal if navigated from resources page
@@ -184,8 +210,57 @@ export default function MicroCards() {
     }
   };
 
-  const handleDownload = (fileName) => {
-    Alert.alert("Download Started", `${fileName} is downloading...`);
+  const handleDownload = (fileName, downloadPath) => {
+    if (downloadPath) {
+      const fullUrl = `${api.defaults.baseURL}${downloadPath}`;
+      Alert.alert(
+        "Download Resource",
+        `Do you want to download and open "${fileName}"?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Download",
+            onPress: async () => {
+              try {
+                if (Platform.OS === "android") {
+                  const safeFileName = fileName.replace(/[^a-zA-Z0-9]/g, "_") + ".pdf";
+                  const localUri = `${FileSystem.documentDirectory}${safeFileName}`;
+
+                  Alert.alert("Downloading", "Please wait while the PDF is downloading...");
+
+                  const { uri } = await FileSystem.downloadAsync(
+                    fullUrl,
+                    localUri,
+                    {
+                      headers: {
+                        "ngrok-skip-browser-warning": "true"
+                      }
+                    }
+                  );
+
+                  const contentUri = await FileSystem.getContentUriAsync(uri);
+
+                  await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+                    data: contentUri,
+                    flags: 1, // Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    type: "application/pdf",
+                  });
+                } else {
+                  Linking.openURL(fullUrl).catch((err) => {
+                    Alert.alert("Error", "Could not open download link.");
+                  });
+                }
+              } catch (err) {
+                console.error(err);
+                Alert.alert("Error", "Failed to download and open PDF. Please ensure a PDF reader is installed.");
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Download Started", `${fileName} is downloading...`);
+    }
   };
 
   const openCardDetail = (guide) => {
@@ -209,6 +284,26 @@ export default function MicroCards() {
       setModalVisible(false);
       setSelectedGuide(null);
     });
+  };
+
+  const handlePreviousCard = () => {
+    if (!selectedGuide) return;
+    const currentIndex = filteredGuides.findIndex((g) => g.id === selectedGuide.id);
+    if (currentIndex > 0) {
+      setSelectedGuide(filteredGuides[currentIndex - 1]);
+    } else {
+      closeCardDetail();
+    }
+  };
+
+  const handleNextCard = () => {
+    if (!selectedGuide) return;
+    const currentIndex = filteredGuides.findIndex((g) => g.id === selectedGuide.id);
+    if (currentIndex < filteredGuides.length - 1) {
+      setSelectedGuide(filteredGuides[currentIndex + 1]);
+    } else {
+      closeCardDetail();
+    }
   };
 
   const filteredGuides = guides.filter((guide) => {
@@ -333,57 +428,40 @@ export default function MicroCards() {
             Downloadable safety resources
           </StyledText>
           <StyledText className="text-[#94A3B8] text-[9px] font-semibold mb-4 mt-0.5">
-            2 listed
+            {contentResources.length} listed
           </StyledText>
 
           <StyledView className="space-y-3">
-            {/* Doc 1 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
-              <StyledView className="flex-row items-center flex-1 mr-3">
-                <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
-                  <Ionicons name="document-text" size={14} color="#005B96" />
+            {contentResources.length > 0 ? (
+              contentResources.map((item) => (
+                <StyledView key={item.id} className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
+                  <StyledView className="flex-row items-center flex-1 mr-3">
+                    <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
+                      <Ionicons name="document-text" size={14} color="#005B96" />
+                    </StyledView>
+                    <StyledView className="flex-1">
+                      <StyledText className="text-[#002B49] text-xs font-bold">
+                        {item.name}
+                      </StyledText>
+                      <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
+                        {item.category} | {item.language} | {item.jurisdiction}
+                      </StyledText>
+                    </StyledView>
+                  </StyledView>
+                  <StyledTouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleDownload(item.name, item.downloadPath)}
+                    className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
+                  >
+                    <Ionicons name="download" size={14} color="white" />
+                  </StyledTouchableOpacity>
                 </StyledView>
-                <StyledView className="flex-1">
-                  <StyledText className="text-[#002B49] text-xs font-bold">
-                    Legal Support Framework 2024
-                  </StyledText>
-                  <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
-                    Legal Awareness | English | Federal
-                  </StyledText>
-                </StyledView>
-              </StyledView>
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleDownload("Legal Support Framework 2024")}
-                className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
-              >
-                <Ionicons name="download" size={14} color="white" />
-              </StyledTouchableOpacity>
-            </StyledView>
-
-            {/* Doc 2 */}
-            <StyledView className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 p-4 rounded-[20px] flex-row justify-between items-center">
-              <StyledView className="flex-row items-center flex-1 mr-3">
-                <StyledView className="w-8 h-8 rounded-full bg-[#EFF6FF] items-center justify-center mr-3 shrink-0">
-                  <Ionicons name="document-text" size={14} color="#005B96" />
-                </StyledView>
-                <StyledView className="flex-1">
-                  <StyledText className="text-[#002B49] text-xs font-bold">
-                    Legal Support Framework 2026
-                  </StyledText>
-                  <StyledText className="text-[#64748B] text-[9.5px] font-semibold">
-                    Online Abuse | English | NSW
-                  </StyledText>
-                </StyledView>
-              </StyledView>
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleDownload("Legal Support Framework 2026")}
-                className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center"
-              >
-                <Ionicons name="download" size={14} color="white" />
-              </StyledTouchableOpacity>
-            </StyledView>
+              ))
+            ) : (
+              <StyledText className="text-[#64748B] text-xs text-center py-4 font-semibold">
+                No downloadable resources found.
+              </StyledText>
+            )}
           </StyledView>
         </StyledView>
       </StyledScrollView>
@@ -420,7 +498,7 @@ export default function MicroCards() {
               style={{
                 height: "92%",
                 width: "100%",
-                backgroundColor: "#F0F4FA",
+                backgroundColor: "#FFFFFF",
                 borderTopLeftRadius: 28,
                 borderTopRightRadius: 28,
                 overflow: "hidden",
@@ -434,46 +512,119 @@ export default function MicroCards() {
                 ]
               }}
             >
-              {/* Modal Header */}
-              <SafeAreaView className="bg-[#F0F4FA]" edges={["top"]}>
-                <StyledView className="flex-row items-center justify-between px-6 py-4">
+              {/* Top half image section */}
+              <StyledView className="w-full h-[250px] relative overflow-hidden">
+                <ImageBackground
+                  source={
+                    selectedGuide.imagePath
+                      ? { uri: getFullImageUrl(selectedGuide.imagePath) }
+                      : hackerImage
+                  }
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                >
+                  {/* Dark overlay gradient to make white text readable */}
+                  <StyledView className="absolute inset-0 bg-black/35" />
+                  
+                  {/* Floating circular Close button in top-right */}
+                  <StyledTouchableOpacity
+                    onPress={closeCardDetail}
+                    activeOpacity={0.7}
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 items-center justify-center z-50"
+                  >
+                    <Ionicons name="close" size={20} color="white" />
+                  </StyledTouchableOpacity>
+
+                  {/* Overlay Content bottom-left */}
+                  <StyledView className="absolute bottom-5 left-6 right-6">
+                    <StyledView className="bg-[#005B96] px-3 py-1 rounded-md self-start mb-2">
+                      <StyledText className="text-white text-[9.5px] font-black uppercase tracking-wider">
+                        {selectedGuide.tag}
+                      </StyledText>
+                    </StyledView>
+                    <StyledText className="text-white text-[28px] font-black leading-9">
+                      {selectedGuide.title}
+                    </StyledText>
+                  </StyledView>
+                </ImageBackground>
+              </StyledView>
+
+              {/* Scrollable details body section */}
+              <StyledScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 }}
+              >
+                {/* 1. detailHeading */}
+                {selectedGuide.detailHeading && (
+                  <StyledText className="text-[#002B49] text-[18px] font-bold mb-2">
+                    {selectedGuide.detailHeading}
+                  </StyledText>
+                )}
+
+                {/* 2. summary / desc */}
+                {selectedGuide.desc && (
+                  <StyledText className="text-[#4B5563] text-sm leading-6 mb-4">
+                    {selectedGuide.desc}
+                  </StyledText>
+                )}
+
+                {/* 3. Key Takeaway Blue Box */}
+                {selectedGuide.detailTakeaway && (
+                  <StyledView className="w-full bg-[#EFF6FF] border-l-[3.5px] border-[#005B96] p-4 mb-5 rounded-r-xl flex-row items-start">
+                    <Ionicons name="alert-circle" size={16} color="#005B96" style={{ marginTop: 1.5, marginRight: 8 }} />
+                    <StyledView className="flex-1">
+                      <StyledText className="text-[#005B96] text-[10.5px] font-black uppercase tracking-wider mb-1">
+                        KEY TAKEAWAY
+                      </StyledText>
+                      <StyledText className="text-[#1E3A8A] text-xs leading-5">
+                        {selectedGuide.detailTakeaway}
+                      </StyledText>
+                    </StyledView>
+                  </StyledView>
+                )}
+
+                {/* 4. detailBody */}
+                {selectedGuide.detailBody && (
+                  <StyledText className="text-[#4B5563] text-sm leading-6 mb-6">
+                    {selectedGuide.detailBody}
+                  </StyledText>
+                )}
+
+                {/* Divider */}
+                <StyledView className="w-full h-[1px] bg-[#E2E8F0] mb-5" />
+
+                {/* Footer Navigation */}
+                <StyledView className="flex-row justify-between items-center w-full mb-4">
+                  {/* Previous Button */}
                   <StyledTouchableOpacity
                     activeOpacity={0.7}
-                    onPress={closeCardDetail}
-                    className="flex-row items-center"
+                    onPress={handlePreviousCard}
+                    className="flex-row items-center py-2"
                   >
-                    <Ionicons name="chevron-back" size={20} color="#1F2937" />
-                    <StyledText className="text-[#1F2937] text-base font-semibold ml-1">
-                      Micro-Cards
+                    <Ionicons name="chevron-back" size={14} color="#64748B" />
+                    <StyledText className="text-[#64748B] text-xs font-semibold ml-1">
+                      Previous Micro-Cards
                     </StyledText>
                   </StyledTouchableOpacity>
 
+                  {/* Next Button */}
                   <StyledTouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={closeCardDetail}
-                    className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
+                    activeOpacity={0.8}
+                    onPress={handleNextCard}
+                    className="bg-[#005B96] px-5 py-2.5 rounded-xl flex-row items-center justify-center shadow-xs"
                   >
-                    <Ionicons name="close" size={20} color="#002B49" />
+                    <StyledText className="text-white text-xs font-bold mr-1">
+                      Next Micro-Cards
+                    </StyledText>
+                    <Ionicons name="chevron-forward" size={12} color="white" />
                   </StyledTouchableOpacity>
                 </StyledView>
-              </SafeAreaView>
 
-              <StyledScrollView
-                className="flex-1 px-6"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 40 }}
-              >
-                <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-6 mt-4 shadow-xs">
-                  <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-2">
-                    {selectedGuide.tag}
-                  </StyledText>
-                  <StyledText className="text-[#002B49] text-2xl font-black mb-3">
-                    {selectedGuide.title}
-                  </StyledText>
-                  <StyledText className="text-[#4B5563] text-sm leading-6 font-semibold">
-                    {selectedGuide.desc}
-                  </StyledText>
-                </StyledView>
+                {/* Bottom Disclaimer */}
+                <StyledText className="text-[#94A3B8] text-[9.5px] text-center italic font-semibold mt-2">
+                  This is educational information only. Always follow professional advice.
+                </StyledText>
               </StyledScrollView>
             </Animated.View>
           </StyledView>
