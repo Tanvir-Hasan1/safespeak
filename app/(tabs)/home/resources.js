@@ -18,6 +18,7 @@ export default function Resources() {
   const { t } = useLanguage();
   const [headerVisible, setHeaderVisible] = useState(true);
   const [resources, setResources] = useState([]);
+  const [contentResources, setContentResources] = useState([]);
   const [educationItems, setEducationItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +51,18 @@ export default function Resources() {
         // Logging is handled globally in the API interceptors
       });
 
-    Promise.allSettled([fetchResources, fetchEducation])
+    const fetchContent = api.get("/content-resources")
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.resources)) {
+          setContentResources(json.data.resources);
+        }
+      })
+      .catch((error) => {
+        // Logging is handled globally in the API interceptors
+      });
+
+    Promise.allSettled([fetchResources, fetchEducation, fetchContent])
       .finally(() => {
         setLoading(false);
       });
@@ -65,8 +77,27 @@ export default function Resources() {
     }
   };
 
-  const handleDownload = (fileName) => {
-    Alert.alert("Download Started", `${fileName} is downloading...`);
+  const handleDownload = (fileName, downloadPath) => {
+    if (downloadPath) {
+      const fullUrl = `${api.defaults.baseURL}${downloadPath}`;
+      Alert.alert(
+        "Download Resource",
+        `Do you want to download "${fileName}"?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Download",
+            onPress: () => {
+              Linking.openURL(fullUrl).catch((err) => {
+                Alert.alert("Error", "Could not open download link.");
+              });
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Download Started", `${fileName} is downloading...`);
+    }
   };
 
   return (
@@ -128,7 +159,7 @@ export default function Resources() {
             </StyledText>
             <StyledView className="bg-[#EFF6FF] px-2 py-0.5 rounded-md border border-[#DBEAFE]">
               <StyledText className="text-[#005B96] text-[9px] font-extrabold uppercase tracking-wider">
-                LIBRARY
+                {loading ? "..." : `${contentResources.length} LISTED`}
               </StyledText>
             </StyledView>
           </StyledView>
@@ -136,45 +167,39 @@ export default function Resources() {
             Backend resources appear here when available.
           </StyledText>
 
-          {/* Doc 1 */}
-          <StyledView className="bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4 mb-4">
-            <StyledText className="text-[#002B49] text-[13px] font-black mb-1">
-              Legal Support Framework 2024
+          {loading && contentResources.length === 0 ? (
+            <ActivityIndicator size="small" color="#005B96" className="py-6" />
+          ) : contentResources.length > 0 ? (
+            contentResources.map((item, index) => (
+              <StyledView
+                key={item.id}
+                className={`bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4 ${
+                  index === contentResources.length - 1 ? "" : "mb-4"
+                }`}
+              >
+                <StyledText className="text-[#002B49] text-[13px] font-black mb-1">
+                  {item.name}
+                </StyledText>
+                <StyledText className="text-[#64748B] text-[10px] font-semibold mb-3">
+                  {item.category} | {item.language} | {item.jurisdiction}
+                </StyledText>
+                <StyledTouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => handleDownload(item.name, item.downloadPath)}
+                  className="w-full bg-[#005B96] py-2 rounded-xl flex-row items-center justify-center"
+                >
+                  <StyledText className="text-white text-[11px] font-bold mr-1.5">
+                    Download
+                  </StyledText>
+                  <Ionicons name="open-outline" size={13} color="white" />
+                </StyledTouchableOpacity>
+              </StyledView>
+            ))
+          ) : (
+            <StyledText className="text-[#64748B] text-xs text-center py-4 font-semibold">
+              No downloadable resources found.
             </StyledText>
-            <StyledText className="text-[#64748B] text-[10px] font-semibold mb-3">
-              Legal Awareness | English | Federal
-            </StyledText>
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => handleDownload("Legal Support Framework 2024")}
-              className="w-full bg-[#005B96] py-2 rounded-xl flex-row items-center justify-center"
-            >
-              <StyledText className="text-white text-[11px] font-bold mr-1.5">
-                Download
-              </StyledText>
-              <Ionicons name="open-outline" size={13} color="white" />
-            </StyledTouchableOpacity>
-          </StyledView>
-
-          {/* Doc 2 */}
-          <StyledView className="bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4">
-            <StyledText className="text-[#002B49] text-[13px] font-black mb-1">
-              Legal Support Framework 2026
-            </StyledText>
-            <StyledText className="text-[#64748B] text-[10px] font-semibold mb-3">
-              Online Abuse | English | NSW
-            </StyledText>
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => handleDownload("Legal Support Framework 2026")}
-              className="w-full bg-[#005B96] py-2 rounded-xl flex-row items-center justify-center"
-            >
-              <StyledText className="text-white text-[11px] font-bold mr-1.5">
-                Download
-              </StyledText>
-              <Ionicons name="open-outline" size={13} color="white" />
-            </StyledTouchableOpacity>
-          </StyledView>
+          )}
         </StyledView>
 
         {/* 3. Micro-education Card */}
@@ -199,7 +224,7 @@ export default function Resources() {
                 activeOpacity={0.85}
                 onPress={() => {
                   setSelectedGuideId(item.id);
-                  router.push("/home/micro-cards/micro-education");
+                  router.push("/home/micro-cards");
                 }}
                 className="w-full bg-[#F8FAFC] border border-[#CBD5E1]/30 rounded-2xl p-4"
               >
@@ -216,17 +241,28 @@ export default function Resources() {
             ))}
           </StyledView>
 
-          {/* Open All learning */}
-          <StyledTouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push("/home/micro-cards/micro-education")}
-            className="w-full bg-white border border-[#CBD5E1] py-2.5 rounded-full items-center justify-center flex-row"
-          >
-            <StyledText className="text-[#475569] text-xs font-bold mr-1">
-              Open all learning content
-            </StyledText>
-            <Ionicons name="chevron-forward" size={13} color="#475569" />
-          </StyledTouchableOpacity>
+          {/* Action Buttons */}
+          <StyledView className="w-full">
+            <StyledTouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push("/home/micro-cards/micro-education")}
+              className="w-full bg-[#005B96] py-2.5 rounded-full items-center justify-center mb-3"
+            >
+              <StyledText className="text-white text-xs font-bold">
+                Open micro-education
+              </StyledText>
+            </StyledTouchableOpacity>
+
+            <StyledTouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push("/home/micro-cards")}
+              className="w-full bg-white border border-[#CBD5E1] py-2.5 rounded-full items-center justify-center"
+            >
+              <StyledText className="text-[#002B49] text-xs font-bold">
+                Browse micro-cards
+              </StyledText>
+            </StyledTouchableOpacity>
+          </StyledView>
         </StyledView>
 
         {/* 4. Support Directory Card */}

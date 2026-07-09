@@ -6,11 +6,22 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Request Interceptor: Logs all outgoing requests
+// Request Interceptor: Logs all outgoing requests and injects Authorization token
 api.interceptors.request.use(
   (config) => {
     const fullUrl = `${config.baseURL || ""}${config.url || ""}`;
     console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${fullUrl}`);
+
+    try {
+      const { useAuthStore } = require("../store/useAuthStore");
+      const token = useAuthStore.getState().accessToken;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      // Ignore module loading issues on initial load
+    }
+
     return config;
   },
   (error) => {

@@ -183,7 +183,12 @@ export default function SmartDialer() {
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader title={t("smartDialerTitle")} headerVisible={headerVisible} />
+      <CustomHeader
+        title=""
+        backText={t("smartDialerTitle")}
+        rightText="Cancel"
+        headerVisible={headerVisible}
+      />
       
       <StyledScrollView
         className="flex-1 px-6"

@@ -55,7 +55,11 @@ export default function FilterScreen() {
 
   return (
     <View style={styles.safe}>
-      <CustomHeader title={t("filterLessons")} />
+      <CustomHeader
+        title=""
+        backText={t("filterLessons")}
+        rightText="Cancel"
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}

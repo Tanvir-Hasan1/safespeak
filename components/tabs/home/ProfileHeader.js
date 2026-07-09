@@ -9,7 +9,7 @@ const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const ProfileHeader = React.memo(({ name = "Alex Rivera", onMenuPress }) => {
+const ProfileHeader = React.memo(({ name = "Alex Rivera", onMenuPress, hasUnread = false }) => {
   const { t } = useLanguage();
   const router = useRouter();
   return (
@@ -38,9 +38,11 @@ const ProfileHeader = React.memo(({ name = "Alex Rivera", onMenuPress }) => {
         onPress={() => router.push("/home/notifications")}
       >
         <StyledView className="p-2">
-          <Ionicons name="notifications" size={28} color="black" />
+          <Ionicons name={hasUnread ? "notifications" : "notifications-outline"} size={28} color="black" />
         </StyledView>
-        <StyledView className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+        {hasUnread && (
+          <StyledView className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+        )}
       </StyledTouchableOpacity>
     </StyledView>
   );

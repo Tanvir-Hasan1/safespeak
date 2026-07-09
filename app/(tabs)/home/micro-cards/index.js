@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, ImageBackground, Animated, Dimensions } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useLanguage } from "../../../../context/LanguageContext";
 import CustomHeader from "../../../../components/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEducationStore } from "../../../../store/useEducationStore";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -17,24 +18,25 @@ const StyledTextInput = styled(TextInput);
 
 const TOPICS = ["All topics", "Racial support", "Legal", "Safety", "Scams & Fraud"];
 
-const GUIDES = [
-  { id: 1, tag: "CYBER", title: "Bullying", theme: "identify", bg: "bg-[#0E5C9E]", icon: "shield-checkmark-outline", category: "Safety", desc: "Protect your digital footprint & data from potential online threats.", duration: "8 min read" },
-  { id: 2, tag: "HARASSMENT", title: "Discrimination", theme: "identify", bg: "bg-[#EA580C]", icon: "scale-outline", category: "Racial support", desc: "Discrimination occurs when employees are treated unfairly for personal traits.", duration: "10 min read" },
-  { id: 3, tag: "PROTECTION", title: "Online Safety", theme: "identify", bg: "bg-[#8F9E8B]", icon: "shield-outline", category: "Safety", desc: "Protect your digital footprint & data from potential online threats.", duration: "12 min read" },
-  { id: 4, tag: "SCAM", title: "Protect Your Identity After a Scam", theme: "footprint", bg: "bg-[#4299E1]", icon: "card-outline", category: "Scams & Fraud", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "15 min read" },
-  { id: 5, tag: "SECURITY", title: "What to Do After a Data Breach", theme: "footprint", bg: "bg-[#319795]", icon: "key-outline", category: "Scams & Fraud", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "14 min read" },
-  { id: 6, tag: "PRIVACY", title: "Image-Based Abuse and Private Photos", theme: "document", bg: "bg-[#0E5C9E]", icon: "image-outline", category: "Safety", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "18 min read" },
-  { id: 7, tag: "THREATS", title: "Online Blackmail or Threats", theme: "identify", bg: "bg-[#EA580C]", icon: "alert-circle-outline", category: "Safety", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "12 min read" },
-  { id: 8, tag: "COURT", title: "Giving Evidence Safely", theme: "rights", bg: "bg-[#EA580C]", icon: "document-text-outline", category: "Legal", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "16 min read" },
-  { id: 9, tag: "TEST", title: "New educational content", theme: "identify", bg: "bg-[#0E5C9E]", icon: "flask-outline", category: "Safety", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "5 min read" },
-  { id: 10, tag: "EMPLOYER", title: "Employer Sharing Health Information", theme: "identify", bg: "bg-[#0D9488]", icon: "business-outline", category: "Legal", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "15 min read" },
-  { id: 11, tag: "TEST", title: "Test with Gurnam", theme: "identify", bg: "bg-[#0E5C9E]", icon: "flask-outline", category: "Safety", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "8 min read" },
-  { id: 12, tag: "COMPLAINT", title: "Privacy Complaint Steps", theme: "document", bg: "bg-[#EA580C]", icon: "chatbox-outline", category: "Legal", desc: "Take early steps to secure accounts, bank access, and identity documents after a scam or privacy breach.", duration: "12 min read" },
-  { id: 13, tag: "GUIDE", title: "Understanding Your Rights Online", theme: "rights", bg: "bg-[#EA580C]", icon: "globe-outline", category: "Legal", desc: "Learn about online rights and guidelines to safeguard yourself and your data.", duration: "10 min read" },
-  { id: 14, tag: "RIGHTS", title: "Migrant & Student Rights", theme: "rights", bg: "bg-[#0E5C9E]", icon: "book-outline", category: "Racial support", desc: "Brief description of legal guidelines, visas rights, and local services for students and migrants.", duration: "14 min read" },
-  { id: 15, tag: "HEALTH", title: "Mental Health", theme: "wellbeing", bg: "bg-[#0D9488]", icon: "heart-outline", category: "Safety", desc: "Resources for mental health, emergency helplines, and safe counseling connections.", duration: "8 min read" },
-  { id: 16, tag: "LEGAL", title: "Legal Aid Basics", theme: "rights", bg: "bg-[#0E5C9E]", icon: "hammer-outline", category: "Legal", desc: "Brief description of legal aid, federal courts support, and local centers guidelines.", duration: "12 min read" }
-];
+// Tone → background color mapping
+const TONE_BG = {
+  blue:   "bg-[#0E5C9E]",
+  orange: "bg-[#EA580C]",
+  green:  "bg-[#22883B]",
+  teal:   "bg-[#0D9488]",
+  violet: "bg-[#7C3AED]",
+  amber:  "bg-[#D97706]",
+};
+
+// Tone → icon mapping
+const TONE_ICON = {
+  blue:   "shield-checkmark-outline",
+  orange: "alert-circle-outline",
+  green:  "shield-outline",
+  teal:   "key-outline",
+  violet: "heart-outline",
+  amber:  "business-outline",
+};
 
 const detailContentByTheme = {
   identify: {
@@ -140,6 +142,39 @@ export default function MicroCards() {
   const [modalVisible, setModalVisible] = useState(false);
   const animValue = useRef(new Animated.Value(0)).current;
 
+  // Zustand store
+  const storeItems = useEducationStore((state) => state.items);
+  const selectedGuideId = useEducationStore((state) => state.selectedGuideId);
+  const setSelectedGuideId = useEducationStore((state) => state.setSelectedGuideId);
+
+  // Use API items from store, fall back to empty array
+  const guides = storeItems.map((item) => ({
+    id: item.id,
+    tag: item.tag?.toUpperCase() || "",
+    title: item.title,
+    theme: "identify",
+    bg: TONE_BG[item.tone] || "bg-[#0E5C9E]",
+    icon: TONE_ICON[item.tone] || "shield-checkmark-outline",
+    category: "Safety",
+    desc: item.summary,
+    duration: item.readTimeLabel,
+    detailHeading: item.detailHeading,
+    detailBody: item.detailBody,
+    detailTakeaway: item.detailTakeaway,
+    cta: item.cta,
+  }));
+
+  // Auto-open guide modal if navigated from resources page
+  useEffect(() => {
+    if (selectedGuideId && guides.length > 0) {
+      const guide = guides.find((item) => item.id === selectedGuideId);
+      if (guide) {
+        openCardDetail(guide);
+        setSelectedGuideId(null);
+      }
+    }
+  }, [selectedGuideId, guides]);
+
   const handleScroll = (event) => {
     const currentOffsetY = event.nativeEvent.contentOffset.y;
     if (currentOffsetY <= 10) {
@@ -176,7 +211,7 @@ export default function MicroCards() {
     });
   };
 
-  const filteredGuides = GUIDES.filter((guide) => {
+  const filteredGuides = guides.filter((guide) => {
     const matchesTopic = activeTopic === "All topics" || guide.category === activeTopic;
     const matchesSearch =
       guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -189,7 +224,7 @@ export default function MicroCards() {
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
         title=""
-        backText="Learn & Resources"
+        backText="Cyber Bullying"
         rightText="Cancel"
         headerVisible={headerVisible}
       />
@@ -428,116 +463,16 @@ export default function MicroCards() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 40 }}
               >
-                {/* Graphic Card 1 */}
-                <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] overflow-hidden shadow-xs mb-6 mt-4">
-                  <ImageBackground
-                    source={hackerImage}
-                    className="h-56 justify-end relative"
-                    resizeMode="cover"
-                  >
-                    <StyledView className="absolute inset-0 bg-[#0A6FAF]/35 mix-blend-multiply" />
-                    <StyledView className="absolute inset-0 bg-black/40" />
-                    <StyledView className="p-5 z-10">
-                      <StyledView className="bg-[#01579B] px-2 py-0.5 rounded-md self-start mb-2">
-                        <StyledText className="text-white text-[9px] font-bold uppercase tracking-wider">
-                          {selectedGuide.tag}
-                        </StyledText>
-                      </StyledView>
-                      <StyledText className="text-white text-[24px] font-black leading-7">
-                        {selectedGuide.title}
-                      </StyledText>
-                    </StyledView>
-                  </ImageBackground>
-
-                  <StyledView className="p-5">
-                    <StyledText className="text-[#3B82F6] text-[10px] font-bold uppercase tracking-[2px] mb-2">
-                      Recognize the pattern
-                    </StyledText>
-                    <StyledText className="text-[#002B49] text-xl font-black mb-3">
-                      {detailContentByTheme[selectedGuide.theme].headline}
-                    </StyledText>
-                    <StyledText className="text-[#4B5563] text-xs leading-5 mb-4">
-                      {detailContentByTheme[selectedGuide.theme].summary}
-                    </StyledText>
-
-                    {/* Key Takeaway Inset Box */}
-                    <StyledView className="bg-[#EFF6FF] border-l-4 border-[#01579B] p-4 rounded-r-xl my-4">
-                      <StyledView className="flex-row items-start gap-2.5">
-                        <Ionicons name="alert-circle" size={18} color="#01579B" className="mt-0.5" />
-                        <StyledView className="flex-1">
-                          <StyledText className="text-[#01579B] text-[9.5px] font-bold uppercase tracking-wider mb-0.5">
-                            KEY TAKEAWAY
-                          </StyledText>
-                          <StyledText className="text-[#111827] text-xs leading-4.5">
-                            {detailContentByTheme[selectedGuide.theme].takeaway}
-                          </StyledText>
-                        </StyledView>
-                      </StyledView>
-                    </StyledView>
-
-                    <StyledText className="text-[#4B5563] text-xs leading-5">
-                      {detailContentByTheme[selectedGuide.theme].paragraph1}
-                    </StyledText>
-                  </StyledView>
-                </StyledView>
-
-                {/* Dynamic Checklist Steps Card Stack */}
-                {detailContentByTheme[selectedGuide.theme].steps.map((step, index) => (
-                  <StyledView key={index} className="w-full bg-white rounded-[24px] border border-[#E2E8F0] overflow-hidden shadow-xs mb-6">
-                    <ImageBackground
-                      source={hackerImage}
-                      className="h-44 justify-end relative"
-                      resizeMode="cover"
-                    >
-                      <StyledView className="absolute inset-0 bg-[#0A6FAF]/25 mix-blend-multiply" />
-                      <StyledView className="absolute inset-0 bg-black/30" />
-                      <StyledView className="p-5 z-10">
-                        <StyledView className="bg-[#01579B] px-2 py-0.5 rounded-md self-start mb-2">
-                          <StyledText className="text-white text-[9px] font-bold uppercase tracking-wider">
-                            {selectedGuide.tag}  |  Step {index + 2}
-                          </StyledText>
-                        </StyledView>
-                        <StyledText className="text-white text-lg font-black leading-6">
-                          {selectedGuide.title}
-                        </StyledText>
-                      </StyledView>
-                    </ImageBackground>
-
-                    <StyledView className="p-5">
-                      <StyledText className="text-[#002B49] text-base font-black mb-3">
-                        {step.title}
-                      </StyledText>
-                      <StyledView className="bg-[#EFF6FF] border-l-4 border-[#01579B] p-4 rounded-r-xl">
-                        <StyledView className="flex-row items-start gap-2.5">
-                          <Ionicons name="information-circle" size={18} color="#01579B" className="mt-0.5" />
-                          <StyledView className="flex-1">
-                            <StyledText className="text-[#01579B] text-[9.5px] font-bold uppercase tracking-wider mb-0.5">
-                              {step.highlight}
-                            </StyledText>
-                            <StyledText className="text-[#111827] text-xs leading-4.5">
-                              {step.tip}
-                            </StyledText>
-                          </StyledView>
-                        </StyledView>
-                      </StyledView>
-                    </StyledView>
-                  </StyledView>
-                ))}
-
-                {/* CTA card bottom */}
-                <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-5 shadow-xs mb-4">
-                  <StyledText className="text-[#4B5563] text-xs leading-5 mb-4">
-                    {detailContentByTheme[selectedGuide.theme].paragraph2}
+                <StyledView className="w-full bg-white rounded-[24px] border border-[#E2E8F0] p-6 mt-4 shadow-xs">
+                  <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-2">
+                    {selectedGuide.tag}
                   </StyledText>
-                  <StyledTouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => Alert.alert("Action Triggered", `Opening: ${detailContentByTheme[selectedGuide.theme].cta}`)}
-                    className="w-full bg-[#FF8A00] py-3 rounded-full items-center justify-center shadow-xs"
-                  >
-                    <StyledText className="text-white text-sm font-bold">
-                      {detailContentByTheme[selectedGuide.theme].cta}
-                    </StyledText>
-                  </StyledTouchableOpacity>
+                  <StyledText className="text-[#002B49] text-2xl font-black mb-3">
+                    {selectedGuide.title}
+                  </StyledText>
+                  <StyledText className="text-[#4B5563] text-sm leading-6 font-semibold">
+                    {selectedGuide.desc}
+                  </StyledText>
                 </StyledView>
               </StyledScrollView>
             </Animated.View>

@@ -22,6 +22,8 @@ const CustomHeader = ({
   blueTheme = false,
   showDivider = false,
   simpleBack = false,
+  rightTextColor,
+  rightDisabled = false,
 }) => {
   const router = useRouter();
   const { t } = useLanguage();
@@ -81,9 +83,13 @@ const CustomHeader = ({
         ) : showCancel ? (
           <StyledTouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.back()}
+            onPress={onRightPress || (() => router.back())}
+            disabled={rightDisabled}
           >
-            <StyledText className="text-[#94A3B8] text-base font-medium">
+            <StyledText
+              style={rightTextColor ? { color: rightTextColor } : null}
+              className="text-[#94A3B8] text-base font-medium"
+            >
               {rightText || t("cancel")}
             </StyledText>
           </StyledTouchableOpacity>

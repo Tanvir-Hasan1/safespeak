@@ -92,6 +92,30 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: () => {
+            try {
+              const { useAuthStore } = require("../../../store/useAuthStore");
+              useAuthStore.getState().clearAuth();
+            } catch (e) {
+              // Ignore if store not yet loaded
+            }
+            router.replace("/");
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const renderDropdown = (label, value, options, onSelect, dropdownKey) => {
     const isOpen = activeDropdown === dropdownKey;
     return (
@@ -728,6 +752,19 @@ export default function ProfileScreen() {
             </StyledText>
           </StyledTouchableOpacity>
         </StyledView>
+
+        {/* Logout Button */}
+        <StyledTouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleLogout}
+          className="w-full bg-white border border-[#EF4444]/30 py-3.5 rounded-full items-center justify-center flex-row mb-6 shadow-xs"
+          style={{ zIndex: 1 }}
+        >
+          <Ionicons name="log-out-outline" size={16} color="#EF4444" className="mr-2" />
+          <StyledText className="text-[#EF4444] text-xs font-bold">
+            Log out
+          </StyledText>
+        </StyledTouchableOpacity>
 
         {/* Privacy Policy & Terms of Use Links */}
         <StyledView className="flex-row justify-center items-center space-x-6 mt-4 mb-10" style={{ zIndex: 1 }}>

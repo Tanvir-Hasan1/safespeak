@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
@@ -14,6 +15,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useLanguage } from "../../context/LanguageContext";
+import api from "../../context/api";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -27,13 +30,38 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const handleSignIn = () => {
-    if (!email.trim() || !password.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password.trim()) {
       Alert.alert("Required Fields", "Please enter both your email and password.");
       return;
     }
-    // Proceed to OTP verification step
-    router.push("/auth/verify");
+
+    setLoading(true);
+    api.post("/auth/login", {
+      email: trimmedEmail,
+      password: password,
+    })
+      .then((res) => {
+        setLoading(false);
+        const json = res.data;
+        if (json.success && json.data) {
+          // Store in global Zustand store
+          useAuthStore.getState().setAuth(json.data.user, json.data.tokens);
+          
+          // Proceed directly to customization step, bypassing OTP verification
+          router.push("/auth/customize");
+        } else {
+          Alert.alert("Login Failed", json.message || "Invalid credentials.");
+        }
+      })
+      .catch((err) => {
+        setLoading(false);
+        const errMsg = err.response?.data?.message || "An error occurred during login. Check your credentials.";
+        Alert.alert("Login Error", errMsg);
+      });
   };
 
   return (
@@ -119,12 +147,19 @@ export default function SignIn() {
         {/* Bottom actions */}
         <StyledView className="mb-4">
           <StyledTouchableOpacity
-            className="w-full bg-[#FB923C] py-4 rounded-full items-center shadow-md"
+            className={`w-full py-4 rounded-full items-center shadow-md ${
+              loading ? "bg-orange-300" : "bg-[#FB923C]"
+            }`}
             onPress={handleSignIn}
+            disabled={loading}
           >
-            <StyledText className="text-white text-lg font-bold">
-              {t("signInBtn")}
-            </StyledText>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <StyledText className="text-white text-lg font-bold">
+                {t("signInBtn")}
+              </StyledText>
+            )}
           </StyledTouchableOpacity>
 
           <StyledView className="flex-row justify-center mt-4">

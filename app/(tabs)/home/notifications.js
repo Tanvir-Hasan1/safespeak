@@ -1,80 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import EmergencyBar from "../../../components/tabs/home/EmergencyBar";
+import CustomHeader from "../../../components/CustomHeader";
 import { useLanguage } from "../../../context/LanguageContext";
+import api from "../../../context/api";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-const TODAY_NOTIFICATIONS = (t) => [
-  {
-    id: "1",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: true,
-  },
-  {
-    id: "2",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-  {
-    id: "3",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-  {
-    id: "4",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-  {
-    id: "5",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-];
-
-const PAST_NOTIFICATIONS = (t) => [
-  {
-    id: "p1",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-  {
-    id: "p2",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-  {
-    id: "p3",
-    title: t("notifUnreadTitle"),
-    subtitle: t("notifUnreadSubtitle"),
-    highlighted: false,
-  },
-];
-
-const NotificationItem = ({ item }) => {
-  if (item.highlighted) {
+const NotificationItem = ({ item, onPress }) => {
+  if (item.unread) {
     return (
-      <StyledView style={styles.highlightedCard}>
+      <StyledTouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.highlightedCard}>
         <StyledView style={styles.highlightedIconWrap}>
           <Ionicons name="notifications" size={22} color="#111" />
           <StyledView style={styles.redDot} />
@@ -82,23 +30,23 @@ const NotificationItem = ({ item }) => {
         <StyledView style={{ flex: 1 }}>
           <StyledText style={styles.highlightedTitle}>{item.title}</StyledText>
           <StyledText style={styles.highlightedSubtitle}>
-            {item.subtitle}
+            {item.body}
           </StyledText>
         </StyledView>
-      </StyledView>
+      </StyledTouchableOpacity>
     );
   }
 
   return (
-    <StyledView style={styles.normalCard}>
+    <StyledTouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.normalCard}>
       <StyledView style={styles.normalIconWrap}>
-        <Ionicons name="flash" size={20} color="#555" />
+        <Ionicons name="flash-outline" size={20} color="#555" />
       </StyledView>
       <StyledView style={{ flex: 1 }}>
         <StyledText style={styles.normalTitle}>{item.title}</StyledText>
-        <StyledText style={styles.normalSubtitle}>{item.subtitle}</StyledText>
+        <StyledText style={styles.normalSubtitle}>{item.body}</StyledText>
       </StyledView>
-    </StyledView>
+    </StyledTouchableOpacity>
   );
 };
 
@@ -107,6 +55,64 @@ export default function NotificationsScreen() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("today");
   const [headerVisible, setHeaderVisible] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = () => {
+    setLoading(true);
+    const viewParam = activeTab === "today" ? "today" : "past";
+    api.get(`/notifications?view=${viewParam}&limit=50`)
+      .then((res) => {
+        const json = res.data;
+        if (json.success && json.data && Array.isArray(json.data.notifications)) {
+          setNotifications(json.data.notifications);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch notifications:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [activeTab]);
+
+  const handleMarkRead = (notificationId) => {
+    const notif = notifications.find((n) => n.id === notificationId);
+    if (!notif || !notif.unread) return;
+
+    api.post("/notifications/read", { notificationId })
+      .then((res) => {
+        if (res.data.success) {
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === notificationId ? { ...n, unread: false } : n))
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to mark notification read:", err);
+      });
+  };
+
+  const handleMarkAllRead = () => {
+    const unreadIds = notifications.filter((n) => n.unread).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+
+    api.post("/notifications/read-all", { notificationIds: unreadIds })
+      .then((res) => {
+        if (res.data.success) {
+          setNotifications((prev) =>
+            prev.map((n) => (unreadIds.includes(n.id) ? { ...n, unread: false } : n))
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to mark all notifications read:", err);
+      });
+  };
 
   const handleScroll = (event) => {
     const currentOffsetY = event.nativeEvent.contentOffset.y;
@@ -118,86 +124,85 @@ export default function NotificationsScreen() {
     }
   };
 
-  const notifications =
-    activeTab === "today" ? TODAY_NOTIFICATIONS(t) : PAST_NOTIFICATIONS(t);
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
     <StyledView style={{ flex: 1, backgroundColor: "#F0F4FA" }}>
-      <SafeAreaView edges={["top"]}>
-        <EmergencyBar visible={headerVisible} />
+      <CustomHeader
+        title=""
+        backText="Notification"
+        rightText="Mark all read"
+        onRightPress={handleMarkAllRead}
+        rightTextColor={unreadCount > 0 ? "#FB923C" : "#94A3B8"}
+        rightDisabled={unreadCount === 0}
+        headerVisible={headerVisible}
+      />
 
-        {/* Header */}
-        <StyledView style={styles.headerRow}>
-          <StyledTouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
+      {/* Tab Switcher */}
+      <StyledView style={styles.tabContainer}>
+        <StyledTouchableOpacity
+          style={[styles.tab, activeTab === "today" && styles.tabActive]}
+          onPress={() => setActiveTab("today")}
+          activeOpacity={0.8}
+        >
+          <StyledText
+            style={[
+              styles.tabText,
+              activeTab === "today"
+                ? styles.tabTextActive
+                : styles.tabTextInactive,
+            ]}
           >
-            <Ionicons name="chevron-back" size={20} color="#FB923C" />
-          </StyledTouchableOpacity>
-
-          <StyledText style={styles.headerTitle}>
-            {t("notifications")}
+            {t("notifToday")}
           </StyledText>
+        </StyledTouchableOpacity>
 
-          <StyledTouchableOpacity
-            onPress={() => router.back()}
-            activeOpacity={0.7}
+        <StyledTouchableOpacity
+          style={[styles.tab, activeTab === "past" && styles.tabActive]}
+          onPress={() => setActiveTab("past")}
+          activeOpacity={0.8}
+        >
+          <StyledText
+            style={[
+              styles.tabText,
+              activeTab === "past"
+                ? styles.tabTextActive
+                : styles.tabTextInactive,
+            ]}
           >
-            <StyledText style={styles.cancelText}>{t("cancel")}</StyledText>
-          </StyledTouchableOpacity>
-        </StyledView>
-
-        {/* Tab Switcher */}
-        <StyledView style={styles.tabContainer}>
-          <StyledTouchableOpacity
-            style={[styles.tab, activeTab === "today" && styles.tabActive]}
-            onPress={() => setActiveTab("today")}
-            activeOpacity={0.8}
-          >
-            <StyledText
-              style={[
-                styles.tabText,
-                activeTab === "today"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive,
-              ]}
-            >
-              {t("notifToday")}
-            </StyledText>
-          </StyledTouchableOpacity>
-
-          <StyledTouchableOpacity
-            style={[styles.tab, activeTab === "past" && styles.tabActive]}
-            onPress={() => setActiveTab("past")}
-            activeOpacity={0.8}
-          >
-            <StyledText
-              style={[
-                styles.tabText,
-                activeTab === "past"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive,
-              ]}
-            >
-              {t("notifPast")}
-            </StyledText>
-          </StyledTouchableOpacity>
-        </StyledView>
-      </SafeAreaView>
+            {t("notifPast")}
+          </StyledText>
+        </StyledTouchableOpacity>
+      </StyledView>
 
       {/* Notification List */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-      >
-        {notifications.map((item) => (
-          <NotificationItem key={item.id} item={item} />
-        ))}
-      </ScrollView>
+      {loading && notifications.length === 0 ? (
+        <StyledView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#005B96" />
+        </StyledView>
+      ) : (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {notifications.length > 0 ? (
+            notifications.map((item) => (
+              <NotificationItem
+                key={item.id}
+                item={item}
+                onPress={() => handleMarkRead(item.id)}
+              />
+            ))
+          ) : (
+            <StyledText style={{ textAlign: "center", color: "#64748B", fontSize: 14, marginTop: 40, fontWeight: "500" }}>
+              No notifications.
+            </StyledText>
+          )}
+        </ScrollView>
+      )}
     </StyledView>
   );
 }

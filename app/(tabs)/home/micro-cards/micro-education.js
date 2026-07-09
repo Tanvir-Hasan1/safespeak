@@ -178,7 +178,7 @@ export default function MicroEducation() {
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
         title=""
-        backText="Learn & Resources"
+        backText="Micro-education"
         rightText="Cancel"
         headerVisible={headerVisible}
       />
@@ -397,7 +397,7 @@ export default function MicroEducation() {
                   >
                     <Ionicons name="chevron-back" size={20} color="#1F2937" />
                     <StyledText className="text-[#1F2937] text-base font-semibold ml-1">
-                      Back
+                      micro-cards
                     </StyledText>
                   </StyledTouchableOpacity>
 
