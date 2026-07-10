@@ -1,25 +1,22 @@
 import axios from "axios";
 import { API_URL } from "./config";
+import { useAuthStore } from "../store/useAuthStore";
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 60000, // 60s – AI analysis (OCR + GPT-4o vision) can take 20-40s
 });
 
-// Request Interceptor: Logs all outgoing requests and injects Authorization token
+// Request Interceptor: Attaches Authorization token to every outgoing request
 api.interceptors.request.use(
   (config) => {
     const fullUrl = `${config.baseURL || ""}${config.url || ""}`;
     console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${fullUrl}`);
 
-    try {
-      const { useAuthStore } = require("../store/useAuthStore");
-      const token = useAuthStore.getState().accessToken;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (e) {
-      // Ignore module loading issues on initial load
+    // Read token directly from the imported store (avoids stale require() module ref)
+    const token = useAuthStore.getState().accessToken;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
@@ -30,7 +27,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Logs all successful responses and errors
+// Response Interceptor: Logs responses; handles 401 by clearing stale auth
 api.interceptors.response.use(
   (response) => {
     const fullUrl = `${response.config.baseURL || ""}${response.config.url || ""}`;
@@ -44,10 +41,52 @@ api.interceptors.response.use(
   (error) => {
     const config = error.config || {};
     const fullUrl = `${config.baseURL || ""}${config.url || ""}`;
+    const status = error.response?.status;
     const errorMsg = error.response
-      ? `Status: ${error.response.status} | Error: ${JSON.stringify(error.response.data)}`
+      ? `Status: ${status} | Error: ${JSON.stringify(error.response.data)}`
       : error.message || String(error);
+
     console.warn(`[API ERROR] ${config.method?.toUpperCase()} ${fullUrl} | ${errorMsg}`);
+
+    // If we get a 401 on a non-auth endpoint, the stored token is stale — clear it
+    if (
+      status === 401 &&
+      config.url &&
+      !config.url.includes("/auth/login") &&
+      !config.url.includes("/auth/refresh")
+    ) {
+      const currentToken = useAuthStore.getState().accessToken;
+      if (currentToken) {
+        // Attempt silent token refresh
+        return api
+          .post("/auth/refresh", {
+            refreshToken: useAuthStore.getState().refreshToken,
+          })
+          .then((refreshRes) => {
+            const { accessToken, refreshToken } = refreshRes.data?.data?.tokens ?? {};
+            if (accessToken) {
+              useAuthStore.getState().setAuth(
+                useAuthStore.getState().user,
+                { accessToken, refreshToken }
+              );
+              // Retry original request with new token
+              config.headers = {
+                ...config.headers,
+                Authorization: `Bearer ${accessToken}`,
+              };
+              return axios(config);
+            }
+            // Refresh didn't return a token — clear auth
+            useAuthStore.getState().clearAuth();
+            return Promise.reject(error);
+          })
+          .catch(() => {
+            useAuthStore.getState().clearAuth();
+            return Promise.reject(error);
+          });
+      }
+    }
+
     return Promise.reject(error);
   }
 );

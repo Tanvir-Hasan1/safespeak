@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, Modal, Animated, Dimensions, Linking, Platform } from "react-native";
-import * as FileSystem from "expo-file-system/legacy";
+import * as FileSystem from "expo-file-system";
 import * as IntentLauncher from "expo-intent-launcher";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
