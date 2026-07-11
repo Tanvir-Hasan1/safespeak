@@ -28,6 +28,16 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-video"]
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow SafeSpeak to access your microphone for speech recognition.",
+          "speechRecognitionPermission": "Allow SafeSpeak to transcribe your speech in real-time."
+        }
+      ]
+    ]
   }
 }

@@ -9,14 +9,20 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Alert,
+  NativeModules,
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { Audio } from "expo-av";
 import CustomHeader from "../../../../components/CustomHeader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { useLanguage } from "../../../../context/LanguageContext";
+import api from "../../../../context/api";
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-speech-recognition";
+import * as FileSystem from "expo-file-system/legacy";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -179,10 +185,25 @@ const TOPICS = {
 
 const KeyboardAvoidingViewWrapper = KeyboardAvoidingView;
 
+const TypingIndicator = () => {
+  const [dots, setDots] = useState(".");
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => {
+        if (prev === ".") return "..";
+        if (prev === "..") return "...";
+        return ".";
+      });
+    }, 450);
+    return () => clearInterval(interval);
+  }, []);
+  return <StyledText className="text-[#002B49] text-base font-bold">{dots}</StyledText>;
+};
+
 export default function VoiceAssistant() {
   const router = useRouter();
-  const { topic } = useLocalSearchParams();
-  const { t } = useLanguage();
+  const { topic, voice } = useLocalSearchParams();
+  const { t, language } = useLanguage();
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
 
@@ -197,26 +218,72 @@ export default function VoiceAssistant() {
   const [showTriageButton, setShowTriageButton] = useState(false);
 
   const isDraggingRef = useRef(false);
+  const activeSoundRef = useRef(null);
+  const silenceTimeoutRef = useRef(null);
+  const recordingRef = useRef(null);
+  const liveFinalTranscriptRef = useRef("");
+  const [isLocalSpeechAvailable, setIsLocalSpeechAvailable] = useState(false);
 
-  const handleScroll = (event) => {
-    if (!isDraggingRef.current) return;
-    const currentOffsetY = event.nativeEvent.contentOffset.y;
-    if (currentOffsetY <= 10) {
-      setHeaderVisible(true);
-    } else if (currentOffsetY > 50) {
-      setHeaderVisible(false);
-    }
-  };
+  const isVoiceModeActiveRef = useRef(false);
+  const isVoiceMutedRef = useRef(false);
+
+  const [conversationSessionId, setConversationSessionId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [isVoiceMuted, setIsVoiceMuted] = useState(false);
   const [continuousTranscript, setContinuousTranscript] = useState("");
+
+  // voiceState: null | 'listening' | 'generating' | 'speaking'
+  const [voiceState, setVoiceState] = useState(null);
   
   // Messages log
   const [messages, setMessages] = useState([]);
 
   // Dynamic sound wave visualizer bars
   const [barHeights, setBarHeights] = useState([12, 18, 8, 24, 14, 18, 10, 22, 16, 26, 12, 18, 8, 20]);
+
+
+
+  // Handle auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
+  // Check speech recognition service availability on mount
+  useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        const isAvail = await ExpoSpeechRecognitionModule.isRecognitionAvailable();
+        setIsLocalSpeechAvailable(isAvail);
+        console.log("[VoiceAssistant] Local Speech Recognition service available:", isAvail);
+      } catch (err) {
+        setIsLocalSpeechAvailable(false);
+      }
+    };
+    checkAvailability();
+  }, []);
+
+  // Sync state to refs for sound callback scoping
+  useEffect(() => {
+    isVoiceModeActiveRef.current = isVoiceModeActive;
+  }, [isVoiceModeActive]);
+
+  useEffect(() => {
+    isVoiceMutedRef.current = isVoiceMuted;
+  }, [isVoiceMuted]);
+
+  // Auto-activate voice mode on mount if voice=1 is passed
+  useEffect(() => {
+    if (voice === "1") {
+      setIsVoiceModeActive(true);
+      startRecording();
+    }
+  }, [voice]);
 
   // Simulate audio visualizer animation when active
   useEffect(() => {
@@ -231,26 +298,346 @@ export default function VoiceAssistant() {
     return () => clearInterval(interval);
   }, [isVoiceRecording]);
 
-  // Simulate continuous speech transcription in Voice Mode
-  useEffect(() => {
-    let timeout;
-    if (isVoiceModeActive && !isVoiceMuted) {
-      timeout = setTimeout(() => {
-        setContinuousTranscript(
-          "Yesterday evening, I received a phishing scam message containing a suspicious link asking for my account verification."
-        );
-      }, 2500);
-    }
-    return () => clearTimeout(timeout);
-  }, [isVoiceModeActive, isVoiceMuted]);
+  // Set up expo-speech-recognition listeners
+  useSpeechRecognitionEvent("start", () => {
+    console.log("[VoiceAssistant] Speech recognition started");
+  });
 
-  // Helper to send a message
-  const sendMessage = (textVal) => {
+  useSpeechRecognitionEvent("end", () => {
+    console.log("[VoiceAssistant] Speech recognition ended");
+  });
+
+  useSpeechRecognitionEvent("result", (event) => {
+    let finalChunk = "";
+    let interimChunk = "";
+
+    // Iterate through all incoming speech segments to construct the preview
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      const result = event.results[index];
+      const transcript = result?.transcript?.trim();
+
+      if (!transcript) {
+        continue;
+      }
+
+      if (result.isFinal) {
+        finalChunk = `${finalChunk} ${transcript}`.trim();
+      } else {
+        interimChunk = `${interimChunk} ${transcript}`.trim();
+      }
+    }
+
+    if (finalChunk) {
+      liveFinalTranscriptRef.current = `${liveFinalTranscriptRef.current} ${finalChunk}`.trim();
+    }
+
+    const fullPreviewText = [liveFinalTranscriptRef.current, interimChunk].filter(Boolean).join(" ");
+    
+    if (fullPreviewText && fullPreviewText.trim().length > 0) {
+      setContinuousTranscript(fullPreviewText);
+
+      // Reset silence timeout on speech results to detect when user stops speaking
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      silenceTimeoutRef.current = setTimeout(() => {
+        console.log("[VoiceAssistant] Silence detected, automatically stopping recording");
+        stopRecording();
+      }, 1800);
+    }
+  });
+
+  useSpeechRecognitionEvent("error", (event) => {
+    console.warn("[VoiceAssistant] Speech recognition error:", event.error);
+  });
+
+  // Clean up silence timer and speech on unmount
+  useEffect(() => {
+    return () => {
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      if (ExpoSpeechRecognitionModule && typeof ExpoSpeechRecognitionModule.destroy === "function") {
+        ExpoSpeechRecognitionModule.destroy();
+      }
+    };
+  }, []);
+
+  // Clean up sounds on unmount
+  useEffect(() => {
+    return () => {
+      if (activeSoundRef.current) {
+        activeSoundRef.current.unloadAsync().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Voice speech recording and recognition triggers
+  const startRecording = async () => {
+    try {
+      // 1. Request microphone permission
+      const recPermission = await Audio.requestPermissionsAsync();
+      if (recPermission.status !== "granted") {
+        Alert.alert("Permission Required", "Microphone access is needed to use voice chat.");
+        return;
+      }
+
+      // Check recognition availability dynamically after mic access is verified
+      let isAvail = false;
+      try {
+        isAvail = ExpoSpeechRecognitionModule.isRecognitionAvailable();
+      } catch (availErr) {
+        isAvail = false;
+      }
+      setIsLocalSpeechAvailable(isAvail);
+
+      // If local speech recognition is available, request its permissions too
+      if (isAvail) {
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync().catch(() => {});
+      }
+
+      // Stop any playing sound
+      if (activeSoundRef.current) {
+        await activeSoundRef.current.stopAsync().catch(() => {});
+        await activeSoundRef.current.unloadAsync().catch(() => {});
+        activeSoundRef.current = null;
+      }
+
+      // Ensure clean recording audio mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldRouteThroughEarpieceIOS: false,
+      });
+
+      // Stop and clear any existing recording
+      if (recordingRef.current) {
+        await recordingRef.current.stopAndUnloadAsync().catch(() => {});
+        recordingRef.current = null;
+      }
+
+      // 2. Start hardware audio recording (Always recorded for backend transcription)
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      recordingRef.current = recording;
+
+      setIsVoiceRecording(true);
+      setVoiceState("listening");
+      setContinuousTranscript("");
+      liveFinalTranscriptRef.current = "";
+
+      // 3. Start local speech recognition if available (Used only for live preview and silence detection)
+      if (isAvail) {
+        try {
+          const speechLang = language === "bn" ? "bn-BD" : language === "es" ? "es-ES" : "en-US";
+          await ExpoSpeechRecognitionModule.start({
+            lang: speechLang,
+            interimResults: true,
+            continuous: true,
+          });
+        } catch (voiceErr) {
+          console.warn("[VoiceAssistant] Failed to start native speech preview:", voiceErr);
+        }
+      } else {
+        // Fallback: Simulate speech indicator movement on emulator/offline device
+        if (isVoiceModeActive) {
+          let index = 0;
+          const simulatedWords = ["Listening", "for", "your", "voice", "input..."];
+          const previewInterval = setInterval(() => {
+            if (recordingRef.current) {
+              setContinuousTranscript((prev) => {
+                const nextWord = simulatedWords[index] || "";
+                index++;
+                return prev ? `${prev} ${nextWord}` : nextWord;
+              });
+            } else {
+              clearInterval(previewInterval);
+            }
+          }, 1200);
+        }
+      }
+
+      // 4. Maximum recording safety timeout (e.g. 10 seconds)
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      silenceTimeoutRef.current = setTimeout(() => {
+        console.log("[VoiceAssistant] Maximum recording duration reached, stopping");
+        stopRecording();
+      }, 10000);
+
+    } catch (err) {
+      console.warn("Failed to start speech recording:", err);
+      recordingRef.current = null;
+      setIsVoiceRecording(false);
+      setVoiceState(null);
+      Alert.alert("Speech Error", "Could not access microphone. Try reloading the app.");
+    }
+  };
+
+  const stopRecording = async (shouldCancel = false) => {
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+
+    setIsVoiceRecording(false);
+
+    try {
+      // Stop native local recognition if running
+      if (isLocalSpeechAvailable) {
+        await ExpoSpeechRecognitionModule.stop().catch(() => {});
+      }
+
+      // Stop hardware audio recording
+      if (!recordingRef.current) {
+        setVoiceState(null);
+        return;
+      }
+      const currentRecording = recordingRef.current;
+      recordingRef.current = null; // reset reference immediately to avoid duplicate stop calls
+
+      await currentRecording.stopAndUnloadAsync().catch(() => {});
+      const uri = currentRecording.getURI();
+
+      // Reset audio mode to playback-friendly mode
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldRouteThroughEarpieceIOS: false,
+      }).catch(() => {});
+
+      if (shouldCancel || !uri) {
+        setVoiceState(null);
+        return;
+      }
+
+      setVoiceState("generating");
+      await handleAudioTranscribe(uri);
+    } catch (err) {
+      console.warn("Failed to stop speech recording:", err);
+      setVoiceState(null);
+    }
+  };
+
+  const handleAudioTranscribe = async (fileUri) => {
+    setIsLoading(true);
+    setVoiceState("generating");
+    try {
+      const formData = new FormData();
+      formData.append("audio", {
+        uri: Platform.OS === "android" ? fileUri : fileUri.replace("file://", ""),
+        name: `audio_${Date.now()}.m4a`,
+        type: "audio/m4a",
+      });
+      formData.append("saveTranscript", "false");
+      if (language) {
+        formData.append("language", language === "bn" ? "bn" : language === "es" ? "es" : "en");
+      }
+
+      const res = await api.post("/ai/transcribe-audio", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const transcriptText = res.data?.data?.transcript || res.data?.transcript;
+      if (transcriptText && transcriptText.trim().length > 0) {
+        setContinuousTranscript(transcriptText);
+        if (isVoiceModeActiveRef.current) {
+          sendMessage(transcriptText);
+        } else {
+          setResponse(transcriptText);
+          setVoiceState(null);
+        }
+      } else {
+        setVoiceState(null);
+        Alert.alert("Transcription Empty", "No speech detected in audio.");
+      }
+    } catch (err) {
+      console.warn("Failed to transcribe audio:", err);
+      setVoiceState(null);
+      Alert.alert("Transcription Error", "Could not transcribe audio. Please try typing your message.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const playSynthesizedVoice = async (text) => {
+    setVoiceState("speaking");
+    let tempUri = null;
+    try {
+      const res = await api.post("/ai/synthesize-speech", {
+        text,
+        language: language || "en",
+      });
+      const audioBase64 = res.data?.data?.audioBase64 || res.data?.audioBase64;
+      if (audioBase64) {
+        // Write base64 audio to a temporary file to guarantee Android MediaPlayer compatibility
+        tempUri = `${FileSystem.cacheDirectory}speech_${Date.now()}.mp3`;
+        await FileSystem.writeAsStringAsync(tempUri, audioBase64, {
+          encoding: "base64",
+        });
+
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: tempUri },
+          { shouldPlay: true }
+        );
+        activeSoundRef.current = sound;
+
+        // Listen for playback finished to restart the listening loop
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.didJustFinish) {
+            await sound.unloadAsync().catch(() => {});
+            activeSoundRef.current = null;
+            setVoiceState(null);
+            
+            // Delete temp audio file to free up cache
+            if (tempUri) {
+              await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(() => {});
+            }
+
+            // Loop back to start recording if voice mode is still active and not muted
+            if (isVoiceModeActiveRef.current && !isVoiceMutedRef.current) {
+              startRecording();
+            }
+          }
+        });
+      } else {
+        setVoiceState(null);
+        if (isVoiceModeActiveRef.current && !isVoiceMutedRef.current) startRecording();
+      }
+    } catch (err) {
+      console.warn("Failed to synthesize speech:", err);
+      setVoiceState(null);
+      if (tempUri) {
+        await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(() => {});
+      }
+      if (isVoiceModeActiveRef.current && !isVoiceMutedRef.current) startRecording();
+    }
+  };
+
+  const stopSpeaking = async () => {
+    if (activeSoundRef.current) {
+      await activeSoundRef.current.stopAsync().catch(() => {});
+      await activeSoundRef.current.unloadAsync().catch(() => {});
+      activeSoundRef.current = null;
+    }
+    setVoiceState(null);
+    if (isVoiceModeActiveRef.current && !isVoiceMutedRef.current) {
+      startRecording();
+    }
+  };
+
+  // Helper to send a message using real APIs
+  const sendMessage = async (textVal) => {
     if (!textVal || textVal.trim().length === 0) return;
 
     setConversationStarted(true);
+    setIsLoading(true);
 
-    // Append user message
+    // Append user message locally
     const userMsg = {
       id: Date.now(),
       type: "user",
@@ -258,28 +645,83 @@ export default function VoiceAssistant() {
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Check if user is asking for triage
-    const isTriageRequest = textVal.toLowerCase().includes("triage");
+    try {
+      let currentSessionId = conversationSessionId;
 
-    // Simulate AI response after 1.2 seconds
-    setTimeout(() => {
-      let aiMsg;
-      if (isTriageRequest) {
-        setShowTriageButton(true);
-        aiMsg = {
-          id: Date.now() + 1,
-          type: "ai",
-          text: "Continue to Triage",
-        };
-      } else {
-        aiMsg = {
-          id: Date.now() + 1,
-          type: "ai",
-          text: "I've processed that detail and added it to your timeline. Let's capture the rest of the incident specifics. Do you have any evidence or screenshots?",
-        };
+      // 1. Initialize session if not exists
+      if (!currentSessionId) {
+        const sessionRes = await api.post("/conversation-flow/sessions", {
+          selectedTopic: topic || currentTopicKey,
+        });
+        const session = sessionRes.data?.data?.session || sessionRes.data?.session;
+        if (session && session.id) {
+          currentSessionId = session.id;
+          setConversationSessionId(session.id);
+        } else if (session && session._id) {
+          currentSessionId = session._id;
+          setConversationSessionId(session._id);
+        }
       }
-      setMessages((prev) => [...prev, aiMsg]);
-    }, 1200);
+
+      // 2. Send message
+      if (currentSessionId) {
+        if (isVoiceModeActiveRef.current) {
+          setVoiceState("generating");
+        }
+        const messageRes = await api.post(
+          `/conversation-flow/sessions/${currentSessionId}/messages`,
+          {
+            content: textVal,
+            language: "en",
+          }
+        );
+        
+        const turnData = messageRes.data?.data || messageRes.data;
+        const aiResponseText = turnData?.assistantMessage?.content;
+ 
+        if (aiResponseText) {
+          const aiMsg = {
+            id: Date.now() + 1,
+            type: "ai",
+            text: aiResponseText,
+          };
+          setMessages((prev) => [...prev, aiMsg]);
+ 
+          // Play voice synthesis if voice mode is enabled
+          if (isVoiceModeActiveRef.current && !isVoiceMutedRef.current) {
+            playSynthesizedVoice(aiResponseText);
+          } else {
+            setVoiceState(null);
+          }
+
+          // Check for triage transition
+          if (turnData?.transition?.offerTriage) {
+            setShowTriageButton(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("AI Assistant message failed:", err);
+      const aiErrorMsg = {
+        id: Date.now() + 1,
+        type: "ai",
+        text: "Sorry, I am having trouble connecting to the SafeSpeak server. Please try again.",
+      };
+      setMessages((prev) => [...prev, aiErrorMsg]);
+      setVoiceState(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScroll = (event) => {
+    if (!isDraggingRef.current) return;
+    const currentOffsetY = event.nativeEvent.contentOffset.y;
+    if (currentOffsetY <= 10) {
+      setHeaderVisible(true);
+    } else if (currentOffsetY > 50) {
+      setHeaderVisible(false);
+    }
   };
 
   const handleSendPress = () => {
@@ -288,90 +730,30 @@ export default function VoiceAssistant() {
   };
 
   const handleTranscribeConfirm = () => {
-    const transcript = "Yesterday evening, I received a phishing scam message containing a suspicious link asking for my account verification.";
-    setResponse(transcript); 
-    setIsVoiceRecording(false); 
+    stopRecording();
   };
 
-  if (isVoiceModeActive) {
-    return (
-      <StyledView className="flex-1 bg-[#F0F4FA] justify-between items-center px-6 pt-16 pb-12">
-        <StyledView className="w-full items-center">
-          <StyledView className="bg-white rounded-full flex-row items-center px-5 py-3 shadow-xs border border-[#E2E8F0] mt-4">
-            <Ionicons
-              name={isVoiceMuted ? "mic-off" : "mic"}
-              size={16}
-              color={isVoiceMuted ? "#64748B" : "#3B82F6"}
-            />
-            <StyledText
-              className={`text-xs font-semibold ml-2 ${
-                isVoiceMuted ? "text-[#64748B]" : "text-[#3B82F6]"
-              }`}
-            >
-              {isVoiceMuted ? "Muted" : "Listening..."}
-            </StyledText>
-          </StyledView>
-
-          {continuousTranscript ? (
-            <StyledView className="bg-white/80 border border-white rounded-[20px] px-5 py-3 mt-4 mx-6 shadow-xs max-w-[90%]">
-              <StyledText className="text-[#002B49] text-sm leading-5 text-center italic font-medium">
-                "{continuousTranscript}"
-              </StyledText>
-            </StyledView>
-          ) : null}
-        </StyledView>
-
-        <StyledView className="flex-1 items-center justify-center">
-          <Image
-            source={Sphere}
-            style={{ width: 220, height: 220, opacity: isVoiceMuted ? 0.75 : 1 }}
-            resizeMode="contain"
-          />
-        </StyledView>
-
-        <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between h-[52px]">
-          <StyledTextInput
-            placeholder={isVoiceMuted ? "Listening paused" : "Type your response..."}
-            editable={false}
-            className="flex-1 text-[#94A3B8] text-sm px-2"
-            placeholderTextColor="#94A3B8"
-          />
-          <StyledView className="flex-row items-center space-x-2">
-            <StyledTouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setIsVoiceMuted(!isVoiceMuted)}
-              className={`w-9 h-9 rounded-full items-center justify-center mr-1 ${
-                isVoiceMuted ? "bg-[#F1F5F9]" : "bg-[#EFF6FF]"
-              }`}
-            >
-              <Ionicons
-                name={isVoiceMuted ? "mic-off" : "mic"}
-                size={18}
-                color={isVoiceMuted ? "#64748B" : "#005B96"}
-              />
-            </StyledTouchableOpacity>
-
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (continuousTranscript) {
-                  sendMessage(continuousTranscript);
-                }
-                setIsVoiceModeActive(false);
-                setIsVoiceMuted(false);
-                setContinuousTranscript("");
-              }}
-              className="bg-[#005B96] px-5 py-2.5 rounded-full flex-row items-center"
-            >
-              <StyledText className="text-white text-xs font-bold">
-                ••• End
-              </StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
-        </StyledView>
-      </StyledView>
-    );
-  }
+  // Toggle full voice mode
+  const toggleVoiceMode = async () => {
+    if (!isVoiceModeActive) {
+      setIsVoiceModeActive(true);
+      // Automatically start recording when voice mode opens
+      startRecording();
+    } else {
+      setIsVoiceModeActive(false);
+      setIsVoiceMuted(false);
+      setContinuousTranscript("");
+      setVoiceState(null);
+      if (recordingRef.current) {
+        stopRecording(true);
+      }
+      if (activeSoundRef.current) {
+        await activeSoundRef.current.stopAsync().catch(() => {});
+        await activeSoundRef.current.unloadAsync().catch(() => {});
+        activeSoundRef.current = null;
+      }
+    }
+  };
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
@@ -451,104 +833,177 @@ export default function VoiceAssistant() {
                   </StyledView>
                 </StyledView>
               ))}
+
+              {isVoiceModeActive && (
+                <StyledView className="w-full space-y-4">
+                  {voiceState === "listening" && (
+                    <StyledView className="self-start max-w-[80%] mb-4">
+                      <StyledView 
+                        className="bg-white border border-[#D0E2FF] p-4 rounded-[24px]"
+                        style={{ borderTopLeftRadius: 4 }}
+                      >
+                        <StyledView className="flex-col">
+                          {continuousTranscript ? (
+                            <StyledText className="text-[#002B49] text-[15px] mb-2 font-medium">
+                              "{continuousTranscript}"
+                            </StyledText>
+                          ) : null}
+                          <StyledView className="flex-row items-center mt-1">
+                            <Ionicons name={isVoiceMuted ? "mic-off" : "mic"} size={14} color={isVoiceMuted ? "#64748B" : "#005B96"} style={{ marginRight: 6 }} />
+                            <StyledText className="text-[#64748B] text-[13px] font-semibold">
+                              {isVoiceMuted ? "Muted" : "Listening..."}
+                            </StyledText>
+                          </StyledView>
+                        </StyledView>
+                      </StyledView>
+                    </StyledView>
+                  )}
+
+                  {voiceState === "generating" && (
+                    <StyledView className="self-start max-w-[80%] mb-4">
+                      <StyledView 
+                        className="bg-white border border-[#FFE0B2] p-4 rounded-[24px]"
+                        style={{ borderTopLeftRadius: 4 }}
+                      >
+                        <StyledView className="flex-row items-center">
+                          <ActivityIndicator size="small" color="#E65100" style={{ marginRight: 8 }} />
+                          <StyledText className="text-[#E65100] text-[15px] font-semibold">
+                            Transcribing...
+                          </StyledText>
+                        </StyledView>
+                      </StyledView>
+                    </StyledView>
+                  )}
+
+                  {voiceState === "speaking" && (
+                    <StyledView className="self-start max-w-[80%] mb-4">
+                      <StyledView 
+                        className="bg-white border border-[#C8E6C9] p-4 rounded-[24px]"
+                        style={{ borderTopLeftRadius: 4 }}
+                      >
+                        <StyledView className="flex-row items-center flex-wrap">
+                          <Ionicons name="volume-medium" size={16} color="#2E7D32" style={{ marginRight: 8 }} />
+                          <StyledText className="text-[#2E7D32] text-[15px] font-semibold mr-3">
+                            Speaking response...
+                          </StyledText>
+                          <TouchableOpacity onPress={stopSpeaking} className="bg-[#E8F5E9] px-2.5 py-1 rounded-full border border-[#C8E6C9]">
+                            <StyledText className="text-[#2E7D32] text-xs font-bold">
+                              Stop voice
+                            </StyledText>
+                          </TouchableOpacity>
+                        </StyledView>
+                      </StyledView>
+                    </StyledView>
+                  )}
+                </StyledView>
+              )}
             </StyledView>
           )}
 
+          {isLoading && conversationStarted && (
+            <StyledView className="self-start max-w-[80%] mb-4 ml-6">
+              <StyledView 
+                className="bg-white/60 border border-white p-3.5 rounded-[24px] px-5"
+                style={{ borderTopLeftRadius: 4 }}
+              >
+                <TypingIndicator />
+              </StyledView>
+            </StyledView>
+          )}
 
           {!conversationStarted && topic && (
             <StyledView className="w-full space-y-6 mt-6">
               <StyledView className="w-full bg-[#EBF3FC] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
-              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
-                {currentTopic.title}
-              </StyledText>
-              <StyledText className="text-[#002B49] text-[15px] font-semibold mt-1.5 mb-3 leading-5">
-                {currentTopic.description}
-              </StyledText>
-
-              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
-                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
-                  This information is general information only.
+                <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
+                  {currentTopic.title}
                 </StyledText>
+                <StyledText className="text-[#002B49] text-[15px] font-semibold mt-1.5 mb-3 leading-5">
+                  {currentTopic.description}
+                </StyledText>
+
+                <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
+                  <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
+                    This information is general information only.
+                  </StyledText>
+                </StyledView>
+
+                <StyledTouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setConversationStarted(true);
+                    sendMessage(currentTopic.startText);
+                  }}
+                  className="bg-[#005B96] py-3.5 rounded-full flex-row items-center justify-center shadow-xs mb-5"
+                >
+                  <StyledText className="text-white text-xs font-bold mr-1">
+                    Start with this topic
+                  </StyledText>
+                  <Ionicons name="arrow-forward" size={14} color="white" />
+                </StyledTouchableOpacity>
+
+                <StyledView className="space-y-2.5">
+                  {currentTopic.pathways.map((act, idx) => (
+                    <StyledTouchableOpacity
+                      key={idx}
+                      activeOpacity={0.7}
+                      className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
+                    >
+                      <StyledText className="text-[#002B49] text-[14px] font-bold">
+                        {act.title}
+                      </StyledText>
+                      <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 leading-4">
+                        {act.desc}
+                      </StyledText>
+                    </StyledTouchableOpacity>
+                  ))}
+                </StyledView>
               </StyledView>
 
-              <StyledTouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  setResponse(currentTopic.startText);
-                  setConversationStarted(true);
-                  scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-                }}
-                className="bg-[#005B96] py-3.5 rounded-full flex-row items-center justify-center shadow-xs mb-5"
-              >
-                <StyledText className="text-white text-xs font-bold mr-1">
-                  Start with this topic
+              <StyledView className="w-full bg-[#F4F9FD] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
+                <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
+                  {currentTopic.legalTitle}
                 </StyledText>
-                <Ionicons name="arrow-forward" size={14} color="white" />
-              </StyledTouchableOpacity>
+                <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 mb-4 leading-4">
+                  {currentTopic.legalDesc}
+                </StyledText>
 
-              <StyledView className="space-y-2.5">
-                {currentTopic.pathways.map((act, idx) => (
-                  <StyledTouchableOpacity
-                    key={idx}
-                    activeOpacity={0.7}
-                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
-                  >
-                    <StyledText className="text-[#002B49] text-[14px] font-bold">
-                      {act.title}
-                    </StyledText>
-                    <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 leading-4">
-                      {act.desc}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                ))}
+                <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
+                  <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
+                    Sources pending approval
+                  </StyledText>
+                </StyledView>
+
+                <StyledView className="mb-4">
+                  {currentTopic.nswPoints.map((pt, idx) => (
+                    <StyledView key={idx} className="flex-row items-start mb-3 px-1">
+                      <StyledView className="w-1.5 h-1.5 bg-[#82AEE8] rounded-full mt-1.5 mr-2.5 shrink-0" />
+                      <StyledText className="flex-1 text-[#64748B] text-[12px] leading-5 font-semibold">
+                        {pt}
+                      </StyledText>
+                    </StyledView>
+                  ))}
+                </StyledView>
+
+                <StyledView className="space-y-3">
+                  {currentTopic.nswPathways.map((path, idx) => (
+                    <StyledView
+                      key={idx}
+                      className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
+                    >
+                      <StyledText className="text-[#002B49] text-[13px] font-bold">
+                        {path.title}
+                      </StyledText>
+                      <StyledText className="text-[#64748B] text-[11px] leading-4 mt-1 font-semibold">
+                        {path.desc}
+                      </StyledText>
+                      <StyledText className="text-[#94A3B8] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
+                        {path.req}
+                      </StyledText>
+                    </StyledView>
+                  ))}
+                </StyledView>
               </StyledView>
             </StyledView>
-
-            <StyledView className="w-full bg-[#F4F9FD] border border-[#C5DFF8] rounded-[24px] p-5 shadow-xs">
-              <StyledText className="text-[11px] font-extrabold uppercase tracking-wider text-[#3B82F6]">
-                {currentTopic.legalTitle}
-              </StyledText>
-              <StyledText className="text-[#64748B] text-[11px] font-semibold mt-1 mb-4 leading-4">
-                {currentTopic.legalDesc}
-              </StyledText>
-
-              <StyledView className="bg-white border border-[#CBD5E1] rounded-full px-4 py-1.5 self-center mb-4">
-                <StyledText className="text-[#64748B] text-[10px] font-bold text-center uppercase tracking-wide">
-                  Sources pending approval
-                </StyledText>
-              </StyledView>
-
-              <StyledView className="mb-4">
-                {currentTopic.nswPoints.map((pt, idx) => (
-                  <StyledView key={idx} className="flex-row items-start mb-3 px-1">
-                    <StyledView className="w-1.5 h-1.5 bg-[#82AEE8] rounded-full mt-1.5 mr-2.5 shrink-0" />
-                    <StyledText className="flex-1 text-[#64748B] text-[12px] leading-5 font-semibold">
-                      {pt}
-                    </StyledText>
-                  </StyledView>
-                ))}
-              </StyledView>
-
-              <StyledView className="space-y-3">
-                {currentTopic.nswPathways.map((path, idx) => (
-                  <StyledView
-                    key={idx}
-                    className="bg-white rounded-[20px] p-4 border border-[#CBD5E1]/30 shadow-xs"
-                  >
-                    <StyledText className="text-[#002B49] text-[13px] font-bold">
-                      {path.title}
-                    </StyledText>
-                    <StyledText className="text-[#64748B] text-[11px] leading-4 mt-1 font-semibold">
-                      {path.desc}
-                    </StyledText>
-                    <StyledText className="text-[#94A3B8] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
-                      {path.req}
-                    </StyledText>
-                  </StyledView>
-                ))}
-              </StyledView>
-            </StyledView>
-          </StyledView>
           )}
         </StyledScrollView>
 
@@ -568,62 +1023,84 @@ export default function VoiceAssistant() {
           </StyledView>
         )}
 
+        {/* Inline Voice Sphere */}
+        {isVoiceModeActive && (
+          <StyledView className="w-full items-center justify-center pt-1 pb-2 bg-[#F0F4FA]">
+            <Image
+              source={Sphere}
+              style={{ width: 64, height: 64, opacity: isVoiceMuted ? 0.75 : 1 }}
+              resizeMode="contain"
+            />
+          </StyledView>
+        )}
+
         {/* Fixed bottom input and metadata capture area */}
         <StyledView className="w-full px-6 pb-3 pt-2 bg-[#F0F4FA] border-t border-[#E2E8F0]/30 shadow-xs">
           <StyledView className="w-full space-y-4">
-            {isVoiceRecording ? (
-              <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between h-[48px]">
-                <StyledText className="text-[#64748B] text-xs font-semibold">
-                  Listening...
-                </StyledText>
+            {isVoiceRecording && !isVoiceModeActive ? (
+              <StyledView className="w-full flex-col">
+                {continuousTranscript ? (
+                  <StyledView className="bg-white border border-[#E2E8F0] p-3 rounded-[18px] mb-2 shadow-xs px-4">
+                    <StyledText className="text-[#002B49] text-[14px] font-medium leading-5">
+                      "{continuousTranscript}"
+                    </StyledText>
+                  </StyledView>
+                ) : null}
+                <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between h-[48px]">
+                  <StyledText className="text-[#64748B] text-xs font-semibold">
+                    Listening...
+                  </StyledText>
 
-                <StyledView className="flex-1 flex-row justify-center items-center space-x-[2px] mx-2">
-                  {barHeights.map((h, i) => (
-                    <StyledView
-                      key={i}
-                      style={{ height: h }}
-                      className="w-[2px] bg-[#3B82F6]/60 rounded-full"
-                    />
-                  ))}
-                </StyledView>
+                  <StyledView className="flex-1 flex-row justify-center items-center space-x-[2px] mx-2">
+                    {barHeights.map((h, i) => (
+                      <StyledView
+                        key={i}
+                        style={{ height: h }}
+                        className="w-[2px] bg-[#3B82F6]/60 rounded-full"
+                      />
+                    ))}
+                  </StyledView>
 
-                <StyledView className="flex-row items-center space-x-2">
-                  <StyledTouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setIsVoiceRecording(false)}
-                    className="w-8 h-8 rounded-full border border-[#CBD5E1] bg-white items-center justify-center"
-                  >
-                    <Ionicons name="close" size={16} color="#64748B" />
-                  </StyledTouchableOpacity>
+                  <StyledView className="flex-row items-center space-x-2">
+                    <StyledTouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => stopRecording(true)}
+                      className="w-8 h-8 rounded-full border border-[#CBD5E1] bg-white items-center justify-center"
+                    >
+                      <Ionicons name="close" size={16} color="#64748B" />
+                    </StyledTouchableOpacity>
 
-                  <StyledTouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={handleTranscribeConfirm}
-                    className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center shadow-sm"
-                  >
-                    <Ionicons name="checkmark" size={16} color="white" />
-                  </StyledTouchableOpacity>
+                    <StyledTouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={handleTranscribeConfirm}
+                      className="w-8 h-8 rounded-full bg-[#005B96] items-center justify-center shadow-sm"
+                    >
+                      <Ionicons name="checkmark" size={16} color="white" />
+                    </StyledTouchableOpacity>
+                  </StyledView>
                 </StyledView>
               </StyledView>
             ) : (
-              <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between shadow-xs">
+              <StyledView className="w-full bg-white rounded-full flex-row items-center px-4 py-2 border border-[#E2E8F0] justify-between h-[54px] shadow-xs">
                 <StyledTextInput
-                  placeholder={t("typeResponse")}
+                  placeholder="Type your response."
                   value={response}
                   onChangeText={setResponse}
-                  editable={true}
-                  className="flex-1 text-[#1F2937] text-sm px-2 h-[40px]"
+                  editable={!isVoiceModeActive}
+                  className="flex-1 text-[#1F2937] text-sm px-2 font-medium h-[40px]"
                   placeholderTextColor="#94A3B8"
                 />
                 
                 <StyledView className="flex-row items-center">
-                  <StyledTouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setIsVoiceRecording(true)}
-                    className="p-2 mr-1"
-                  >
-                    <Ionicons name="mic-outline" size={20} color="#94A3B8" />
-                  </StyledTouchableOpacity>
+                  {!isVoiceModeActive && (
+                    <StyledTouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={startRecording}
+                      className="p-2 mr-1"
+                    >
+                      <Ionicons name="mic-outline" size={20} color="#94A3B8" />
+                    </StyledTouchableOpacity>
+                  )}
 
                   <StyledTouchableOpacity
                     activeOpacity={0.8}
@@ -631,13 +1108,19 @@ export default function VoiceAssistant() {
                       if (response.trim().length > 0) {
                         handleSendPress();
                       } else {
-                        setIsVoiceModeActive(true);
+                        toggleVoiceMode();
                       }
                     }}
-                    className="w-10 h-10 rounded-full items-center justify-center shadow-sm bg-[#005B96]"
+                    className={`rounded-full items-center justify-center shadow-sm bg-[#005B96] ${
+                      isVoiceModeActive ? "px-5 py-2.5 h-[38px] flex-row" : "w-10 h-10"
+                    }`}
                   >
                     {response.trim().length > 0 ? (
                       <Ionicons name="send" size={16} color="white" className="ml-[2px]" />
+                    ) : isVoiceModeActive ? (
+                      <StyledText className="text-white text-xs font-bold">
+                        ••• End
+                      </StyledText>
                     ) : (
                       <StyledView className="flex-row items-center justify-center space-x-[2px]">
                         <StyledView className="w-[3px] h-[8px] bg-white rounded-full" />
@@ -650,7 +1133,7 @@ export default function VoiceAssistant() {
               </StyledView>
             )}
 
-            {!conversationStarted && (
+            {!conversationStarted && !isVoiceModeActive && (
               <StyledView className="w-full bg-white rounded-[24px] flex-row items-center py-2 px-3.5 border border-[#E2E8F0]">
                 <StyledView className="w-8 h-8 bg-[#EFF6FF] rounded-full items-center justify-center">
                   <Ionicons name="location" size={16} color="#3B82F6" />
