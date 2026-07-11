@@ -18,6 +18,7 @@ import CustomHeader from "../../../../components/CustomHeader";
 import { useLanguage } from "../../../../context/LanguageContext";
 import api from "../../../../context/api";
 import { useScamShieldStore } from "../../../../store/useScamShieldStore";
+import CustomAlert from "../../../../components/ui/CustomAlert";
 
 const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
@@ -61,6 +62,8 @@ export default function AnalyzeMessage() {
 
   // Evidence files/images/documents
   const [images, setImages] = useState([]);
+  const [isPicking, setIsPicking] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   const handleScroll = (event) => {
     const y = event.nativeEvent.contentOffset.y;
@@ -72,24 +75,62 @@ export default function AnalyzeMessage() {
   };
 
   const pickDocument = async () => {
+    if (isPicking) return;
+    setIsPicking(true);
+
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*", // Allows all files (images, pdfs, docs, etc.)
+        type: ["image/*", "application/pdf"], // Restricts file selection to images and PDFs only
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled) {
-        const newFiles = result.assets.map((asset) => ({
-          id: Date.now() + Math.random(),
-          uri: asset.uri,
-          name: asset.name,
-          mimeType: asset.mimeType,
-          size: asset.size,
-        }));
-        setImages([...images, ...newFiles]);
+        const validAssets = [];
+        let hasInvalidFile = false;
+
+        result.assets.forEach((asset) => {
+          const mime = asset.mimeType || "";
+          const name = asset.name || "";
+          const ext = name.split(".").pop().toLowerCase();
+
+          const isImg = mime.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif"].includes(ext);
+          const isPdf = mime === "application/pdf" || ext === "pdf";
+
+          if (isImg || isPdf) {
+            validAssets.push(asset);
+          } else {
+            hasInvalidFile = true;
+          }
+        });
+
+        if (hasInvalidFile) {
+          setShowWarningModal(true);
+        }
+
+        if (validAssets.length > 0) {
+          const newFiles = validAssets.map((asset) => ({
+            id: Date.now() + Math.random(),
+            uri: asset.uri,
+            name: asset.name,
+            mimeType: asset.mimeType,
+            size: asset.size,
+          }));
+          setImages([...images, ...newFiles]);
+        }
       }
     } catch (err) {
-      console.warn("Document picking failed: ", err);
+      const errorMsg = err?.message || String(err);
+      // Suppress activity unavailable warnings or double picking logs so they don't break the UX
+      if (
+        errorMsg.includes("activity is no longer available") ||
+        errorMsg.includes("Different document picking in progress")
+      ) {
+        console.log("Document picking cancelled or context swapped: " + errorMsg);
+      } else {
+        console.warn("Document picking failed: ", err);
+      }
+    } finally {
+      setIsPicking(false);
     }
   };
 
@@ -457,6 +498,12 @@ export default function AnalyzeMessage() {
           </StyledText>
         </StyledTouchableOpacity>
       </StyledScrollView>
+
+      {/* Custom Warning Card Modal */}
+      <CustomAlert
+        visible={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+      />
     </StyledView>
   );
 }

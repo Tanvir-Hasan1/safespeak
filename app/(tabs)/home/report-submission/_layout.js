@@ -7,6 +7,8 @@ export default function ReportSubmissionLayout() {
       <Stack.Screen name="recommendations" />
       <Stack.Screen name="attachments" />
       <Stack.Screen name="evidence-review" />
+      <Stack.Screen name="submission-success" />
+      <Stack.Screen name="share-report" />
       <Stack.Screen name="detailed-explanations" />
       <Stack.Screen name="history" />
       <Stack.Screen name="detail" />

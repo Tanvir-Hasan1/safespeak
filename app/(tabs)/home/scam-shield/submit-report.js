@@ -86,7 +86,7 @@ export default function SubmitReport() {
             Secure your assets & report the incident
           </StyledText>
           <StyledText className="text-[#64748B] text-xs text-center leading-5 mb-5 px-1">
-            Likely phishing/scam message using an urgent "final notice" and "protection expires today" payment-declined claim to pressure you into updating payment details, potentially to steal card info or credentials.
+            This appears to be a live phishing/scareware-style payment/renewal scam claiming your protection expires today and urging you to update payment details. It uses urgency and fear to pressure action, but provides no legitimate organization details.
           </StyledText>
 
           {/* Recommended Next Steps Inner Box */}
@@ -97,13 +97,13 @@ export default function SubmitReport() {
             
             <StyledView className="space-y-3">
               <StyledText className="text-[#334155] text-xs leading-5">
-                • Do not click any links or enter payment details from this message.
+                Do not click any buttons/links or provide payment details in response to this message.
               </StyledText>
               <StyledText className="text-[#334155] text-xs leading-5">
-                • Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.
+                Verify independently by going to the provider's official website/app (typed manually) or checking your bank/credit card statement for legitimate charges.
               </StyledText>
               <StyledText className="text-[#334155] text-xs leading-5">
-                • If you already interacted or entered payment info, contact your card issuer to secure the account and monitor for fraudulent charges.
+                Mark as spam/phishing in your email client and delete it.
               </StyledText>
             </StyledView>
           </StyledView>

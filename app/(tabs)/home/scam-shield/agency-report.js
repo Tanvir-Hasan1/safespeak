@@ -42,7 +42,7 @@ const AGENCIES = [
     description:
       "This form is prefilled for scam reporting and can be submitted directly to Scamwatch.",
     detailText:
-      "Use this summary for scam reporting and attach any evidence before submitting.",
+      "Choose this if you have not lost money, but want the government to be aware of a scam. Do not click any buttons/links or provide payment details in response to this message.",
     downloadLabel: "Download Scamwatch guide",
     guidanceLabel: "Open Scamwatch",
     guidanceUrl: AGENCY_EXTERNAL_URLS.accc,
@@ -57,7 +57,7 @@ const AGENCIES = [
     description:
       "This form is prefilled for cybercrime reporting and can be submitted directly to ReportCyber.",
     detailText:
-      "Use this summary for cybercrime reporting and attach the listed evidence if your accounts, identity, or money were exposed.",
+      "Report here if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk. Verify independently by going to the provider's official website/app (typed manually) or checking your bank/credit card statement for legitimate charges.",
     downloadLabel: "Download ReportCyber guide",
     guidanceLabel: "Open ACSC guidance",
     guidanceUrl: AGENCY_EXTERNAL_URLS.reportCyber,
@@ -72,7 +72,7 @@ const AGENCIES = [
     description:
       "Contact your bank or card issuer's fraud department to secure your accounts.",
     detailText:
-      "Call your bank's fraud line to freeze affected accounts and request chargebacks if money was transferred.",
+      "If you have lost money, shared your card details, or think someone can access your account, contact your bank immediately to freeze your accounts. This appears to be a live phishing/scareware-style payment/renewal scam claiming your protection expires today.",
     downloadLabel: "Download bank dispute guide",
     guidanceLabel: "Open AFCA portal",
     guidanceUrl: AGENCY_EXTERNAL_URLS.bank,
@@ -252,10 +252,21 @@ export default function AgencyReport() {
         ...(currentAnalysis._id ? {} : { analysisSnapshot: currentAnalysis }),
       };
 
-      await api.post(url, body);
+      const response = await api.post(url, body);
       setSubmitted(true);
 
-      router.push("/home/report-submission/evidence-review");
+      const reportId =
+        response.data?.data?.analysis?.metadata?.linkedReportId ||
+        response.data?.data?.analysis?.reportId;
+
+      if (reportId) {
+        router.push({
+          pathname: "/home/report-submission/evidence-review",
+          params: { reportId },
+        });
+      } else {
+        router.push("/home/report-submission/evidence-review");
+      }
     } catch (err) {
       const msg =
         err?.response?.data?.message ??

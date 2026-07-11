@@ -1,330 +1,869 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  ScrollView,
   View,
   Text,
   TouchableOpacity,
   TextInput,
-  Linking,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import CustomHeader from "../../../../components/CustomHeader";
+import SafeSpeakScreen from "../../../../components/SafeSpeakScreen";
 import { useLanguage } from "../../../../context/LanguageContext";
+import api from "../../../../context/api";
+import CustomAlert from "../../../../components/ui/CustomAlert";
 
-const StyledScrollView = styled(ScrollView);
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledTextInput = styled(TextInput);
 
+// ─── API helpers (mirrors reports-client.ts) ──────────────────────────────────
+
+/** GET /api/v1/reports */
+async function listReports() {
+  const res = await api.get("/reports");
+  return res.data?.data?.reports ?? res.data?.reports ?? [];
+}
+
+/** GET /api/v1/reports/:reportId/status */
+async function getReportStatus(reportId) {
+  const res = await api.get(`/reports/${reportId}/status`);
+  return res.data?.data?.status ?? res.data?.status ?? null;
+}
+
+/** POST /api/v1/reports/:reportId/withdraw */
+async function withdrawReport(reportId) {
+  const res = await api.post(`/reports/${reportId}/withdraw`);
+  return res.data?.data?.report ?? res.data?.report ?? null;
+}
+
+/** POST /api/v1/reports/:reportId/mark-info-only */
+async function markReportInfoOnly(reportId) {
+  const res = await api.post(`/reports/${reportId}/mark-info-only`);
+  return res.data?.data?.report ?? res.data?.report ?? null;
+}
+
+/** POST /api/v1/reports/:reportId/request-delete */
+async function requestReportDelete(reportId) {
+  const res = await api.post(`/reports/${reportId}/request-delete`);
+  return res.data?.data?.report ?? res.data?.report ?? null;
+}
+
+/** DELETE /api/v1/reports/:reportId */
+async function deleteReport(reportId) {
+  await api.delete(`/reports/${reportId}`);
+  return null;
+}
+
+// ─── Status helpers (mirrors web normalizeHistoryStatus) ─────────────────────
+
+function normalizeStatus(raw) {
+  if (!raw) return "DRAFT";
+  if (raw === "submitted" || raw === "received") return "SUBMITTED";
+  if (
+    raw === "in_review" ||
+    raw === "in-review" ||
+    raw === "pending_submission" ||
+    raw === "ready_for_review" ||
+    raw === "triaged"
+  )
+    return "ACTION REQUIRED";
+  if (
+    raw === "closed" ||
+    raw === "deleted" ||
+    raw === "withdrawn" ||
+    raw === "info_only"
+  )
+    return "CLOSED";
+  return "DRAFT";
+}
+
+function getStatusMeta(normalizedStatus) {
+  switch (normalizedStatus) {
+    case "ACTION REQUIRED":
+      return {
+        label: "PENDING SUBMISSION",
+        badgeBg: "#FFF1DE",
+        badgeText: "#9A6A2E",
+        iconName: "shield",
+        iconBg: "#ECE7FF",
+        iconColor: "#5D61F6",
+        team: "SafeSpeak review queue",
+      };
+    case "SUBMITTED":
+      return {
+        label: "SUBMITTED",
+        badgeBg: "#EBF0FF",
+        badgeText: "#526CC6",
+        iconName: "heart",
+        iconBg: "#FFE9EA",
+        iconColor: "#F26161",
+        team: "Saved in SafeSpeak",
+      };
+    case "CLOSED":
+      return {
+        label: "CLOSED",
+        badgeBg: "#FFF1F2",
+        badgeText: "#BE123C",
+        iconName: "document-text",
+        iconBg: "#EEF1F5",
+        iconColor: "#64748B",
+        team: "Lifecycle action recorded",
+      };
+    default:
+      return {
+        label: "DRAFT",
+        badgeBg: "#EEF1F5",
+        badgeText: "#5F6F83",
+        iconName: "lock-closed",
+        iconBg: "#D4F4ED",
+        iconColor: "#0A9D8D",
+        team: "Draft saved safely",
+      };
+  }
+}
+
+function formatDate(value) {
+  if (!value) return "DATE UNAVAILABLE";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value).toUpperCase();
+  return d
+    .toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
+}
+
+/** Determine which lifecycle action pills to show based on raw status */
+function getLifecycleActions(rawStatus) {
+  const actions = [];
+  const s = rawStatus ?? "";
+
+  // Withdraw: available if not already withdrawn/closed/deleted
+  if (!["withdrawn", "closed", "deleted", "info_only"].includes(s)) {
+    actions.push({
+      key: "withdraw",
+      label: "Withdraw",
+      iconName: "document-text-outline",
+      destructive: false,
+    });
+  }
+
+  // Mark info-only: available if not already info_only/withdrawn/deleted
+  if (!["info_only", "withdrawn", "deleted", "closed"].includes(s)) {
+    actions.push({
+      key: "mark-info-only",
+      label: "Mark info-only",
+      iconName: "bookmark-outline",
+      destructive: false,
+    });
+  }
+
+  // Request deletion
+  if (!["deletion_requested", "deleted"].includes(s)) {
+    actions.push({
+      key: "request-delete",
+      label: "Request deletion",
+      iconName: "trash-outline",
+      destructive: true,
+    });
+  }
+
+  // Hard delete (always available as last resort)
+  actions.push({
+    key: "delete",
+    label: "Delete",
+    iconName: "trash-outline",
+    destructive: true,
+  });
+
+  return actions;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function IncidentHistory() {
   const router = useRouter();
   const { t } = useLanguage();
 
-  const [headerVisible, setHeaderVisible] = useState(true);
+  // ── API state ────────────────────────────────────────────────────────────
+  const [reports, setReports] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [activeActionKey, setActiveActionKey] = useState(null); // "reportId:action"
+  const [statusMessage, setStatusMessage] = useState(null);
 
-  // Search & Filter State
+  // ── Search & filter state ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all"); // "all", "draft", "in_review"
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  // Mock Incident History List (enabling fully demonstrable sorting & filtering)
-  const initialIncidents = [
-    {
-      id: "SSR-20260704-OQHO2T3K",
-      title: "Harassment near main corridor",
-      date: "Updated 05 July 2026, 1:28 am",
-      status: "draft",
-    },
-    {
-      id: "SSR-20260706-XY78Z9A1",
-      title: "Report of online safety incident",
-      date: "Updated 06 July 2026, 4:15 pm",
-      status: "in_review",
-    },
-  ];
-
-  // Dynamic Metrics based on all records
-  const totalReports = initialIncidents.length;
-  const submittedOrReceived = initialIncidents.filter(
-    (i) => i.status === "submitted" || i.status === "received"
-  ).length;
-  const lifecycleActions = initialIncidents.filter(
-    (i) => i.status === "draft" || i.status === "in_review"
-  ).length;
-
-  // Filtered List
-  const filteredIncidents = initialIncidents.filter((incident) => {
-    const matchesSearch =
-      incident.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      incident.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      activeFilter === "all" || incident.status === activeFilter;
-    return matchesSearch && matchesFilter;
+  // ── Alert modal ──────────────────────────────────────────────────────────
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
   });
 
-  const handleScroll = (event) => {
-    const currentOffsetY = event.nativeEvent.contentOffset.y;
-    if (currentOffsetY <= 10) {
-      if (!headerVisible) setHeaderVisible(true);
-    } else if (currentOffsetY > 50) {
-      if (headerVisible) setHeaderVisible(false);
+  // ── Load all reports + status in parallel (mirrors web Promise.all) ──────
+  const loadReportHistory = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+
+    try {
+      // 1. GET /api/v1/reports
+      const reportRecords = await listReports();
+
+      // 2. GET /api/v1/reports/:id/status — one per report, all in parallel
+      const enriched = await Promise.all(
+        reportRecords.map(async (report) => {
+          try {
+            const status = await getReportStatus(report._id);
+            const resolvedStatus = status?.current ?? status?.status ?? report.status;
+            const normalized = normalizeStatus(resolvedStatus);
+            const meta = getStatusMeta(normalized);
+            return {
+              ...report,
+              _resolvedStatus: resolvedStatus,
+              _normalized: normalized,
+              _meta: meta,
+              deletionRequestedAt:
+                status?.deletionRequestedAt ?? report.deletionRequestedAt,
+              withdrawnAt: status?.withdrawnAt ?? report.withdrawnAt,
+            };
+          } catch {
+            const normalized = normalizeStatus(report.status);
+            return {
+              ...report,
+              _resolvedStatus: report.status,
+              _normalized: normalized,
+              _meta: getStatusMeta(normalized),
+            };
+          }
+        })
+      );
+
+      setReports(enriched);
+    } catch (err) {
+      console.warn("[IncidentHistory] Failed to load:", err);
+      setLoadError(
+        err?.response?.data?.message ?? "Report history could not be loaded."
+      );
+      setReports([]);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadReportHistory();
+  }, [loadReportHistory]);
+
+  // ── Lifecycle action handler ─────────────────────────────────────────────
+  const handleLifecycleAction = useCallback(
+    (report, action) => {
+      const confirmMessages = {
+        withdraw: "Are you sure you want to withdraw this report?",
+        "mark-info-only": "Mark this report as information only?",
+        "request-delete": "Request deletion of this report?",
+        delete: "Permanently delete this report? This cannot be undone.",
+      };
+
+      Alert.alert(
+        action.label,
+        confirmMessages[action.key] ?? "Confirm this action?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Confirm",
+            style: action.destructive ? "destructive" : "default",
+            onPress: async () => {
+              const actionKey = `${report._id}:${action.key}`;
+              setActiveActionKey(actionKey);
+              setLoadError(null);
+              setStatusMessage(null);
+
+              try {
+                let updatedReport = null;
+
+                switch (action.key) {
+                  case "withdraw":
+                    updatedReport = await withdrawReport(report._id);
+                    break;
+                  case "mark-info-only":
+                    updatedReport = await markReportInfoOnly(report._id);
+                    break;
+                  case "request-delete":
+                    updatedReport = await requestReportDelete(report._id);
+                    break;
+                  case "delete":
+                    await deleteReport(report._id);
+                    break;
+                }
+
+                if (updatedReport) {
+                  // Update in place
+                  const normalized = normalizeStatus(updatedReport.status);
+                  const enriched = {
+                    ...updatedReport,
+                    _resolvedStatus: updatedReport.status,
+                    _normalized: normalized,
+                    _meta: getStatusMeta(normalized),
+                  };
+                  setReports((prev) =>
+                    prev.map((r) => (r._id === enriched._id ? enriched : r))
+                  );
+                  setStatusMessage(
+                    `${action.label} completed for ${updatedReport.refNo ?? updatedReport._id}.`
+                  );
+                } else {
+                  // DELETE — remove from list
+                  setReports((prev) => prev.filter((r) => r._id !== report._id));
+                  setStatusMessage("Report deleted from active history.");
+                }
+              } catch (err) {
+                console.warn(`[IncidentHistory] Action ${action.key} failed:`, err);
+                setAlertConfig({
+                  visible: true,
+                  title: "Action Failed",
+                  message:
+                    err?.response?.data?.message ??
+                    "This action could not be completed. Please try again.",
+                });
+              } finally {
+                setActiveActionKey(null);
+              }
+            },
+          },
+        ]
+      );
+    },
+    []
+  );
+
+  // ── Derived metrics (same as web) ────────────────────────────────────────
+  const submittedCount = reports.filter((r) => r._normalized === "SUBMITTED").length;
+  const actionRequiredCount = reports.filter(
+    (r) => r._normalized === "ACTION REQUIRED"
+  ).length;
+
+  // ── Filtered list ────────────────────────────────────────────────────────
+  const filteredReports = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return reports.filter((r) => {
+      if (activeFilter === "draft" && r._normalized !== "DRAFT") return false;
+      if (activeFilter === "action_required" && r._normalized !== "ACTION REQUIRED")
+        return false;
+      if (activeFilter === "closed" && r._normalized !== "CLOSED") return false;
+      if (!q) return true;
+      const title = (r.context || r.incidentType || "").toLowerCase();
+      const id = (r._id || r.refNo || "").toLowerCase();
+      return title.includes(q) || id.includes(q);
+    });
+  }, [reports, searchQuery, activeFilter]);
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader
-        backText={t("yourReports")}
-        rightText={t("cancel")}
-        blueTheme={false}
-        showDivider={true}
-        headerVisible={headerVisible}
-      />
-
-      <StyledScrollView
-        className="flex-1 px-6"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40, paddingTop: 16 }}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+    <>
+      <SafeSpeakScreen
+        backText={t("yourReports") ?? "Your Reports"}
+        rightText={t("cancel") ?? "Cancel"}
+        onRightPress={() => router.back()}
+        showCancel={false}
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 16, paddingHorizontal: 16 }}
       >
-        {/* Main Card Wrapper */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-sm mb-8">
-          {/* Incident History Header */}
-          <StyledView className="items-center mb-6">
-            <StyledView className="w-12 h-12 bg-[#EFF6FF] rounded-full items-center justify-center mb-3">
-              <Ionicons name="folder-outline" size={24} color="#005B96" />
+        {/* ── Main card wrapper ─────────────────────────────────────────── */}
+        <StyledView
+          style={{
+            backgroundColor: "white",
+            borderRadius: 32,
+            padding: 24,
+            borderWidth: 1,
+            borderColor: "#EBF3FC",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 16,
+            elevation: 2,
+          }}
+        >
+          {/* ── Hero header ─────────────────────────────────────────────── */}
+          <StyledView style={{ alignItems: "center", marginBottom: 24 }}>
+            <StyledView
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: "#D9E7FF",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 12,
+              }}
+            >
+              <StyledView
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: "#2F87FF",
+                  shadowColor: "#2F87FF",
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 6,
+                  elevation: 3,
+                }}
+              />
             </StyledView>
-            <StyledText className="text-[#0F172A] text-[24px] font-bold text-center leading-8">
-              {t("yourIncidentHistory")}
+            <StyledText
+              style={{
+                fontSize: 26,
+                fontWeight: "800",
+                color: "#1F2A3A",
+                textAlign: "center",
+                lineHeight: 32,
+              }}
+            >
+              Your Incident History
             </StyledText>
-            <StyledText className="text-[#64748B] text-xs text-center mt-1.5 px-4 leading-4 font-semibold">
-              {t("historySubtitle")}
+            <StyledText
+              style={{
+                fontSize: 11,
+                color: "#7B8CA2",
+                textAlign: "center",
+                marginTop: 4,
+              }}
+            >
+              Live SafeSpeak report records and lifecycle actions
             </StyledText>
           </StyledView>
 
-          {/* Stats List */}
-          <StyledView className="space-y-3 mb-6">
-            {/* Total Reports */}
-            <StyledView className="bg-white rounded-[20px] p-4 border border-[#EBF3FC] shadow-xs">
-              <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-1">
-                {t("totalReportsLabel")}
+          {/* ── Stat cards ─────────────────────────────────────────────── */}
+          <StyledView style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
+            <StyledView
+              style={{
+                flex: 1,
+                backgroundColor: "#F7FAFE",
+                borderRadius: 16,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: "#E3EBF5",
+                alignItems: "center",
+              }}
+            >
+              <StyledText
+                style={{ fontSize: 28, fontWeight: "800", color: "#0F5D9F" }}
+              >
+                {reports.length}
               </StyledText>
-              <StyledText className="text-[#005B96] text-3xl font-extrabold">
-                {totalReports}
+              <StyledText
+                style={{
+                  fontSize: 8,
+                  fontWeight: "700",
+                  color: "#7F8FA4",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                  marginTop: 2,
+                }}
+              >
+                Total Active
               </StyledText>
             </StyledView>
-
-            {/* Submitted or Received */}
-            <StyledView className="bg-white rounded-[20px] p-4 border border-[#EBF3FC] shadow-xs">
-              <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-1">
-                {t("submittedOrReceivedLabel")}
+            <StyledView
+              style={{
+                flex: 1,
+                backgroundColor: "#F7FAFE",
+                borderRadius: 16,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: "#E3EBF5",
+                alignItems: "center",
+              }}
+            >
+              <StyledText
+                style={{ fontSize: 28, fontWeight: "800", color: "#18B06C" }}
+              >
+                {submittedCount}
               </StyledText>
-              <StyledText className="text-[#137333] text-3xl font-extrabold">
-                {submittedOrReceived}
-              </StyledText>
-            </StyledView>
-
-            {/* Lifecycle Actions */}
-            <StyledView className="bg-white rounded-[20px] p-4 border border-[#EBF3FC] shadow-xs">
-              <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-1">
-                {t("lifecycleActionsLabel")}
-              </StyledText>
-              <StyledText className="text-[#D97706] text-3xl font-extrabold">
-                {lifecycleActions}
+              <StyledText
+                style={{
+                  fontSize: 8,
+                  fontWeight: "700",
+                  color: "#7F8FA4",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                  marginTop: 2,
+                }}
+              >
+                Submitted
               </StyledText>
             </StyledView>
           </StyledView>
 
-          {/* Functional Search Box */}
-          <StyledView className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-full flex-row items-center px-4 py-2.5 mb-6">
-            <Ionicons name="search-outline" size={18} color="#94A3B8" />
+          {/* ── Action required notice ──────────────────────────────────── */}
+          {actionRequiredCount > 0 && (
+            <StyledView
+              style={{
+                backgroundColor: "#FFFBEB",
+                borderRadius: 10,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                marginBottom: 16,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="alert-circle" size={13} color="#D97706" style={{ marginRight: 6 }} />
+              <StyledText style={{ fontSize: 10, color: "#92400E", fontWeight: "600" }}>
+                {actionRequiredCount} report{actionRequiredCount === 1 ? "" : "s"} currently need review or follow-up.
+              </StyledText>
+            </StyledView>
+          )}
+
+          {/* ── Search box ─────────────────────────────────────────────── */}
+          <StyledView
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#F8FAFC",
+              borderWidth: 1,
+              borderColor: "#E2E8F0",
+              borderRadius: 100,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              marginBottom: 14,
+            }}
+          >
+            <Ionicons name="search-outline" size={16} color="#94A3B8" />
             <StyledTextInput
-              className="flex-1 text-[#0F172A] text-xs ml-2 font-semibold p-0"
-              placeholder={t("searchPlaceholder")}
+              style={{ flex: 1, marginLeft: 8, fontSize: 12, color: "#0F172A", padding: 0 }}
+              placeholder="Search reports..."
               placeholderTextColor="#94A3B8"
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
             />
             {searchQuery.length > 0 && (
-              <StyledTouchableOpacity onPress={() => setSearchQuery("")}>
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
                 <Ionicons name="close-circle" size={16} color="#94A3B8" />
-              </StyledTouchableOpacity>
+              </TouchableOpacity>
             )}
           </StyledView>
 
-          {/* Interactive Filter Pills */}
-          <StyledView className="flex-row items-center space-x-2 mb-6">
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setActiveFilter("all")}
-              className={`px-4 py-2 rounded-full ${
-                activeFilter === "all"
-                  ? "bg-[#005B96]"
-                  : "bg-white border border-[#E2E8F0]"
-              }`}
-            >
-              <StyledText
-                className={`text-xs font-bold ${
-                  activeFilter === "all" ? "text-white" : "text-[#64748B]"
-                }`}
+          {/* ── Filter pills ─────────────────────────────────────────────── */}
+          <StyledView
+            style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}
+          >
+            {[
+              { id: "all", label: "All Reports" },
+              { id: "draft", label: "Drafts" },
+              { id: "action_required", label: "Needs Review" },
+              { id: "closed", label: "Closed" },
+            ].map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                onPress={() => setActiveFilter(f.id)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 100,
+                  backgroundColor: activeFilter === f.id ? "#2F87FF" : "white",
+                  borderWidth: 1,
+                  borderColor: activeFilter === f.id ? "#2F87FF" : "#E2E8F0",
+                }}
               >
-                {t("allReportsLabel")}
-              </StyledText>
-            </StyledTouchableOpacity>
-
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setActiveFilter("draft")}
-              className={`px-4 py-2 rounded-full ${
-                activeFilter === "draft"
-                  ? "bg-[#005B96]"
-                  : "bg-white border border-[#E2E8F0]"
-              }`}
-            >
-              <StyledText
-                className={`text-xs font-bold ${
-                  activeFilter === "draft" ? "text-white" : "text-[#64748B]"
-                }`}
-              >
-                {t("draftsLabelText")}
-              </StyledText>
-            </StyledTouchableOpacity>
-
-            <StyledTouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setActiveFilter("in_review")}
-              className={`px-4 py-2 rounded-full ${
-                activeFilter === "in_review"
-                  ? "bg-[#005B96]"
-                  : "bg-white border border-[#E2E8F0]"
-              }`}
-            >
-              <StyledText
-                className={`text-xs font-bold ${
-                  activeFilter === "in_review" ? "text-white" : "text-[#64748B]"
-                }`}
-              >
-                {t("inReviewLabel")}
-              </StyledText>
-            </StyledTouchableOpacity>
+                <StyledText
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: activeFilter === f.id ? "white" : "#60728A",
+                  }}
+                >
+                  {f.label}
+                </StyledText>
+              </TouchableOpacity>
+            ))}
           </StyledView>
 
-          {/* Dynamic Incident List */}
-          {filteredIncidents.length === 0 ? (
-            <StyledText className="text-[#94A3B8] text-xs text-center my-8">
-              No reports found matching your criteria.
-            </StyledText>
-          ) : (
-            filteredIncidents.map((incident) => (
-              <StyledView
-                key={incident.id}
-                className="bg-white border border-[#E2E8F0] rounded-[24px] p-5 shadow-xs mb-4"
-              >
-                {/* Top row with status badge and ref (preventing overlap) */}
-                <StyledView className="flex-row items-center justify-between mb-3.5 flex-wrap gap-y-2">
-                  <StyledView
-                    className={`px-2.5 py-1 rounded-full flex-row items-center ${
-                      incident.status === "draft" ? "bg-[#FEF3C7]" : "bg-[#EFF6FF]"
-                    }`}
-                  >
-                    <StyledText
-                      className={`text-[10px] font-extrabold uppercase ${
-                        incident.status === "draft"
-                          ? "text-[#D97706]"
-                          : "text-[#005B96]"
-                      }`}
-                    >
-                      •{" "}
-                      {incident.status === "draft"
-                        ? t("draftStatusLabel")
-                        : t("inReviewLabel")}
-                    </StyledText>
-                  </StyledView>
-                  <StyledText
-                    className="text-[#94A3B8] text-[10px] font-bold flex-shrink ml-2 text-right"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    SafeSpeak ref {incident.id}
-                  </StyledText>
-                </StyledView>
-
-                {/* Title & Timestamp */}
-                <StyledText className="text-[#0F172A] text-[16px] font-bold mb-1">
-                  {incident.title}
-                </StyledText>
-                <StyledText className="text-[#64748B] text-xs mb-5 font-semibold">
-                  {incident.date}
-                </StyledText>
-
-                {/* Main Action Buttons */}
-                <StyledTouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push("/home/report-submission/detail")}
-                  className="bg-[#005B96] rounded-full py-3.5 flex-row items-center justify-center w-full mb-3 shadow-xs"
-                >
-                  <StyledText className="text-white font-bold text-sm">
-                    {t("openDetail")}
-                  </StyledText>
-                </StyledTouchableOpacity>
-
-                <StyledTouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => router.push("/home/report-submission/detail")}
-                  className="bg-white border border-[#E2E8F0] rounded-full py-3.5 flex-row items-center justify-center w-full mb-5"
-                >
-                  <StyledText className="text-[#475569] font-bold text-sm">
-                    {t("reviewSubmission")}
-                  </StyledText>
-                </StyledTouchableOpacity>
-
-                {/* Action Pills Row (using margins to prevent wrapper overlap) */}
-                <StyledView className="flex-row flex-wrap">
-                  <StyledTouchableOpacity className="bg-white border border-[#E2E8F0] px-3.5 py-2 rounded-full flex-row items-center mr-2 mb-2">
-                    <Ionicons
-                      name="document-text-outline"
-                      size={14}
-                      color="#64748B"
-                    />
-                    <StyledText className="text-[#64748B] text-[11px] font-bold ml-1.5">
-                      {t("withdraw")}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-
-                  <StyledTouchableOpacity className="bg-white border border-[#E2E8F0] px-3.5 py-2 rounded-full flex-row items-center mr-2 mb-2">
-                    <Ionicons
-                      name="bookmark-outline"
-                      size={14}
-                      color="#64748B"
-                    />
-                    <StyledText className="text-[#64748B] text-[11px] font-bold ml-1.5">
-                      {t("markInfoOnly")}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-
-                  <StyledTouchableOpacity className="bg-[#FFF1F1] border border-[#FEE2E2] px-3.5 py-2 rounded-full flex-row items-center mr-2 mb-2">
-                    <Ionicons name="trash-outline" size={14} color="#EF4444" />
-                    <StyledText className="text-[#EF4444] text-[11px] font-bold ml-1.5">
-                      {t("requestDeletion")}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-
-                  <StyledTouchableOpacity className="bg-[#FFF1F1] border border-[#FEE2E2] px-3.5 py-2 rounded-full flex-row items-center mb-2">
-                    <Ionicons name="trash-outline" size={14} color="#EF4444" />
-                    <StyledText className="text-[#EF4444] text-[11px] font-bold ml-1.5">
-                      {t("delete")}
-                    </StyledText>
-                  </StyledTouchableOpacity>
-                </StyledView>
-              </StyledView>
-            ))
+          {/* ── Status / error messages ───────────────────────────────────── */}
+          {statusMessage && (
+            <StyledView
+              style={{
+                backgroundColor: "#EFF6FF",
+                borderRadius: 10,
+                padding: 10,
+                marginBottom: 12,
+                flexDirection: "row",
+                alignItems: "flex-start",
+              }}
+            >
+              <Ionicons name="checkmark-circle" size={13} color="#0F5D9F" style={{ marginRight: 6, marginTop: 1 }} />
+              <StyledText style={{ fontSize: 11, color: "#0F5D9F", fontWeight: "600", flex: 1 }}>
+                {statusMessage}
+              </StyledText>
+              <TouchableOpacity onPress={() => setStatusMessage(null)}>
+                <Ionicons name="close" size={13} color="#0F5D9F" />
+              </TouchableOpacity>
+            </StyledView>
           )}
+
+          {loadError && (
+            <StyledView
+              style={{
+                backgroundColor: "#FFF7F6",
+                borderWidth: 1,
+                borderColor: "#F4C7C3",
+                borderRadius: 10,
+                padding: 10,
+                marginBottom: 12,
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="alert-circle" size={13} color="#B42318" style={{ marginRight: 6 }} />
+              <StyledText style={{ fontSize: 11, color: "#B42318", fontWeight: "600", flex: 1 }}>
+                {loadError}
+              </StyledText>
+              <TouchableOpacity onPress={loadReportHistory}>
+                <StyledText style={{ fontSize: 10, color: "#B42318", fontWeight: "700", textDecorationLine: "underline" }}>
+                  Retry
+                </StyledText>
+              </TouchableOpacity>
+            </StyledView>
+          )}
+
+          {/* ── Loading state ─────────────────────────────────────────────── */}
+          {isLoading && (
+            <StyledView style={{ paddingVertical: 40, alignItems: "center" }}>
+              <ActivityIndicator size="small" color="#0F5D9F" />
+              <StyledText style={{ fontSize: 11, color: "#607B90", marginTop: 8 }}>
+                Loading reports...
+              </StyledText>
+            </StyledView>
+          )}
+
+          {/* ── Empty state ───────────────────────────────────────────────── */}
+          {!isLoading && filteredReports.length === 0 && (
+            <StyledView style={{ paddingVertical: 40, alignItems: "center" }}>
+              <Ionicons name="folder-open-outline" size={32} color="#CBD5E1" />
+              <StyledText
+                style={{ fontSize: 13, color: "#607B90", marginTop: 8, textAlign: "center" }}
+              >
+                No reports matched this view.
+              </StyledText>
+            </StyledView>
+          )}
+
+          {/* ── Report cards ─────────────────────────────────────────────── */}
+          {!isLoading &&
+            filteredReports.map((report, index) => {
+              const meta = report._meta;
+              const actions = getLifecycleActions(report._resolvedStatus);
+              const isFirst = index === 0;
+
+              return (
+                <StyledView
+                  key={report._id}
+                  style={{
+                    backgroundColor: "white",
+                    borderWidth: 1,
+                    borderColor: "#E3EBF5",
+                    borderRadius: 20,
+                    padding: 16,
+                    marginBottom: 12,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 8,
+                    elevation: 1,
+                  }}
+                >
+                  {/* Top row */}
+                  <StyledView
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <StyledView style={{ flexDirection: "row", alignItems: "flex-start", flex: 1, marginRight: 10 }}>
+                      {/* Icon bubble */}
+                      <StyledView
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: meta.iconBg,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 10,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Ionicons name={meta.iconName} size={14} color={meta.iconColor} />
+                      </StyledView>
+
+                      <StyledView style={{ flex: 1 }}>
+                        {/* Status badge */}
+                        <StyledView
+                          style={{
+                            alignSelf: "flex-start",
+                            backgroundColor: meta.badgeBg,
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <StyledText
+                            style={{
+                              fontSize: 8,
+                              fontWeight: "800",
+                              color: meta.badgeText,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.8,
+                            }}
+                          >
+                            {meta.label}
+                          </StyledText>
+                        </StyledView>
+
+                        {/* Title */}
+                        <StyledText
+                          style={{ fontSize: 14, fontWeight: "700", color: "#1F2A3A" }}
+                          numberOfLines={2}
+                        >
+                          {report.context || report.incidentType || "SafeSpeak report"}
+                        </StyledText>
+
+                        {/* Team & date */}
+                        <StyledText
+                          style={{ fontSize: 9, color: "#7F8FA4", marginTop: 3 }}
+                        >
+                          • {meta.team}
+                        </StyledText>
+                        <StyledText
+                          style={{
+                            fontSize: 8,
+                            fontWeight: "600",
+                            color: "#97A6BA",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.8,
+                            marginTop: 1,
+                          }}
+                        >
+                          {formatDate(report.updatedAt ?? report.createdAt)}
+                        </StyledText>
+                      </StyledView>
+                    </StyledView>
+
+                    {/* Chevron button */}
+                    <TouchableOpacity
+                      onPress={() =>
+                        router.push({
+                          pathname: "/home/report-submission/submission-success",
+                          params: { reportId: report._id },
+                        })
+                      }
+                      style={{
+                        width: isFirst ? 64 : 52,
+                        height: isFirst ? 64 : 52,
+                        borderRadius: 14,
+                        backgroundColor: isFirst ? "#0F5D9F" : "#F9FBFF",
+                        borderWidth: isFirst ? 0 : 1,
+                        borderColor: "#E4EBF5",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        shadowColor: isFirst ? "#0F5D9F" : "transparent",
+                        shadowOffset: { width: 0, height: 6 },
+                        shadowOpacity: isFirst ? 0.3 : 0,
+                        shadowRadius: 12,
+                        elevation: isFirst ? 4 : 0,
+                      }}
+                    >
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color={isFirst ? "white" : "#7F91A8"}
+                      />
+                    </TouchableOpacity>
+                  </StyledView>
+
+                  {/* ── Lifecycle action pills ─────────────────────────── */}
+                  <StyledView
+                    style={{
+                      borderTopWidth: 1,
+                      borderTopColor: "#EDF2F7",
+                      paddingTop: 12,
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {actions.map((action) => {
+                      const actionKey = `${report._id}:${action.key}`;
+                      const isRunning = activeActionKey === actionKey;
+                      const isAnyRunning = Boolean(activeActionKey);
+
+                      return (
+                        <TouchableOpacity
+                          key={action.key}
+                          disabled={isAnyRunning}
+                          onPress={() => handleLifecycleAction(report, action)}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            paddingHorizontal: 12,
+                            paddingVertical: 7,
+                            borderRadius: 100,
+                            borderWidth: 1,
+                            backgroundColor: action.destructive ? "#FFF7F6" : "white",
+                            borderColor: action.destructive ? "#F4C7C3" : "#D8E4F2",
+                            opacity: isAnyRunning ? 0.6 : 1,
+                          }}
+                        >
+                          {isRunning ? (
+                            <ActivityIndicator
+                              size="small"
+                              color={action.destructive ? "#B42318" : "#40566F"}
+                              style={{ width: 11, height: 11, marginRight: 5 }}
+                            />
+                          ) : (
+                            <Ionicons
+                              name={action.iconName}
+                              size={11}
+                              color={action.destructive ? "#B42318" : "#40566F"}
+                              style={{ marginRight: 5 }}
+                            />
+                          )}
+                          <StyledText
+                            style={{
+                              fontSize: 10,
+                              fontWeight: "700",
+                              color: action.destructive ? "#B42318" : "#40566F",
+                            }}
+                          >
+                            {action.label}
+                          </StyledText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </StyledView>
+                </StyledView>
+              );
+            })}
         </StyledView>
-      </StyledScrollView>
-    </StyledView>
+      </SafeSpeakScreen>
+
+      {/* Custom Alert Modal */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+    </>
   );
 }

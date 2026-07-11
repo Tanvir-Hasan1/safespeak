@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
 import { useLanguage } from "../../../../context/LanguageContext";
 
@@ -19,6 +19,7 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function DetailedExplanations() {
   const router = useRouter();
+  const { reportId } = useLocalSearchParams();
   const { t } = useLanguage();
   const [legalRightsExpanded, setLegalRightsExpanded] = useState(true);
 
@@ -134,8 +135,17 @@ export default function DetailedExplanations() {
 
         {/* Action Bar */}
         <StyledView className="bg-[#F0F7FF] rounded-[24px] p-4 flex-row items-center border border-[#E0F2FE] mb-8">
-          <StyledTouchableOpacity className="flex-1 flex-row items-center justify-center">
-            <Ionicons name="bookmark-outline" size={22} color="#FB923C" />
+          <StyledTouchableOpacity
+            className="flex-1 flex-row items-center justify-center"
+            activeOpacity={0.7}
+            onPress={() =>
+              router.push({
+                pathname: "/home/report-submission/history",
+                params: reportId ? { reportId } : undefined,
+              })
+            }
+          >
+            <Ionicons name="bookmark" size={22} color="#FB923C" />
             <StyledText className="text-[#FB923C] text-xs font-bold ml-3 text-center">
               {t("saveToHistoryFull")}
             </StyledText>

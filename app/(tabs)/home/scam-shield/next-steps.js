@@ -34,9 +34,9 @@ const AGENCIES = [
     iconColor: "#EF7D00",
     title: "Contact Your Bank",
     badge: null,
-    body: "If you already interacted or entered payment info, contact your card issuer or bank to secure the account and monitor for fraudulent charges.",
+    body: "If you have lost money, shared your card details, or think someone can access your account, contact your bank immediately to freeze your accounts.",
     secondary:
-      "Do not click any links or enter payment details from this message.",
+      "This appears to be a live phishing/scareware-style payment/renewal scam claiming your protection expires today and urging you to update payment details. It uses urgency and fear to pressure action, but provides no legitimate organization details.",
     ctaLabel: "Call Fraud Department",
     ctaUrl: AGENCY_URLS.bank,
     destination: "bank",
@@ -48,9 +48,9 @@ const AGENCIES = [
     iconColor: "#EF7D00",
     title: "Report to ACCC Scamwatch",
     badge: "COMMUNITY PREVENTION",
-    body: "Choose this if you have not lost money, but want the government to be aware of a scam. Crucial for community prevention.",
+    body: "Choose this if you have not lost money, but want the government to be aware of a scam.",
     secondary:
-      "Do not click any links or enter payment details from this message.",
+      "Do not click any buttons/links or provide payment details in response to this message.",
     ctaLabel: "Launch Report Tool",
     ctaUrl: AGENCY_URLS.accc,
     destination: "scamwatch",
@@ -62,9 +62,9 @@ const AGENCIES = [
     iconColor: "#EF7D00",
     title: "Report to ReportCyber",
     badge: null,
-    body: "Choose this if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk.",
+    body: "Report here if you clicked a link, shared personal details, lost money, or believe your identity or accounts are at risk.",
     secondary:
-      "Verify the subscription by going directly to the company's official website/app (type the address yourself) or checking your bank/credit card statements.",
+      "Verify independently by going to the provider's official website/app (typed manually) or checking your bank/credit card statement for legitimate charges.",
     ctaLabel: "Launch Report Tool",
     ctaUrl: AGENCY_URLS.reportCyber,
     destination: "reportCyber",
@@ -206,10 +206,10 @@ export default function NextSteps() {
               </StyledView>
 
               {/* Body text */}
-              <StyledText className="text-[#374151] text-[12.5px] leading-5 mb-2">
+              <StyledText className="text-[#6B7280] text-[12.5px] leading-5 mb-2">
                 {agency.body}
               </StyledText>
-              <StyledText className="text-[#6B7280] text-[12px] leading-5 mb-5">
+              <StyledText className="text-[#1F2937] text-[12px] font-bold leading-5 mb-5">
                 {agency.secondary}
               </StyledText>
 
