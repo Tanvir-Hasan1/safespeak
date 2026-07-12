@@ -7,6 +7,7 @@ const StyledView = styled(View);
 const StyledScrollView = styled(ScrollView);
 
 export default function SafeSpeakScreen({
+  title,
   backText,
   rightIcon,
   onRightPress,
@@ -31,6 +32,7 @@ export default function SafeSpeakScreen({
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
+        title={title}
         backText={backText}
         rightIcon={rightIcon}
         onRightPress={onRightPress}

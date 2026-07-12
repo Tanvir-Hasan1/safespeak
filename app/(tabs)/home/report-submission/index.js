@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import CustomHeader from "../../../../components/CustomHeader";
 
 import { useLanguage } from "../../../../context/LanguageContext";
@@ -21,6 +21,7 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function TriageExplanation() {
   const router = useRouter();
+  const { conversationSessionId } = useLocalSearchParams();
   const { t } = useLanguage();
 
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -52,11 +53,26 @@ export default function TriageExplanation() {
         scrollEventThrottle={16}
       >
         <StyledView className="mt-4 mb-6">
-          <StyledText className="text-[#002B49] text-2xl font-bold">
+          <StyledText className="text-[#64748B] text-[9.5px] font-extrabold uppercase tracking-widest mb-1.5">
+            INCIDENT BUILDER
+          </StyledText>
+          <StyledText className="text-[#002B49] text-3xl font-black mb-2">
             {t("triageExplanation")}
           </StyledText>
-          <StyledText className="text-[#64748B] text-sm mt-1">
+          <StyledText className="text-[#64748B] text-xs leading-5 mb-4">
             {t("triageSubtitle")}
+          </StyledText>
+
+          {/* Step progress bar segments */}
+          <StyledView className="flex-row items-center justify-between space-x-1.5 mb-1.5">
+            <StyledView className="h-1.5 bg-[#005B96] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+          </StyledView>
+          <StyledText className="text-[#005B96] text-[9px] font-extrabold uppercase tracking-wider">
+            STEP 1 OF 5
           </StyledText>
         </StyledView>
 
@@ -88,112 +104,27 @@ export default function TriageExplanation() {
           {t("legalAdviceDisclaimer")}
         </StyledText>
 
-        {/* Your Control Card */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-6">
-          <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-3">
-            {t("yourControl")}
-          </StyledText>
-          <StyledText className="text-[#64748B] text-[14px] leading-5 mb-3 font-semibold">
-            {t("yourControlDesc")}
-          </StyledText>
-          <StyledText className="text-[#94A3B8] text-xs leading-4">
-            {t("yourControlSub")}
-          </StyledText>
-        </StyledView>
-
-        {/* Why This Path Card */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-6">
-          <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-3">
-            {t("whyThisPath")}
-          </StyledText>
-          <StyledText className="text-[#64748B] text-[14px] leading-5 font-semibold">
-            {t("whyThisPathDesc")}
-          </StyledText>
-        </StyledView>
-
-        {/* Possible Pathways Card */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-8">
-          <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-3">
-            {t("possiblePathways")}
-          </StyledText>
-          <StyledText className="text-[#64748B] text-[14px] leading-5 mb-5 font-semibold">
-            {t("possiblePathwaysDesc")}
-          </StyledText>
-          
-          {/* Inner grey box */}
-          <StyledView className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E2E8F0]/50">
-            <StyledText className="text-[#0F172A] text-sm font-bold mb-1">
-              {t("generalSupportOptions")}
-            </StyledText>
-            <StyledText className="text-[#64748B] text-xs leading-4">
-              {t("generalSupportOptionsDesc")}
+        {/* Safety-First Report Flow Card */}
+        <StyledView className="w-full bg-[#EFF6FF] border border-[#BFDBFE] rounded-[24px] p-5 mb-6 shadow-xs">
+          <StyledView className="flex-row items-start mb-2">
+            <Ionicons name="shield-checkmark" size={16} color="#005B96" className="mt-0.5" />
+            <StyledText className="text-[#005B96] text-[10px] font-extrabold uppercase tracking-widest ml-2">
+              SAFETY-FIRST REPORT FLOW
             </StyledText>
           </StyledView>
-        </StyledView>
-
-        {/* Prepare For This Pathway Card */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-6">
-          <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-3">
-            {t("preparePathway")}
+          <StyledText className="text-[#4B5563] text-xs leading-5 mb-4">
+            Nothing is auto-submitted on entry. Reports are created, updated, or prepared only when you explicitly continue or save.
           </StyledText>
-          <StyledText className="text-[#64748B] text-[14px] leading-5 mb-5 font-semibold">
-            {t("preparePathwayDesc")}
-          </StyledText>
-          
-          <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-2">
-            {t("whatAskNext")}
-          </StyledText>
-          <StyledView className="flex-row mb-5">
-            <StyledView className="bg-[#EFF6FF] px-4 py-2 rounded-full border border-[#D0E3FF]">
-              <StyledText className="text-[#005B96] text-xs font-bold">
-                {t("shortSummary")}
-              </StyledText>
-            </StyledView>
-          </StyledView>
-
-          <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-2">
-            {t("helpfulAvailable")}
-          </StyledText>
-          <StyledView className="flex-row">
-            <StyledView className="bg-[#F1F5F9] px-4 py-2 rounded-full border border-[#E2E8F0]">
-              <StyledText className="text-[#475569] text-xs font-bold">
-                {t("datesTiming")}
-              </StyledText>
-            </StyledView>
-          </StyledView>
-        </StyledView>
-
-        {/* Report Draft Status Card */}
-        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-8">
-          <StyledText className="text-[#005B96] text-xs font-bold uppercase tracking-wider mb-3">
-            {t("reportDraftStatus")}
-          </StyledText>
-          <StyledText className="text-[#64748B] text-[14px] leading-5 mb-5 font-semibold">
-            {t("reportDraftStatusDesc")}
-          </StyledText>
-
-          {/* Status Box */}
-          <StyledView className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E2E8F0]/50 mb-4">
-            <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-1.5">
-              {t("statusLabel")}
+          <StyledTouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push("/home/smart-dialer")}
+            className="bg-white border border-[#CBD5E1] py-2 px-4 rounded-full flex-row items-center self-start"
+          >
+            <Ionicons name="call" size={12} color="#005B96" />
+            <StyledText className="text-[#005B96] text-[11px] font-bold ml-1.5">
+              Smart Dialer
             </StyledText>
-            <StyledText className="text-[#0F172A] text-[18px] font-extrabold mb-1">
-              {t("draftLabel")}
-            </StyledText>
-            <StyledText className="text-[#64748B] text-xs leading-4">
-              {t("statusDesc")}
-            </StyledText>
-          </StyledView>
-
-          {/* Still Missing Box */}
-          <StyledView className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E2E8F0]/50">
-            <StyledText className="text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider mb-1.5">
-              {t("stillMissingLabel")}
-            </StyledText>
-            <StyledText className="text-[#64748B] text-xs leading-4">
-              {t("missingItems")}
-            </StyledText>
-          </StyledView>
+          </StyledTouchableOpacity>
         </StyledView>
 
         {/* Recommended Steps */}
@@ -282,7 +213,12 @@ export default function TriageExplanation() {
           </StyledView>
           <StyledTouchableOpacity
             activeOpacity={0.8}
-            onPress={() => router.push("/home/report-submission/recommendations")}
+            onPress={() =>
+              router.push({
+                pathname: "/home/report-submission/recommendations",
+                params: { conversationSessionId: conversationSessionId || "" },
+              })
+            }
             className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-3xl py-3.5 flex-row items-center justify-center w-full"
           >
             <StyledText className="text-[#475569] font-bold text-sm mr-2">
@@ -319,6 +255,36 @@ export default function TriageExplanation() {
               {t("findSupportLabel")}
             </StyledText>
             <Ionicons name="arrow-forward" size={16} color="#475569" />
+          </StyledTouchableOpacity>
+        </StyledView>
+
+        {/* Card 5: Report Incident */}
+        <StyledView className="bg-white rounded-[32px] p-6 border border-[#EBF3FC] shadow-xs mb-8">
+          <StyledView className="flex-row items-start mb-4">
+            <StyledView className="w-12 h-12 rounded-full bg-[#EEF6FF] items-center justify-center mr-4">
+              <Ionicons name="alert-circle" size={20} color="#0A66A8" />
+            </StyledView>
+            <StyledView className="flex-1">
+              <StyledText className="text-[#0F172A] text-[15px] font-bold mb-1">
+                Report Incident
+              </StyledText>
+              <StyledText className="text-[#64748B] text-[12px] leading-4 mb-2">
+                Safely submit details about what happened. You can choose to remain anonymous.
+              </StyledText>
+              <StyledText className="text-[#94A3B8] text-[11px] leading-4">
+                SafeSpeak does not submit anything automatically. You have full control.
+              </StyledText>
+            </StyledView>
+          </StyledView>
+          <StyledTouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push("/home/incident-builder")}
+            className="bg-[#0A66A8] rounded-3xl py-3.5 flex-row items-center justify-center w-full shadow-xs"
+          >
+            <StyledText className="text-white font-bold text-sm mr-2">
+              Start Report
+            </StyledText>
+            <Ionicons name="arrow-forward" size={16} color="white" />
           </StyledTouchableOpacity>
         </StyledView>
 

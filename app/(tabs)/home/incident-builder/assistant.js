@@ -1012,7 +1012,12 @@ export default function VoiceAssistant() {
           <StyledView className="w-full bg-[#F0F4FA] items-center pt-2 pb-1">
             <StyledTouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push("/home/report-submission")}
+              onPress={() =>
+                router.push({
+                  pathname: "/home/report-submission",
+                  params: { conversationSessionId: conversationSessionId || "" },
+                })
+              }
               className="bg-[#005B96] py-3.5 px-6 rounded-full flex-row items-center justify-center shadow-md"
             >
               <StyledText className="text-white text-xs font-bold mr-1.5">
