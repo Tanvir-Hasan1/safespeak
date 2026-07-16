@@ -1,6 +1,7 @@
 import axios from "axios";
 import { API_URL } from "./config";
 import { useAuthStore } from "../store/useAuthStore";
+import { router } from "expo-router";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -48,19 +49,21 @@ api.interceptors.response.use(
 
     console.warn(`[API ERROR] ${config.method?.toUpperCase()} ${fullUrl} | ${errorMsg}`);
 
-    // If we get a 401 on a non-auth endpoint, the stored token is stale — clear it
+    // If we get a 401 on a non-auth endpoint, the stored token is stale — attempt refresh
     if (
       status === 401 &&
       config.url &&
       !config.url.includes("/auth/login") &&
-      !config.url.includes("/auth/refresh")
+      !config.url.includes("/auth/refresh") &&
+      !config._retry
     ) {
-      const currentToken = useAuthStore.getState().accessToken;
-      if (currentToken) {
+      config._retry = true;
+      const rToken = useAuthStore.getState().refreshToken;
+      if (rToken) {
         // Attempt silent token refresh
-        return api
-          .post("/auth/refresh", {
-            refreshToken: useAuthStore.getState().refreshToken,
+        return axios
+          .post(`${API_URL}/auth/refresh`, {
+            refreshToken: rToken,
           })
           .then((refreshRes) => {
             const { accessToken, refreshToken } = refreshRes.data?.data?.tokens ?? {};
@@ -74,16 +77,23 @@ api.interceptors.response.use(
                 ...config.headers,
                 Authorization: `Bearer ${accessToken}`,
               };
-              return axios(config);
+              return api(config);
             }
-            // Refresh didn't return a token — clear auth
+            // Refresh didn't return a token — clear auth and redirect to login
             useAuthStore.getState().clearAuth();
+            router.replace("/auth/sign-in");
             return Promise.reject(error);
           })
-          .catch(() => {
+          .catch((refreshError) => {
+            console.warn("[Token Refresh Error]", refreshError);
             useAuthStore.getState().clearAuth();
+            router.replace("/auth/sign-in");
             return Promise.reject(error);
           });
+      } else {
+        // No refresh token available, session is completely expired — clear auth and redirect to login
+        useAuthStore.getState().clearAuth();
+        router.replace("/auth/sign-in");
       }
     }
 

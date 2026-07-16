@@ -35,6 +35,12 @@ export default function EvidenceReview() {
   const [reportLanguage, setReportLanguage] = useState("en");
   const [reportJurisdiction, setReportJurisdiction] = useState("NSW");
 
+  const [destinations, setDestinations] = useState([]);
+  const [selectedDestinationId, setSelectedDestinationId] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewWarning, setPreviewWarning] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
   React.useEffect(() => {
     if (
       Platform.OS === "android" &&
@@ -106,15 +112,28 @@ export default function EvidenceReview() {
     if (!reportId) return;
 
     let active = true;
-    const fetchReport = async () => {
+    const fetchReportData = async () => {
       try {
-        const res = await api.get(`/reports/${reportId}`);
-        const report = res.data?.data?.report || res.data?.report;
+        // 1. Consent Verification (Pre-flight)
+        const consentRes = await api.get("/consents/current");
+
+        // 2. Report Details (On Load) parallel-loading
+        const [reportRes, statusRes, timelineRes, destRes] = await Promise.all([
+          api.get(`/reports/${reportId}`),
+          api.get(`/reports/${reportId}/status`),
+          api.get(`/reports/${reportId}/timeline`),
+          api.get(`/reports/${reportId}/destinations`),
+        ]);
+
+        const report = reportRes.data?.data?.report || reportRes.data?.report;
+        const statusData = statusRes.data?.data?.status || statusRes.data?.status;
+        const destData = destRes.data?.data?.destinations || destRes.data?.destinations || [];
 
         if (report && active) {
-          setReportStatus(report.status || "draft");
+          setReportStatus(statusData?.current || report.status || "draft");
           setReportLanguage(report.language || "en");
           setReportJurisdiction(report.jurisdiction || "NSW");
+          setDestinations(destData);
 
           const backendFieldMapping = [
             { key: "who", id: "WHO", label: "WHO" },
@@ -142,11 +161,11 @@ export default function EvidenceReview() {
           setTimelineItems(mappedItems);
         }
       } catch (err) {
-        console.warn("Failed to load report from API: ", err);
+        console.warn("Failed to load report data from API: ", err);
       }
     };
 
-    fetchReport();
+    fetchReportData();
     return () => {
       active = false;
     };
@@ -210,6 +229,30 @@ export default function EvidenceReview() {
     }
   };
 
+  const handleSelectDestination = async (destId) => {
+    setSelectedDestinationId(destId);
+    // 4. Submission Previews (On Destination Selection)
+    setPreviewLoading(true);
+    setPreviewWarning(null);
+    try {
+      const res = await api.post(`/reports/${reportId}/submission-previews`, {
+        destinationIds: [destId],
+        anonymityMode: "identified",
+      });
+      const previews = res.data?.data?.previews || res.data?.previews || [];
+      if (previews.length > 0) {
+        const missing = previews[0].missingRequiredInfo || [];
+        if (missing.length > 0) {
+          setPreviewWarning(`Missing required fields: ${missing.join(", ")}`);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to preview submission: ", err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   const handleToggleExpand = (id) => {
     LayoutAnimation.easeInEaseOut();
     setExpandedId((prev) => (prev === id ? null : id));
@@ -229,7 +272,7 @@ export default function EvidenceReview() {
     setManualType("What");
   };
 
-  const handleSaveManual = () => {
+  const handleSaveManual = async () => {
     const value = manualValue.trim();
     if (!value) {
       setAlertConfig({
@@ -240,23 +283,58 @@ export default function EvidenceReview() {
       return;
     }
 
-    const entryId = `MANUAL_${Date.now()}`;
-    setTimelineItems((prev) => {
-      const newEntry = {
-        id: entryId,
-        label: manualType.toUpperCase(),
-        content: value,
-        isProvided: true,
-      };
-      return [...prev, newEntry];
+    const fieldKey = manualType.toLowerCase() === "repeated" ? "repeatedIncidents" :
+      manualType.toLowerCase() === "evidence" ? "evidenceItems" :
+        manualType.toLowerCase();
+
+    // Rebuild structured fields from current timeline items + new one
+    const updatedFields = {};
+    timelineItems.forEach((item) => {
+      const key = item.label.toLowerCase() === "repeated" ? "repeatedIncidents" :
+        item.label.toLowerCase() === "evidence" ? "evidenceItems" :
+          item.label.toLowerCase();
+      if (item.isProvided && item.content !== "Not provided yet") {
+        updatedFields[key] = item.content;
+      }
     });
+    updatedFields[fieldKey] = value;
 
-    LayoutAnimation.easeInEaseOut();
-    setExpandedId(entryId);
+    setIsSaving(true);
+    try {
+      // 3. Syncing & Saving Changes (On Edit)
+      await api.patch(`/reports/${reportId}`, {
+        structuredFields: updatedFields,
+      });
 
-    setIsAddingManual(false);
-    setManualValue("");
-    setManualType("What");
+      // Update local state on success
+      setTimelineItems((prev) => {
+        return prev.map((item) => {
+          if (item.id === manualType.toUpperCase()) {
+            return {
+              ...item,
+              content: value,
+              isProvided: true,
+            };
+          }
+          return item;
+        });
+      });
+
+      LayoutAnimation.easeInEaseOut();
+      setExpandedId(manualType.toUpperCase());
+      setIsAddingManual(false);
+      setManualValue("");
+      setManualType("What");
+    } catch (err) {
+      console.warn("Failed to sync manual entry: ", err);
+      setAlertConfig({
+        visible: true,
+        title: "Sync Error",
+        message: "Failed to save timeline changes to backend.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -264,19 +342,35 @@ export default function EvidenceReview() {
       <SafeSpeakScreen
         backText="Timeline Builder"
         rightIcon="time-outline"
-        onRightPress={() => Alert.alert("History", "No history found.")}
+        onRightPress={() => router.push("/home/report-submission/history")}
         showCancel={false}
         className="flex-1 px-5"
         contentContainerStyle={{ paddingBottom: 60 }}
+        blueTheme={true}
+        plainRightIcon={true}
       >
         {/* Title & Description */}
-        <StyledView className="mt-6 mb-5 items-center">
-          <StyledText className="text-[#0B5A9E] text-3xl font-extrabold text-center">
+        <StyledView className="mt-4 mb-4">
+          <StyledText className="text-[#0B5A9E] text-[10px] font-extrabold uppercase tracking-widest mb-1">
+            INCIDENT BUILDER
+          </StyledText>
+          <StyledText className="text-[#0B1F33] text-3xl font-black mb-2">
             Evidence Review
           </StyledText>
-          <StyledText className="text-[#6B7280] text-[13px] text-center leading-5 mt-2 px-3">
-            If AI-assisted structuring was used, verify the timeline below before
-            saving this prepared report for review.
+          <StyledText className="text-[#64748B] text-xs leading-5">
+            If AI-assisted structuring was used, verify the timeline below before continuing to the secure sharing step.
+          </StyledText>
+
+          {/* Progress Bar */}
+          <StyledView className="flex-row items-center justify-between space-x-1.5 mt-4 mb-1.5">
+            <StyledView className="h-1.5 bg-[#005B96] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#005B96] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#005B96] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+            <StyledView className="h-1.5 bg-[#E2E8F0] rounded-full flex-1" />
+          </StyledView>
+          <StyledText className="text-[#005B96] text-[9px] font-extrabold uppercase tracking-wider">
+            STEP 3 OF 5
           </StyledText>
         </StyledView>
 
@@ -287,103 +381,29 @@ export default function EvidenceReview() {
           </StyledText>
         </StyledView>
 
-        {/* Local Warning Info Card */}
-        <StyledView className="bg-white rounded-[20px] p-5 border border-[#E2E8F0] shadow-sm mb-4">
-          <StyledText className="text-[#4B5563] text-[12px] leading-[18px]">
-            Choose a police, government, or support contact from the admin-managed
-            directory. SafeSpeak will not call, email, or share anything automatically:
-            you decide whether to contact directly or share the prepared information.
-          </StyledText>
-          <StyledText className="text-[#B45309] text-[11px] font-bold leading-[16px] mt-3">
-            Stored locally only: some review fields are shown from this browser session and are not stored in the backend.
-          </StyledText>
-        </StyledView>
-
         {/* Review with Approved Sources Card */}
-        <StyledView className="bg-white rounded-[20px] p-5 border border-[#E2E8F0] shadow-sm mb-4">
-          <StyledView className="flex-row items-center justify-between mb-1.5">
-            <StyledText className="text-[#0B5A9E] text-[11px] font-bold uppercase tracking-wider">
-              REVIEW WITH APPROVED SOURCES
+
+        {/* Safety-First Report Flow Card */}
+        <StyledView className="w-full bg-[#EFF6FF] border border-[#BFDBFE] rounded-[24px] p-5 mb-5 shadow-xs">
+          <StyledView className="flex-row items-start mb-2">
+            <Ionicons name="shield-checkmark" size={16} color="#005B96" className="mt-0.5" />
+            <StyledText className="text-[#005B96] text-[10px] font-extrabold uppercase tracking-widest ml-2">
+              SAFETY-FIRST REPORT FLOW
             </StyledText>
-            {answerResult?.confidence ? (
-              <StyledView className="bg-[#EFF6FF] rounded-full px-2.5 py-0.5 border border-[#DBEAFE]">
-                <StyledText className="text-[#2D66B0] text-[9px] font-bold">
-                  {`Confidence: ${answerResult.confidence}`}
-                </StyledText>
-              </StyledView>
-            ) : null}
           </StyledView>
-          <StyledText className="text-[#6B7280] text-[11px] leading-4 mb-4">
-            Ask a cited question before sharing. If approved sources are insufficient,
-            SafeSpeak shows a fallback and no fake citations.
+          <StyledText className="text-[#4B5563] text-xs leading-5 mb-4">
+            Nothing is auto-submitted on entry. Reports are created, updated, or prepared only when you explicitly continue or save.
           </StyledText>
-
-          <StyledTextInput
-            value={askQuery}
-            onChangeText={setAskQuery}
-            multiline
-            placeholder="Type your question..."
-            placeholderTextColor="black"
-            className="border border-[#E2D6F0] bg-[#F8FAFF] rounded-[10px] p-3 text-[12px] text-[#374151] min-h-[44px] mb-3"
-          />
-
           <StyledTouchableOpacity
             activeOpacity={0.8}
-            disabled={isAsking}
-            onPress={handleAsk}
-            className="bg-[#0B5A9E] rounded-[10px] py-[10px] flex-row items-center justify-center"
+            onPress={() => router.push("/home/smart-dialer")}
+            className="bg-white border border-[#CBD5E1] py-2 px-4 rounded-full flex-row items-center self-start"
           >
-            {isAsking ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Ionicons name="search" size={14} color="white" />
-            )}
-            <StyledText className="text-white text-xs font-bold ml-1.5">
-              {isAsking ? "Asking..." : "Ask"}
+            <Ionicons name="call" size={12} color="#005B96" />
+            <StyledText className="text-[#005B96] text-[11px] font-bold ml-1.5">
+              Smart Dialer
             </StyledText>
           </StyledTouchableOpacity>
-
-          {/* RAG Answer Display Container */}
-          {answerResult ? (
-            <StyledView className="mt-4 border-t border-[#F1F5F9] pt-4">
-              <StyledView className="bg-[#F8FAFF] rounded-[16px] border border-[#E2E8F0] p-4">
-                <StyledText className="text-[#1F2937] text-[12.5px] font-semibold leading-5 mb-2">
-                  {answerResult.answer}
-                </StyledText>
-                
-                {answerResult.disclaimer ? (
-                  <StyledText className="text-[#64748B] text-[11px] leading-[17px] mb-3">
-                    {answerResult.disclaimer}
-                  </StyledText>
-                ) : null}
-
-                <StyledText className="text-[#B45309] text-[11px] font-bold mb-2">
-                  Human review recommended before relying on this answer.
-                </StyledText>
-
-                {/* Warning box if citations are empty / fallback used */}
-                {(!answerResult.citations || answerResult.citations.length === 0) ? (
-                  <StyledView className="bg-[#FFFBEB] rounded-[10px] border border-[#FEF3C7] p-3 mt-1">
-                    <StyledText className="text-[#B45309] text-[11px] leading-4 font-semibold text-center">
-                      No approved citations were returned, so this answer is a fallback and should not be treated as a cited legal conclusion.
-                    </StyledText>
-                  </StyledView>
-                ) : (
-                  /* Display Citations if present */
-                  <StyledView className="mt-2 pt-2 border-t border-[#E2E8F0]">
-                    <StyledText className="text-[#7C8DA3] text-[9px] font-bold uppercase tracking-wider mb-2">
-                      CITATIONS
-                    </StyledText>
-                    {answerResult.citations.map((citation, idx) => (
-                      <StyledText key={idx} className="text-[#475569] text-[11px] leading-4 mb-1">
-                        • {citation.title} {citation.publisher ? `(${citation.publisher})` : ""}
-                      </StyledText>
-                    ))}
-                  </StyledView>
-                )}
-              </StyledView>
-            </StyledView>
-          ) : null}
         </StyledView>
 
         {/* Contact Option Card */}
@@ -393,18 +413,60 @@ export default function EvidenceReview() {
               CONTACT OPTION
             </StyledText>
             <StyledText className="text-[#94A3B8] text-[10px] font-bold">
-              0 options available
+              {`${destinations.length} option${destinations.length !== 1 ? "s" : ""} available`}
             </StyledText>
           </StyledView>
           <StyledText className="text-[#374151] text-[11.5px] leading-5 mb-4">
-            Language 'en' in 'NSW'.
+            Language '{reportLanguage}' in '{reportJurisdiction}'.
           </StyledText>
 
-          <StyledView className="bg-[#FFFBEB] rounded-[10px] border border-[#FEF3C7] p-3">
-            <StyledText className="text-[#B45309] text-[11px] leading-4 font-semibold text-center">
-              No active destinations match this report yet. Add or activate them in the admin dashboard.
-            </StyledText>
-          </StyledView>
+          {destinations.length === 0 ? (
+            <StyledView className="bg-[#FFFBEB] rounded-[10px] border border-[#FEF3C7] p-3">
+              <StyledText className="text-[#B45309] text-[11px] leading-4 font-semibold text-center">
+                No active destinations match this report yet. Add or activate them in the admin dashboard.
+              </StyledText>
+            </StyledView>
+          ) : (
+            destinations.map((dest) => {
+              const isSelected = selectedDestinationId === dest.destinationId;
+              return (
+                <StyledTouchableOpacity
+                  key={dest.destinationId}
+                  activeOpacity={0.8}
+                  onPress={() => handleSelectDestination(dest.destinationId)}
+                  className={`border rounded-[14px] p-3 mb-2 flex-row items-center justify-between ${isSelected ? "border-[#0B5A9E] bg-[#F4F9FD]" : "border-[#E2E8F0] bg-white"
+                    }`}
+                >
+                  <StyledView className="flex-1 mr-2">
+                    <StyledText className="text-[12px] font-bold text-[#1F2937]">
+                      {dest.destinationName}
+                    </StyledText>
+                    <StyledText className="text-[10px] text-[#6B7280] mt-0.5">
+                      {dest.reason || "Matched referral destination"}
+                    </StyledText>
+                  </StyledView>
+                  <Ionicons
+                    name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                    size={18}
+                    color={isSelected ? "#0B5A9E" : "#94A3B8"}
+                  />
+                </StyledTouchableOpacity>
+              );
+            })
+          )}
+
+          {/* Submission Preview Alerts */}
+          {selectedDestinationId && previewLoading && (
+            <ActivityIndicator size="small" color="#0B5A9E" className="mt-2" />
+          )}
+
+          {selectedDestinationId && !previewLoading && previewWarning ? (
+            <StyledView className="bg-[#FFFBEB] rounded-[10px] border border-[#FEF3C7] p-3 mt-2">
+              <StyledText className="text-[#B45309] text-[11px] leading-4 font-semibold">
+                Warning: {previewWarning}
+              </StyledText>
+            </StyledView>
+          ) : null}
         </StyledView>
 
         {/* Timeline Section */}
@@ -427,7 +489,7 @@ export default function EvidenceReview() {
                   className={`bg-white rounded-[24px] border border-[#E2E8F0] shadow-sm overflow-hidden ${isOpen ? "border-l-[6px] border-l-[#0B5A9E] p-5" : "p-4"
                     }`}
                 >
-                   <StyledTouchableOpacity
+                  <StyledTouchableOpacity
                     activeOpacity={0.75}
                     onPress={() => handleToggleExpand(item.id)}
                     className="flex-row items-center justify-between"
@@ -480,7 +542,7 @@ export default function EvidenceReview() {
               <StyledText className="text-[#0B5A9E] text-[11px] font-bold uppercase tracking-wider mb-3">
                 MANUAL ENTRY
               </StyledText>
-              
+
               <StyledView className="flex-row items-center space-x-3 mb-4">
                 <StyledView className="w-1/3">
                   <StyledText className="text-[#6B7280] text-[10px] font-semibold mb-1">
@@ -560,7 +622,10 @@ export default function EvidenceReview() {
           onPress={() => {
             router.push({
               pathname: "/home/report-submission/submission-success",
-              params: { reportId },
+              params: {
+                reportId,
+                selectedDestinationId: selectedDestinationId || "",
+              },
             });
           }}
           className="bg-[#F59E0B] rounded-full py-[14px] flex-row items-center justify-center shadow-md mb-3"

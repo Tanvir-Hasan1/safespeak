@@ -17,9 +17,12 @@ export default function SafeSpeakScreen({
   blueTheme = false,
   showDivider = false,
   simpleBack = false,
+  plainRightIcon = false,
   children,
   contentContainerStyle,
   className = "flex-1 px-5",
+  showHeader = true,
+  showOnlyEmergencyBar = false,
 }) {
   const [headerVisible, setHeaderVisible] = useState(true);
 
@@ -31,19 +34,23 @@ export default function SafeSpeakScreen({
 
   return (
     <StyledView className="flex-1 bg-[#F0F4FA]">
-      <CustomHeader
-        title={title}
-        backText={backText}
-        rightIcon={rightIcon}
-        onRightPress={onRightPress}
-        showCancel={showCancel}
-        rightText={rightText}
-        rightTextColor={rightTextColor}
-        blueTheme={blueTheme}
-        showDivider={showDivider}
-        simpleBack={simpleBack}
-        headerVisible={headerVisible}
-      />
+      {(showHeader || showOnlyEmergencyBar) && (
+        <CustomHeader
+          title={title}
+          backText={backText}
+          rightIcon={rightIcon}
+          onRightPress={onRightPress}
+          showCancel={showCancel}
+          rightText={rightText}
+          rightTextColor={rightTextColor}
+          blueTheme={blueTheme}
+          showDivider={showDivider}
+          simpleBack={simpleBack}
+          plainRightIcon={plainRightIcon}
+          headerVisible={headerVisible}
+          showOnlyEmergencyBar={showOnlyEmergencyBar}
+        />
+      )}
 
       <StyledScrollView
         className={className}

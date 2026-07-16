@@ -39,7 +39,9 @@ export default function TriageExplanation() {
     <StyledView className="flex-1 bg-[#F0F4FA]">
       <CustomHeader
         backText={t("triageExplanation")}
-        rightText={t("cancel")}
+        rightIcon="time-outline"
+        plainRightIcon={true}
+        onRightPress={() => router.push("/home/report-submission/history")}
         blueTheme={true}
         showDivider={true}
         headerVisible={headerVisible}

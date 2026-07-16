@@ -1,17 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-} from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { styled } from "nativewind";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import CustomHeader from "../../../components/CustomHeader";
-import HelpAndSupport from "../../../assets/icons/help-and-support.svg";
+import SafeSpeakScreen from "../../../components/SafeSpeakScreen";
 import { useLanguage } from "../../../context/LanguageContext";
 
 const StyledView = styled(View);
@@ -27,70 +19,80 @@ export default function HelpSupportScreen() {
 
   return (
     <StyledView className="flex-1 bg-[#F8FAFC]">
-      <CustomHeader title={t("helpSupportHeader")} />
-
-      <KeyboardAwareScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}
-        enableOnAndroid={true}
-        enableAutomaticScroll={true}
-        extraScrollHeight={100}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <SafeSpeakScreen
+        backText="Profile Settings"
+        rightText="Cancel"
+        onRightPress={() => router.back()}
+        showCancel={false}
+        className="flex-1 px-5"
+        contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+        blueTheme={false}
       >
-        {/* Illustration Section */}
-        <StyledView className="items-center justify-center pt-6">
-          <HelpAndSupport width={200} height={200} />
+        {/* Centered Flag Icon Illustration */}
+        <StyledView className="items-center justify-center pt-6 mb-4">
+          <StyledView className="w-24 h-24 rounded-[32px] bg-[#F1F5F9] items-center justify-center">
+            <Ionicons name="flag-sharp" size={32} color="#1E293B" />
+          </StyledView>
         </StyledView>
 
-        <StyledText className="text-[#002B49] text-xl font-medium text-center mb-8 opacity-60">
-          {t("helpSupportGreeting")}
+        {/* Orange Large Headings */}
+        <StyledText className="text-[#FF8A00] text-3xl font-black text-center mb-1.5">
+          Hello, how can we assist{"\n"}you?
+        </StyledText>
+        <StyledText className="text-[#94A3B8] text-[13px] font-semibold text-center mb-6 leading-5 px-4">
+          Our team is ready to help you resolve any issues promptly.
         </StyledText>
 
-        {/* Title Input */}
-        <StyledView className="mb-6">
-          <StyledText className="text-[#1F2937] text-xl font-bold mb-3">
-            {t("helpTitle")}
+        {/* Support Input Card */}
+        <StyledView className="bg-white rounded-[24px] border border-[#E2E8F0] p-5 shadow-xs">
+          {/* Title Field */}
+          <StyledText className="text-[#0F172A] text-xs font-bold mb-2">
+            Title
           </StyledText>
           <StyledTextInput
-            className="w-full bg-[#fdf2ff] border border-[#f3e8ff] rounded-xl px-5 py-4 text-[#1F2937] text-base"
-            placeholder={t("helpTitlePlaceholder")}
+            className="w-full border border-[#CBD5E1] bg-white rounded-xl px-4 py-3 text-xs text-[#0F172A] mb-5 h-[46px]"
+            placeholder="Enter the title of your issue"
             placeholderTextColor="#94A3B8"
             value={title}
             onChangeText={setTitle}
           />
-        </StyledView>
 
-        {/* Description Input */}
-        <StyledView className="mb-10">
-          <StyledText className="text-[#1F2937] text-xl font-bold mb-3">
-            {t("helpDescription")}
+          {/* Description Field */}
+          <StyledText className="text-[#0F172A] text-xs font-bold mb-2">
+            Write in below box
           </StyledText>
           <StyledTextInput
-            className="w-full bg-[#fdf2ff] border border-[#f3e8ff] rounded-3xl px-5 py-4 text-[#1F2937] text-base min-h-[160px]"
-            placeholder={t("helpDescriptionPlaceholder")}
+            className="w-full border border-[#CBD5E1] bg-white rounded-xl px-4 py-3 text-xs text-[#0F172A] min-h-[140px] mb-6"
+            placeholder="Write here..."
             placeholderTextColor="#94A3B8"
             multiline
             textAlignVertical="top"
             value={description}
             onChangeText={setDescription}
           />
-        </StyledView>
 
-        {/* Send Button */}
-        <StyledTouchableOpacity
-          activeOpacity={0.8}
-          className="w-full bg-[#FB923C] rounded-full py-5 items-center shadow-lg"
-          onPress={() => {
-            // Handle send
-            console.log("Support request sent:", { title, description });
-          }}
-        >
-          <StyledText className="text-white text-lg font-bold">
-            {t("send")}
-          </StyledText>
-        </StyledTouchableOpacity>
-      </KeyboardAwareScrollView>
+          {/* Send Button */}
+          <StyledTouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              if (!title.trim() || !description.trim()) {
+                Alert.alert("Error", "Please fill in all fields.");
+                return;
+              }
+              console.log("Support request sent:", { title, description });
+              Alert.alert("Success", "Your support request has been submitted.");
+              setTitle("");
+              setDescription("");
+            }}
+            className="w-full bg-[#FF8A00] rounded-full py-4 flex-row items-center justify-center shadow-sm"
+          >
+            <StyledText className="text-white text-xs font-bold mr-1">
+              Send
+            </StyledText>
+            <Ionicons name="chevron-forward" size={13} color="white" />
+          </StyledTouchableOpacity>
+        </StyledView>
+      </SafeSpeakScreen>
     </StyledView>
   );
 }
